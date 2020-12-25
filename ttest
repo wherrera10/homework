@@ -1,0 +1,31 @@
+#=
+    len = 1_000_000
+    cups = [9,2,5,1,7,6,8,3,4]
+    cuplen = length(cups)
+    cuplist = [i = 1 for i 1in 1:len]
+    cuplist[end] = cups[1]
+    for i in 1:cuplen
+        cuplist[cups[i]] = i == cuplen ? cuplist[i + 1] : cups[i+ 1]
+    end
+=#
+
+using Combinatorics
+
+function pseqs(minlen, maxlen, n)
+    return Dict(len => filter(x -> length(x) == n && all(i -> minlen <= i <= maxlen, x),
+        integer_partitions(len)) for len in n*minlen:n*maxlen)
+end
+
+makeintervals(seq) = (a, i = Int[], 1; for j in seq push!(a, [i, j]); i = j + 1; end; a)
+
+minsumlen, maxsumlen = n * minlen, n * maxlen
+for word in wordlist
+    len = length(word)
+    minsumlen <= len <= maxsumlen || continue
+    for seq in pseqs[len]
+        substrings = [word[n[1]:n[2]] for n in makeintervals(seq)]
+        all(x -> x in set, substrings) && println(substrings, " => ", word)
+    end
+end
+
+    
