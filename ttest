@@ -4,6 +4,6 @@ vprob() = (x = 2 * rand() - 1; x < 0 ? -x : x)
 
 const tenvrand = [vprob for _ in 1:10000]
 
-histogram(tenvrand)
+histogram(tenvrand) # note: try for about 15 bins
 
 
