@@ -1,2 +1,9 @@
-isstrangesum(n) = (d = digits(n); all(p -> (println(sum(p)); sum(p) in smallprimes), zip(d[1:end-1], d[2:end])))
+using UnicodePlots
+
+vprob() = (x = 2 * rand() - 1; x < 0 ? -x : x)
+
+const tenvrand = [vprob for _ in 1:10000]
+
+histogram(tenvrand)
+
 
