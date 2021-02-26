@@ -2,8 +2,4 @@ using UnicodePlots
 
 vprob(x) = (y = 2x - 1; y < 0 ? -y : y)
 
-const tenvrand = vprob.(rand(10000))
-
-histogram(tenvrand) # note: try for about 15 bins
-
-
+histogram(vprob.(rand(10000)), nbins = 15, closed = :left))
