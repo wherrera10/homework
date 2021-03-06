@@ -1,5 +1,57 @@
-using UnicodePlots
+#include <julia.h>
 
-vprob(x) = (y = 2x - 1; y < 0 ? -y : y)
+JULIA_DEFINE_FAST_TLS() // only define this once, in an executable (not in a shared library) if you want fast code.
 
-histogram(vprob.(rand(10000)), nbins = 15, closed = :left))
+#include <stdio.h>
+
+int main(int argc, char *argv[])
+{
+    /* required: setup the Julia context */
+    jl_init();
+
+    /* create a 1D array of length 100 */
+    size_t length = 1024;
+    char *existingArray = (char *)malloc(sizeof(char) * length);
+    int * sizePointer = (int *)malloc(sizeof(int *))
+
+    /* create thin wrappers around our C array in int pointer*/
+    jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_uint8_type, 1);
+    jl_array_t *data = jl_ptr_to_array_1d(array_type, existingArray, length, 0);
+    array_type = jl_apply_array_type((jl_value_t*)jl_int64_type, 1);
+    jl_array_t *length = jl_ptr_to_array_1d(array_type, sizePointer, 1, 0);
+
+    /* create the import Query function in Julia */
+    jl_eval_string("
+    function Query(Data, Length)
+        s = Vector{UInt8}("\Here am I\")
+        n = length(s)
+        if n < Length[1]
+            Data[1:n] .= s[1:n]
+            Length[1] = n
+            return 1
+        end
+        return 0
+    end
+";
+
+    /* get Query function */
+    jl_function_t *query = jl_get_function(Main, "Query");
+
+    /* call function */
+    jl_value_t* p = jl_call1(query, (jl_value_t*)data, (jl_value_t*)length);
+
+   if (0 == *p)
+   {
+      printf ("Error: Query failed\n");
+   }
+   else
+   {
+      char * Ptr = Buffer;
+      while (Size-- > 0) putchar (*Ptr++);
+      putchar ('\n');
+   }
+
+    /* exit julia  */
+    jl_atexit_hook(0);
+    return 0;
+}
