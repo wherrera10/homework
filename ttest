@@ -1,22 +1,82 @@
-using Primes 
+using Primes
 
-for i in 1:1000
-           n = big"2"^i - 1
-           isprime(n) && println(lpad(i, 5), lpad(n, 100))
-       end
-    2                                                                                                   3
-    3                                                                                                   7
-    5                                                                                                  31
-    7                                                                                                 127
-   13                                                                                                8191
-   17                                                                                              131071
-   19                                                                                              524287
-   31                                                                                          2147483647
-   61                                                                                 2305843009213693951
-   89                                                                         618970019642690137449562111
-  107                                                                   162259276829213363391578010288127
-  127                                                             170141183460469231731687303715884105727
-  5216864797660130609714981900799081393217269435300143305409394463459185543183397656052122559640661454554977296311391480858037121987999716643812574028291115057151
-  607531137992816767098689588206552468627329593117727031923199444138200403559860852242739162502265229285668889329486246501015346579337652707239409519978766587351943831270835393219031728127
-  
-  
+function prime_sum_prime_triplets_to(N, verbose=false)
+    a = primes(2, N)
+    prime_sieve_set = Set(primes(2, N * 3))
+    len, triplets, n = length(a), Dict{Tuple{Int64,Int64,Int64}, Int}(), 0
+    for i in eachindex(a), j in i+1:len, k in j+1:len
+        if (a[i] + a[j] + a[k]) in prime_sieve_set
+            verbose && (triplets[(a[i], a[j], a[k])] = 1)
+            n += 1
+        end
+    end
+    if verbose
+        len = (length(string(N)) + 2) * 3
+        println("\n", rpad("Triplet", len), "Sum\n", "-"^(len+3))
+        for k in sort(collect(keys(triplets)), lt = (x, y) -> collect(x) < collect(y))
+            println(rpad(k, len), sum(k))
+        end
+    end
+    println("\n\n$n unique triplets of 3 primes between 2 and $N sum to a prime.")
+    return triplets
+end
+
+prime_sum_prime_triplets_to(30, true)
+prime_sum_prime_triplets_to(1000)
+prime_sum_prime_triplets_to(10000)
+prime_sum_prime_triplets_to(100000)
+
+#=
+Triplet     Sum
+---------------
+(3, 5, 11)  19
+(3, 5, 23)  31
+(3, 5, 29)  37
+(3, 7, 13)  23
+(3, 7, 19)  29
+(3, 11, 17) 31
+(3, 11, 23) 37
+(3, 11, 29) 43
+(3, 17, 23) 43
+(5, 7, 11)  23
+(5, 7, 17)  29
+(5, 7, 19)  31
+(5, 7, 29)  41
+(5, 11, 13) 29
+(5, 13, 19) 37
+(5, 13, 23) 41
+(5, 13, 29) 47
+(5, 17, 19) 41
+(5, 19, 23) 47
+(5, 19, 29) 53
+(7, 11, 13) 31
+(7, 11, 19) 37
+(7, 11, 23) 41
+(7, 11, 29) 47
+(7, 13, 17) 37
+(7, 13, 23) 43
+(7, 17, 19) 43
+(7, 17, 23) 47
+(7, 17, 29) 53
+(7, 23, 29) 59
+(11, 13, 17)41
+(11, 13, 19)43
+(11, 13, 23)47
+(11, 13, 29)53
+(11, 17, 19)47
+(11, 19, 23)53
+(11, 19, 29)59
+(13, 17, 23)53
+(13, 17, 29)59
+(13, 19, 29)61
+(17, 19, 23)59
+(19, 23, 29)71
+
+
+42 unique triplets of 3 primes between 2 and 30 sum to a prime.
+
+
+241580 unique triplets of 3 primes between 2 and 1000 sum to a prime.
+
+
+74588542 unique triplets of 3 primes between 2 and 10000 sum to a prime.
