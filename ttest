@@ -6,15 +6,15 @@ function square_form_factor(n::Integer)
     s = isqrt(n)
     s * s == n && return s
     for k in multiplier
-        n > typemax(UInt64) / k && break
+        n > typemax(typeof(n)) / k && break
         D = k * n
         Po = Pprev = P = isqrt(D)
         Qprev = 1
         Q = D - Po * Po
-        L = 2 * isqrt(2 * s)
+        L = 2 * sqrt(2 * s)
         B = 3 * L
         for (i = 2 ; i < B ; i++) {
-            b = (uint64_t)((Po + P)/Q);
+            b = typeof(n)((Po + P) / Q))
             P = b*Q - P;
             q = Q;
             Q = Qprev + b*(Pprev - P);
