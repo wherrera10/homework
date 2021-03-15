@@ -1,46 +1,47 @@
-function square_form_factor(n::T)::T where T <: Integer
-    multiplier = T.([1, 3, 5, 7, 11, 3*5, 3*7, 3*11, 5*7, 5*11, 7*11, 3*5*7, 3*5*11, 3*7*11, 5*7*11, 3*5*7*11])
-    s = isqrt(n)
-    s * s == n && return s
-    for k in multiplier
-        n > typemax(T) / k && break
-        D = k * n
-        Po = Pprev = P = isqrt(D)
-        Qprev = 1
-        Q = D - Po * Po
-        L = T(2 * sqrt(2 * s))
-        B = 3 * L
-        for i in 2:B-1
-            b = div(Po + P, Q)
-            P = b * Q - P
-            q = Q
-            Q = Qprev + b * (Pprev - P)
-            r = isqrt(Q)
-            iseven(i) && r * r == Q && break
-            Qprev, Pprev = q, p
-        end
-        i < B && break
-        b = div((Po - P), r)
-        Pprev = P = b * r + P
-        Qprev = r
-        Q = div(D - Pprev * Pprev, Qprev)
-        i = 0
-        while true
-            b = div(Po + P, Q)
-            Pprev = P
-            P = b * Q - P
-            q = Q
-            Q = Qprev + b * (Pprev - P)
-            Qprev = q
-            i += 1
-            P == Pprev && break
-        end
-        r = gcd(N, Qprev)
-        if r != 1 && r != N
-            return r
+# Formatting output as in Go example.
+using Primes, Formatting
+
+isncubedplus2prime(x) = begin fx = x * x * x + 2; (isprime(fx), fx) end
+
+tostring(x, fx) = "n = " * lpad(x, 3) * " => n³ + 2 =" * lpad(format(fx, commas=true), 10)
+
+function filterprintresults(x_to_bool_and_fx, start, stop, stringify=(x, fx)->"$x $fx", doprint=true)
+    ncount = 0
+    println("Filtering $x_to_bool_and_fx for integers between $start and $stop:\n")
+    for n in start+1:stop-1
+        isone, result = x_to_bool_and_fx(n)
+        if isone
+            doprint && println(stringify(n, result))
+            ncount += 1
         end
     end
-    return zero(T)
+    println("\nThe total found was $ncount.")
 end
 
+filterprintresults(isncubedplus2prime, 0, 200, tostring)
 
+#=
+<pre>
+n =   1 => n³ + 2 =         3
+n =   3 => n³ + 2 =        29
+n =   5 => n³ + 2 =       127
+n =  29 => n³ + 2 =    24,391
+n =  45 => n³ + 2 =    91,127
+n =  63 => n³ + 2 =   250,049
+n =  65 => n³ + 2 =   274,627
+n =  69 => n³ + 2 =   328,511
+n =  71 => n³ + 2 =   357,913
+n =  83 => n³ + 2 =   571,789
+n = 105 => n³ + 2 = 1,157,627
+n = 113 => n³ + 2 = 1,442,899
+n = 123 => n³ + 2 = 1,860,869
+n = 129 => n³ + 2 = 2,146,691
+n = 143 => n³ + 2 = 2,924,209
+n = 153 => n³ + 2 = 3,581,579
+n = 171 => n³ + 2 = 5,000,213
+n = 173 => n³ + 2 = 5,177,719
+n = 189 => n³ + 2 = 6,751,271
+
+The total found was 19.
+</pre>
+=#
