@@ -1,47 +1,15 @@
-# Formatting output as in Go example.
-using Primes, Formatting
+using Primes
 
-isncubedplus2prime(x) = begin fx = x * x * x + 2; (isprime(fx), fx) end
-
-tostring(x, fx) = "n = " * lpad(x, 3) * " => n³ + 2 =" * lpad(format(fx, commas=true), 10)
-
-function filterprintresults(x_to_bool_and_fx, start, stop, stringify=(x, fx)->"$x $fx", doprint=true)
-    ncount = 0
-    println("Filtering $x_to_bool_and_fx for integers between $start and $stop:\n")
-    for n in start+1:stop-1
-        isone, result = x_to_bool_and_fx(n)
-        if isone
-            doprint && println(stringify(n, result))
-            ncount += 1
+let
+    p = primesmask(1003)
+    println("Cousin primes under 1,000:")
+    count = 0
+    for i in 2:999
+        if !p[i] && !p[i + 4]
+            print(lpad(i, 4), ":", lpad(i + 4, 4), "  ")
+            count =+ 1
+            count % 7 == 0 && println()
         end
     end
-    println("\nThe total found was $ncount.")
+    println("\n\n$count pairs found")
 end
-
-filterprintresults(isncubedplus2prime, 0, 200, tostring)
-
-#=
-<pre>
-n =   1 => n³ + 2 =         3
-n =   3 => n³ + 2 =        29
-n =   5 => n³ + 2 =       127
-n =  29 => n³ + 2 =    24,391
-n =  45 => n³ + 2 =    91,127
-n =  63 => n³ + 2 =   250,049
-n =  65 => n³ + 2 =   274,627
-n =  69 => n³ + 2 =   328,511
-n =  71 => n³ + 2 =   357,913
-n =  83 => n³ + 2 =   571,789
-n = 105 => n³ + 2 = 1,157,627
-n = 113 => n³ + 2 = 1,442,899
-n = 123 => n³ + 2 = 1,860,869
-n = 129 => n³ + 2 = 2,146,691
-n = 143 => n³ + 2 = 2,924,209
-n = 153 => n³ + 2 = 3,581,579
-n = 171 => n³ + 2 = 5,000,213
-n = 173 => n³ + 2 = 5,177,719
-n = 189 => n³ + 2 = 6,751,271
-
-The total found was 19.
-</pre>
-=#
