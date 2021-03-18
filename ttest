@@ -3,13 +3,13 @@ using Primes
 let
     p = primesmask(1003)
     println("Cousin primes under 1,000:")
-    count = 0
+    pcount = 0
     for i in 2:999
-        if !p[i] && !p[i + 4]
-            print(lpad(i, 4), ":", lpad(i + 4, 4), "  ")
-            count =+ 1
-            count % 7 == 0 && println()
+        if p[i] && p[i + 4]
+            print(lpad(i, 4), ":", rpad(i + 4, 4))
+            pcount += 1
+            pcount % 7 == 0 && println()
         end
     end
-    println("\n\n$count pairs found")
+    println("\n\n$pcount pairs found")
 end
