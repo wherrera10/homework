@@ -1,5 +1,3 @@
-#{{trans|Perl}}
-
 using JuMP, GLPK
 
 const nums = Dict(
