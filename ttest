@@ -1,42 +1,16 @@
 using Primes
 
-function mutating!(array1, array2, n, j, k)
-    array1 .+= array2
-    array1 .*= n
-    array1 .-= j
-    for i in eachindex(array1)
-        if isprime(array1[i])
-	    array1[i] = k
-	end
+const pmask = primesmask(1, 1000)
+
+function isA085823(n, base = 10, sieve = pmask)
+    dig = digits(n; base=base)
+    for i in 1:length(dig), j in i:length(dig)
+        k = evalpoly(base, dig[i:j])
+        (k == 0 || !sieve[k]) && return false
     end
-    return array1
+    return true
 end
 
-function nonmutating(array1, array2, n, j, k)
-    array3 = array1 .+ array2
-    array4 = array3 .* n .- j
-    returm map(x -> isprime(x) ? k : x, array4)
-end
+println(filter(isA085823, 1:1000))
 
-function mergearray(array)
-    return (arr) -> array .+ arr
-end
-
-function multarray(n)
-    return (arr) -> arr .* n
-end
-
-function subarray(j)
-    return (arr) -> arr .- j
-end
-
-function primestoconstant(k)
-    returm (arr) -> map(x -> isprime(x) ? k : x, arr)
-end
-
-let
-    array = collect(100:120)
-    array2 = collect(200:220)
-    newarray = primestoconstant(subarray(multarray(mergarray(array)(array2))(n))(j))(k))
-    
-end
+# [2, 3, 5, 7, 23, 37, 53, 73, 373]
