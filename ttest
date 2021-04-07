@@ -1,16 +1,35 @@
 using Primes
 
-const pmask = primesmask(1, 1000)
+const nt, nons = [0], Int[]
 
-function isA085823(n, base = 10, sieve = pmask)
-    dig = digits(n; base=base)
-    for i in 1:length(dig), j in i:length(dig)
-        k = evalpoly(base, dig[i:j])
-        (k == 0 || !sieve[k]) && return false
+counted_primetest(n) = (nt[1] += 1; b = isprime(n); !b && push!(nons, n); b) 
+
+# start with 1 digit primes
+const results = [2, 3, 5, 7]
+
+# check 2 digit candidates
+for n in results, i in [3, 7]
+    if n != i
+        candidate = n * 10 + i
+        candidate < 100 && counted_primetest(candidate) && push!(results, candidate)
     end
-    return true
 end
 
-println(filter(isA085823, 1:1000))
+# check 3 digit candidates
+for n in results, i in [3, 7]
+    if 10 < n < 100 && n % 10 != i
+        candidate = n * 10 + i
+        counted_primetest(candidate) && push!(results, candidate)
+    end
+end
 
-# [2, 3, 5, 7, 23, 37, 53, 73, 373]
+println("Results: $results.\nThe function isprime() was called $(nt[1]) times.")
+println("Discarded candidates: ", nons)
+
+# Because 237, 537, and 737 are excluded, we cannot generate any larger candidates from 373.
+
+"""
+Results: [2, 3, 5, 7, 23, 37, 53, 73, 373].
+The function isprime() was called 10 times.
+Discarded candidates: [27, 57, 237, 537, 737]
+"""
