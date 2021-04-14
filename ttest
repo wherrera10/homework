@@ -1,4 +1,3 @@
- 
 const DEG = 0.017453292519943295769236907684886127134  # degrees to radians
 const RE = 6371000                                     # Earth radius in meters
 const dd = 0.001      # integrate in this fraction of the distance already covered
@@ -6,33 +5,29 @@ const FIN = 10000000  # integrate only to a height of 10000km, effectively infin
  
 """ the density of air as a function of height above sea level """
 rho(a::Float64)::Float64 = exp(-a/8500.0)
- 
-function height( a as double, z as double, d as double ) as double
-    'a = altitude of observer
-    'z = zenith angle (in degrees)
-    'd = distance along line of sight
-    dim as double AA = RE + a, HH
-    HH = sqr( AA^2 + d^2 - 2*d*AA*cos((180-z)*DEG) )
-    return HH - RE
-end function
- 
-function column_density( a as double, z as double ) as double
-    'integrates density along the line of sight
-    dim as double sum = 0.0, d = 0.0, delta
-    while d<FIN
-        delta = max(dd, (dd)*d)  'adaptive step size to avoid it taking forever:
-        sum += rho(height(a, z, d+0.5*delta))*delta
+
+""" a = altitude of observer
+    z = zenith angle (in degrees)
+    d = distance along line of sight """ 
+height(a, z, d) = sqrt((RE + a)^2 + d^2 - 2 * d * (RE + a) * cosd(180 - z)) - RE
+
+""" integrates density along the line of sight """
+function column_density(a, z)
+    dsum, d = 0.0, 0.0
+    while d < FIN
+        delta = max(dd, (dd)*d)  # adaptive step size to avoid it taking forever:
+        dsum += rho(height(a, z, d + 0.5 * delta)) * delta
         d += delta
-    wend
-    return sum
-end function
+    end
+    return dsum
+end
  
-function airmass( a as double, z as double ) as double
-    return column_density( a, z ) / column_density( a, 0 )
-end function
+airmass(a, z) = column_density(a, z) / column_density(a, 0)
+
  
-print "Angle     0 m              13700 m"
-print "------------------------------------"
-for z as double = 0 to 90 step 5.0
-    print using "##      ##.########      ##.########";z;airmass(0, z);airmass(13700, z)
-next z
+println("Angle              0 m             13700 m")
+println("------------------------------------------")
+for z in 0:5:90
+    println(lpad(z, 2), lpad(airmass(0, z), 20), lpad(airmass(13700, z), 20))
+end
+
