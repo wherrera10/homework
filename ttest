@@ -1,14 +1,11 @@
  
-#define DEG 0.017453292519943295769236907684886127134  'degrees to radians
-#define RE  6371000  'Earth radius in meters
-#define dd  0.001     'integrate in this fraction of the distance already covered
-#define FIN 10000000 'integrate only to a height of 10000km, effectively infinity
-#define max(a, b) iif(a>b,a,b)
+const DEG = 0.017453292519943295769236907684886127134  # degrees to radians
+const RE = 6371000                                     # Earth radius in meters
+const dd = 0.001      # integrate in this fraction of the distance already covered
+const FIN = 10000000  # integrate only to a height of 10000km, effectively infinity
  
-function rho(a as double) as double
-    'the density of air as a function of height above sea level
-    return exp(-a/8500.0)
-end function
+""" the density of air as a function of height above sea level """
+rho(a::Float64)::Float64 = exp(-a/8500.0)
  
 function height( a as double, z as double, d as double ) as double
     'a = altitude of observer
