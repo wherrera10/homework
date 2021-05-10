@@ -1,19 +1,21 @@
 using DataFrames, StatsBase
 
 """
-    Aggregate data for detection of Simpson's paradox.
-    Returns a dataframe labeled "total" which is true if success
-    example: aggregate_data(DataFrame([
-        [1, "A", "small"],
-        [0, "B", "small"],
-        [1, "A", "large"],
-        [1, "A", "small"],
-        [0, "B", "large"],
-        [0, "B", "large"]]), "kidney_stone_size", "treatment", "recovery"])
+    aggregate_data(df, effect_column, cause_column, factor_column)
+    
+Aggregate data for detection of Simpson's paradox.
+Returns a dataframe labeled "total" which is true if success
+example: 
+    df = DataFrame(
+        treatment = ["A", "B", "A", "A", "B", "B"],
+        recovery = [1, 0, 1, 1, 0, 0], 
+        kidney_stone_size = ["small", "small", "large", "small", "large", "large"])
+    
+   aggregate_data(df, "treatment", "recovery", "kidney_stone_size")
 """
-function aggregate_data(df, effect_column, cause_column, factor_column)
-    df1 = df[[conversion_col, treatment_col, segment_col]]
-    grouped = df1.groupby(aggrgate([segment_col, treatment_col]), [sum, x -> length(x)])
+function aggregate_data(df, cause_column, effect_column, factor_column)
+    df1 = df[[conversion_column, treatment_column, segment_column]]
+    grouped = groupby(df, aggregate([factor_column, cause_column]), [sum, x -> length(x)])
     grouped.columns = [conversion_col, "total"]
     return grouped
 end
