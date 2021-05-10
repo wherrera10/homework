@@ -1,26 +1,22 @@
 using DataFrames, StatsBase
 
-def aggregate_data(df, conversion_col, treatment_col, segment_col):
-    """
-    takes table of individual level data and aggregates it for simpsons paradox detection.
-    conversion_col is 1 if success, 0 else. 
-    ex:
-    pd.DataFrame([
-        ['small', 'A', 1],
-        ['small', 'B', 0],
-        ['large', 'A', 1],
-        ['small', 'A', 1],
-        ['large', 'B', 0],
-        ['large', 'B', 0],
-    ], columns=['kidney_stone_size', 'treatment', 'recovery'])   
-    """
-    df_ = df[[conversion_col, treatment_col, segment_col]]
-    gb = df_.groupby([segment_col, treatment_col]).agg(
-        [np.sum, lambda x: len(x)])
-    gb.columns = [conversion_col, "total"]
-
-    return gb.reset_index()
-
+"""
+    Aggregate data for detection of Simpson's paradox.
+    Returns a dataframe labeled "total" which is true if success
+    example: aggregate_data(DataFrame([
+        [1, "A", "small"],
+        [0, "B", "small"],
+        [1, "A", "large"],
+        [1, "A", "small"],
+        [0, "B", "large"],
+        [0, "B", "large"]]), "kidney_stone_size", "treatment", "recovery"])
+"""
+function aggregate_data(df, effect_column, cause_column, factor_column)
+    df1 = df[[conversion_col, treatment_col, segment_col]]
+    grouped = df1.groupby(aggrgate([segment_col, treatment_col]), [sum, x -> length(x)])
+    grouped.columns = [conversion_col, "total"]
+    return grouped
+end
 
 def simpsons_paradox(df, conversion_col, total_col, treatment_col, segment_col):
     """
