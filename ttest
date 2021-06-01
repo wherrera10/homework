@@ -1,19 +1,43 @@
-using Simpsons
-using Test
+function factorialdigitspread(upto = 5000; base = 10)
+    resultmatrix = zeros(upto, base)
+    for n in 1:upto
+        diginbase = digits(factorial(BigInt(n)), base=base)
+        leng = length(diginbase)
+        for i in 0:base-1
+            resultmatrix[n, i + 1] = count(x -> x == i, diginbase) / leng
+        end
+    end
+    
+    summary = [sum(col) for col in eachcol(resultmatrix)] ./ upto
 
-# see wikipedia entry at http://en.wikipedia.org/wiki/Simpsons_paradox
-data = vcat(
-    repeat([["A", "small", 1]], 81), repeat([["A", "small", 0]], 87 - 81),
-    repeat([["B", "small", 0]], 270 - 234), repeat([["B", "small", 1]], 234),
-    repeat([["B", "large", 1]], 55), repeat([["B", "large", 0]], 80 - 55),
-    repeat([["A", "large", 0]], 263 - 192), repeat([["A", "large", 1]], 192)
-)
-df = DataFrame(Atreatment = [d[1] == "A" ? 1 : 0 for d in data],
-               recovery = [d[3] for d in data],
-               kidney_stone_size = [d[2] for d in data])
+    return summary, resultmatrix
+end
 
-result = has_simpsons_paradox(df, :Atreatment, :recovery, :kidney_stone_size, false)
+for base in 2:10
+    @show base, factorialdigitspread(1000, base = base)[1]
+    println()
+end
 
-@test result == true
+
+#=
+(base, (factorialdigitspread(1000, base = base))[1]) = (2, [0.5690817047986345, 0.4309182952013657])
+
+(base, (factorialdigitspread(1000, base = base))[1]) = (3, [0.4066723454483713, 0.29577742908969773, 0.29755022546193094])
+
+(base, (factorialdigitspread(1000, base = base))[1]) = (4, [0.354469151037752, 0.21594947024955802, 0.2154370851182248, 0.21414429359446527])
+
+(base, (factorialdigitspread(1000, base = base))[1]) = (5, [0.26412414092825837, 0.18570522301267417, 0.182972169797051, 0.1821548500085917, 0.18504361625342483])
+
+(base, (factorialdigitspread(1000, base = base))[1]) = (6, [0.3185540404809588, 0.13691997426714925, 0.1374192471633965, 0.13518481379348862, 0.1367812063153748, 0.1351407179796319])
+
+(base, (factorialdigitspread(1000, base = base))[1]) = (7, [0.19756800164683672, 0.1330837212959914, 0.1358692334331912, 0.13356456473001713, 0.13289922249656316, 0.13231785188157877, 0.13469740451582154])
+
+(base, (factorialdigitspread(1000, base = base))[1]) = (8, [0.24724627282798262, 0.10897439834140919, 0.10822652590740768, 0.10778428184783333, 0.10681541887797717, 0.10523827041993036, 0.10934406643650046, 0.1063707653409592])
+
+(base, (factorialdigitspread(1000, base = base))[1]) = (9, [0.2088706511960499, 0.09961550515285308, 0.10075933184425383, 0.09816738784930994, 0.09808626204632763, 0.09832697181621056, 0.10045939809392428, 0.09759929209299557, 0.0981151999080752])
+
+(base, (factorialdigitspread(1000, base = base))[1]) = (10, [0.20354455110316458, 0.09000569366143307, 0.09141482586574715, 0.08768663393869026, 0.08899685487937642, 0.08637400369164645, 0.08973124156607255, 0.08687456731022822, 0.08914181946352545, 0.0862298085201159])
+
+=#
 
     
