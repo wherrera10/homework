@@ -1,6 +1,6 @@
 # preprocess.jl convert includes to file contenets
 
-length(ARGS) < 2 && error("Usage: $Program_FiLE <infile> <outfile>")
+length(ARGS) < 2 && error("Usage: $PROGRAM_FiLE <infile> <outfile>")
 
 function includefile(s)
     m = match(r"(\s)include\"([^\"]+)\"(\s)", s)
