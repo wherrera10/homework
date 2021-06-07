@@ -15,7 +15,6 @@ end
 
 input = read(infile, String)
 
-output = replace(input, r"\sinclude\"[^\"]+\"\s)" => includefile(x))
+output = replace(input, r"\sinclude\"[^\"]+\"\s)" => includefile)
 
 write(outfile, output)
-
