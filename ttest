@@ -3,8 +3,8 @@
 length(ARGS) < 2 && error("Usage: $PROGRAM_FiLE <infile> <outfile>")
 
 function includefile(s)
-    m = match(r"(\s)include\"([^\"]+)\"(\s)", s)
     try
+        m = match(r"(\s)include\"([^\"]+)\"(\s)", s)
         incl = read(m.captures[2], String)
         return m.captures[1] * incl * m.captures[3]
     catch y
