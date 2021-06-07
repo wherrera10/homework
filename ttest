@@ -2,6 +2,12 @@
 
 length(ARGS) < 2 && error("Usage: $Program_FiLE <infile> <outfile>")
 
+function includer(s)
+    m = match(r"(\s)include\"([^\"]+)\"(\s)", s)
+
+end
+
+
 input = read(ARGS[1], String)
 
 output = replace(input, r"\sinclude\"[^\"]+\"\s)" => includer(x))
