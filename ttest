@@ -8,6 +8,7 @@ function includefile(s)
         incl = read(m.captures[2], String)
         return m.captures[1] * incl * m.captures[3]
     catch y
+        warn(y)
         return s
     end
 end
