@@ -1,6 +1,7 @@
 # preprocess.jl convert includes to file contenets
 
-length(ARGS) < 2 && error("Usage: $PROGRAM_FiLE <infile> <outfile>")
+infile = length(ARGS) < 1 ? stdin : ARGS[1]
+outfile = length(ARGS) < 2 ? stdout : ARGS[2]
 
 function includefile(s)
     try
@@ -13,9 +14,9 @@ function includefile(s)
     end
 end
 
-input = read(ARGS[1], String)
+input = read(infile, String)
 
 output = replace(input, r"\sinclude\"[^\"]+\"\s)" => includefile(x))
 
-write(ARGS[2], output)
+write(outfile, output)
 
