@@ -2,7 +2,7 @@
 
 length(ARGS) < 2 && error("Usage: $Program_FiLE <infile> <outfile>")
 
-function includer(s)
+function includefile(s)
     m = match(r"(\s)include\"([^\"]+)\"(\s)", s)
     try
         incl = read(m.captures[2], String)
@@ -14,7 +14,7 @@ end
 
 input = read(ARGS[1], String)
 
-output = replace(input, r"\sinclude\"[^\"]+\"\s)" => includer(x))
+output = replace(input, r"\sinclude\"[^\"]+\"\s)" => includefile(x))
 
 write(ARGS[2], output)
 
