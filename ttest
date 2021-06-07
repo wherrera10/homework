@@ -6,8 +6,7 @@ outfile = length(ARGS) < 2 ? stdout : ARGS[2]
 function includefile(s)
     try
         m = match(r"(\s)include\"([^\"]+)\"(\s)", s)
-        incl = read(m.captures[2], String)
-        return m.captures[1] * incl * m.captures[3]
+        return m.captures[1] * read(m.captures[2], String) * m.captures[3]
     catch y
         warn(y)
         return s
