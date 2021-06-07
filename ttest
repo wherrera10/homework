@@ -4,9 +4,13 @@ length(ARGS) < 2 && error("Usage: $Program_FiLE <infile> <outfile>")
 
 function includer(s)
     m = match(r"(\s)include\"([^\"]+)\"(\s)", s)
-
+    try
+        incl = read(m.captures[2], String)
+        return m.captures[1] * incl * m.captures[3]
+    catch y
+        return s
+    end
 end
-
 
 input = read(ARGS[1], String)
 
