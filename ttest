@@ -26,6 +26,16 @@ to n, whereas the number of digits of n in base 10 increases exponentially.
 
 ; The task:
 
+Create a function to calculate the total fraction of zero digits in the aggregate digits of all factorials from 1 to N. 
+The proportion of 0 digits in base 10 should be calculated using the number as printed as a base 10 integer. 
+
+Example: for 1 to 6 we have 1!, 2!, 3!, 4!, 5!, 6!, or (1, 2, 3, 24, 120, 720), so (2 zero digits) / (8 total digits) = 0.25.
+
+Do this for N in (100, 1000, and 10000), so for factorials from 1 to 100, 1 to 1000, and 1 to 10000. 
+
+; Stretch task:  Find the N where the proportion of 0 digits in the aggregate factorials from 1 to dips below 0.16.
+
+
 =={{header|Julia}}==
 <lang julia>
 =#
