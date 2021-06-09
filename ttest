@@ -1,8 +1,9 @@
 #=
+{{draft task}}
 
 Large Factorials and the Distribution of '0' in base 10 digits.
 
-; About the task
+; About the task:
 
 We can see that some features of factorial numbers (the series of numbers 1!, 2!, 3!, ...)
 come about because such numbers are the product of a series of counting numbers, and so those
@@ -33,7 +34,9 @@ Example: for 1 to 6 we have 1!, 2!, 3!, 4!, 5!, 6!, or (1, 2, 3, 24, 120, 720), 
 
 Do this for N in (100, 1000, and 10000), so for factorials from 1 to 100, 1 to 1000, and 1 to 10000. 
 
-; Stretch task:  Find the N where the proportion of 0 digits in the aggregate factorials from 1 to dips below 0.16.
+; Stretch task:  
+
+Find the N where the proportion of 0 digits in the aggregate factorials from 1 to dips below 0.16.
 
 
 =={{header|Julia}}==
