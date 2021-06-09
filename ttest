@@ -1,20 +1,58 @@
-# preprocess.jl convert includes to file contenets
+#=
 
-infile = length(ARGS) < 1 ? stdin : ARGS[1]
-outfile = length(ARGS) < 2 ? stdout : ARGS[2]
+Large Factorials and the Distribution of '0' in base 10 digits.
 
-function includefile(s)
-    try
-        m = match(r"(\s)include\"([^\"]+)\"(\s)", s)
-        return m.captures[1] * read(m.captures[2], String) * m.captures[3]
-    catch y
-        warn(y)
-        return s
+; About the task
+
+We can see that some features of factorial numbers (the series of numbers 1!, 2!, 3!, ...)
+come about because such numbers are the product of a series of counting numbers, and so those
+products have predictable factors. For example, all factorials above 1! are even numbers,
+since they have 2 as a factor. Similarly, all factorials from 5! up end in a 0, because they
+have 5 and 2 as factors, and thus have 10 as a factor. In fact, the factorial integers add
+another 0 at the end of the factorial for every step of 5 upward: 5! = 120, 10! = 3628800,
+15! = 1307674368000, 16! = 20922789888000 and so on.
+
+Because factorial numbers, which quickly become quite large, continue to have another terminal 0
+on the right hand side of the number for every 5 increase in the factorial base number, one might
+think that the proportion of zeros in a base 10 factorial number might be close to 1/5. However,
+though the factorial products add another terminating 0 every 5, as the numbers become quite large,
+the number of digits in the factorial product expands exponentially, and the number above the
+terminating zeros tends toward 10% of each digit from 0 to 1, as the factorial becomes larger. Thus,
+as the factorials become larger, the proportion of 0 digits in the factorial products shifts slowly
+from around 1/5 toward 1/10, since the number of terminating zeros in n! increases only in proportion
+to n, whereas the number of digits of n in base 10 increases exponentially.
+
+
+
+; The task:
+
+=={{header|Julia}}==
+<lang julia>
+=#
+function facpropzeros(N, verbose = true)
+    proportions = zeros(N)
+    fac, psum = big"1", 0.0
+    for i in 1:N
+        fac *= i
+        d = digits(fac)
+        psum += count(x -> x == 0, d) / length(d)
+        proportions[i] = psum / i
     end
+    verbose && println("Percent of zero digits in factorials to $N is ", psum / N)
+    return proportions
 end
 
-input = read(infile, String)
+foreach(facpropzeros, [1000, 5000, 10000])
 
-output = replace(input, r"\sinclude\"[^\"]+\"\s)" => includefile)
+n = findlast(x -> x > 0.16, facpropzeros(47500, false))
+println("The summed proportion dips permanently below 0.16 at $(n + 1)." )
 
-write(outfile, output)
+#=
+</lang>{{out}}
+<pre>
+Percent of zero digits in factorials to 47331 is 0.20354455110316458
+Percent of zero digits in factorials to 47331 is 0.180569085635071
+Percent of zero digits in factorials to 47331 is 0.17300384824186707
+The summed proportion dips permanently below 0.16 at 47332.
+</pre>
+=#
