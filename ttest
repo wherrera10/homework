@@ -1,1 +1,73 @@
+"""
+    module DailyMed
+
+National Library of Medicine's DailyMed service RESTful interface functions """
+"""
+module DailyMed
+
+export applicationnumbers, drugclasses, ndcs, rxcuis, spls, uniis
+
+using HTTP
+using EzXML
+
+
+#=
+
+RESTful WEB SERVICE RESOURCES	DESCRIPTION|
+| ----------------- | ---------------- |
+|/applicationnumbers	R|eturns a list of all NDA numbers.|
+|/drugclasses | Returns a list of all drug classes associated with at least one SPL in the Pharmacologic Class Indexing Files.|
+|/drugnames | Returns a list of all drug names.|
+|/ndcs | Returns a list of all NDC codes.|
+|/rxcuis | Returns a list of all product-level RxCUIs.|
+|/spls | Returns a list of all SPLs.|
+|/spls/{SETID} | Returns an SPL document for specific SET ID.|
+|/spls/{SETID}/history | Returns version history for specific SET ID.|
+|/spls/{SETID}/media | Returns links to all media for specific SET ID.|
+|/spls/{SETID}/ndcs | Returns all ndcs for specific SET ID.|
+|/spls/{SETID}/packaging | Returns all product packaging descriptions for specific SET ID.|
+|/uniis | Returns a list of all UNIIs.|
+
+=#
+
+filters1 = Dict("application_number" => "", "marketing_category_code" => "")
+filters2 = Dict("drug_class_code" => "", "drug_class_coding_system" => "",
+    "class_code_type" => "", "class_name" => "", "unii_code" => )
+filters3 = Dict("drug_name" => "", "name_type" => "")
+filters3 = Dict("rxtty" => "", "rxstring" => "", "rxcui" => "")
+
+
+outputcontrols1() = Dict{"pagesize" => 100, "page" => 1}
+
+
+baseurl = "https://dailymed.nlm.nih.gov/dailymed/services/v2/"
+
+
+function applicationnumbers
+
+end
+
+function drugclasses()
+
+end
+
+function drugnames()
+
+end
+
+
+function ndcs()
+
+end
+
+
+function spls(SETID = "", history = false, media = false, ndcs = false, packaging = false)
+
+end
+
+function uniis()
+
+end
+
+end # module
 
