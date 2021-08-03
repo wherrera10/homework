@@ -9,3 +9,11 @@ d = sqrt((x1 - x2)^2 + (y1 - y2)^2)
 
 @show d   # d = 111.8 ± 2.9
 
+readlines("diplomacyrodgers.txt", keep=true) |> reverse .|> print
+
+ "Diplomacy is the art of
+   saying  'Nice Doggy'
+until you can find a rock."
+
+                            --- Will Rodgers
+
