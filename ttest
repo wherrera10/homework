@@ -1,24 +1,19 @@
-using Measurements
+using Primes
 
-x1 = measurement(100, 1.1)
-x2 = measurement(50, 1.2)
-y1 = measurement(200, 2.2)
-y2 = measurement(100, 2.3)
+isxbyx(n, base=10, dig=3) = n ÷ prevpow(base, n) == dig && n % base == dig
 
-d = sqrt((x1 - x2)^2 + (y1 - y2)^2)
+p3x3(N) = [p for p in primes(N) if isxbyx(p)]
 
-@show d   # d = 111.8 ± 2.9
+println("3x3 primes < 4000:")
+foreach(p -> print(rpad(last(p), 5), first(p) % 11 == 0 ? "\n" : ""), enumerate(p3x3(4000)))
 
-readlines("diplomacyrodgers.txt", keep=true) |> reverse .|> print
+println("\nTotal 3x3 primes less than 1,000,000: ", length(p3x3(1_000_000)), ".")
 
- "Diplomacy is the art of
-   saying  'Nice Doggy'
-until you can find a rock."
+#=
+3x3 primes < 4000:
+3    313  353  373  383  3023 3083 3163 3203 3253 3313
+3323 3343 3373 3413 3433 3463 3533 3583 3593 3613 3623
+3643 3673 3733 3793 3803 3823 3833 3853 3863 3923 3943
 
-                            --- Will Rodgers
-                            
-                            --- Will Rodgers
-
-until you can find a rock."
-   saying  'Nice Doggy'
- "Diplomacy is the art of
+Total 3x3 primes less than 1,000,000: 2251.
+=#
