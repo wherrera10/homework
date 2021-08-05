@@ -10,17 +10,8 @@ end
  @time primepi(10^8)
  @time primepi(10^9)
  
-ulia> @time countprimes(10^8)
-  0.172059 seconds (358 allocations: 37.440 MiB, 1.32% gc time)
-5761455
+julia> using FastPrimeSieve, BenchmarkTools
 
-julia> using primecount_jll
-
-julia> @time run(`$(primecount()) 1e8`);
-5761455
-  0.007801 seconds (586 allocations: 67.656 KiB)
-@HexSpin 10^14 you said? There you go:
-
-julia> @time run(`$(primecount()) 1e14`);
-3204941750802
-  0.397191 seconds (586 allocations: 67.656 KiB)
+julia> @btime FastPrimeSieve.countprimes(2^32)
+  1.241 s (21531 allocations: 1.19 MiB)
+203280221
