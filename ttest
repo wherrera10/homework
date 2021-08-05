@@ -10,3 +10,4 @@ end
  @time primepi(10^8)
  @time primepi(10^9)
  
+https://discourse.julialang.org/t/number-of-primes-below-a-given-number/58709/23
