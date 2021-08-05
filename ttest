@@ -1,13 +1,12 @@
 using Primes
 
-function countprimes(N)
+function primepi(N)
     Δ = round(Int, N^0.8)
     sum(1:Δ:N) do n₀
         count(primesmask(n₀, min(n₀ + Δ - 1, N)))
     end
 end
 
- @time countprimes(10^8)
- @time countprimes(10^9)
+ @time primepi(10^8)
+ @time primepi(10^9)
  
-
