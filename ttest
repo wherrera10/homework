@@ -1,17 +1,18 @@
-using Primes
+String <- function(x) {
+  class(x) <- c("String", class(x))
+  x
+}
 
-function primepi(N)
-    Δ = round(Int, N^0.8)
-    sum(1:Δ:N) do n₀
-        count(primesmask(n₀, min(n₀ + Δ - 1, N)))
-    end
-end
+"+.String" <- function(x,...) {
+  x <- paste(x, paste(..., sep="", collapse=""), sep="", collapse="")
+  String(x)
+}
 
- @time primepi(10^8)
- @time primepi(10^9)
- 
-julia> using FastPrimeSieve, BenchmarkTools
 
-julia> @btime FastPrimeSieve.countprimes(2^32)
-  1.241 s (21531 allocations: 1.19 MiB)
-203280221
+print.String <- function(x, ...) cat(x)
+
+x <- "The quick brown "
+y <- "fox jumped over "
+z <- "the lazy dog"
+
+String(x) + y + z
