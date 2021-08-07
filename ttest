@@ -1,18 +1,35 @@
-String <- function(x) {
-  class(x) <- c("String", class(x))
-  x
+MinTropical <- function(x) {
+    class(x) <- c("MinTropical", x)
+    x
 }
 
-"+.String" <- function(x,...) {
-  x <- paste(x, paste(..., sep="", collapse=""), sep="", collapse="")
-  String(x)
-}
+"+.MinTropical" <- function(x, y) { MinTropical(min(x, y)) }
+
+"*.MinTropical" <- function(x, y) { MinTropical(x + y) }
+
+"^.MinTropical" <- function(x, y) { MinTropical(x * y) }
+
+a = MinTropical(-2)
+b = MinTropical(-1)
+c = MinTropical(-0.5)
+d = MinTropical(-0.001)
+e = MinTropical(0)
+f = MinTropical(0.5)
+g = MinTropical(1)
+h = MinTropical(1.5)
+i = MinTropical(2)
+j = MinTropical(5)
+k = MinTropical(7)
+l = MinTropical(8)
+m = MinTropical(Inf)
+
+print("2 * -2 == ", i * a)
+print("-0.001 +  Inf == ", d + m)
+print("0 * Inf == ", e * m)
+print("1.5 + -1 == ", h + b)
+print("-0.5 * 0 == ", c * e)
+print("(-1)^(1/2) == ", b^f)
+print("5 * (8 + 7)) == ", j * (l + k)) 
+print("5 * 8 + 5 ⊗ 7 == ", j * l + j * k
 
 
-print.String <- function(x, ...) cat(x)
-
-x <- "The quick brown "
-y <- "fox jumped over "
-z <- "the lazy dog"
-
-String(x) + y + z
