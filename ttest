@@ -1,35 +1,12 @@
-MinTropical <- function(x) {
-    class(x) <- c("MinTropical", x)
-    x
-}
-
-"+.MinTropical" <- function(x, y) { MinTropical(min(x, y)) }
-
-"*.MinTropical" <- function(x, y) { MinTropical(x + y) }
-
-"^.MinTropical" <- function(x, y) { MinTropical(x * y) }
-
-a = MinTropical(-2)
-b = MinTropical(-1)
-c = MinTropical(-0.5)
-d = MinTropical(-0.001)
-e = MinTropical(0)
-f = MinTropical(0.5)
-g = MinTropical(1)
-h = MinTropical(1.5)
-i = MinTropical(2)
-j = MinTropical(5)
-k = MinTropical(7)
-l = MinTropical(8)
-m = MinTropical(Inf)
-
-print("2 * -2 == ", i * a)
-print("-0.001 +  Inf == ", d + m)
-print("0 * Inf == ", e * m)
-print("1.5 + -1 == ", h + b)
-print("-0.5 * 0 == ", c * e)
-print("(-1)^(1/2) == ", b^f)
-print("5 * (8 + 7)) == ", j * (l + k)) 
-print("5 * 8 + 5 ⊗ 7 == ", j * l + j * k
-
-
+function decrypt(s::String, k)
+    chars = filter(c -> c in k.alphabet, uppercase(s))
+    sortedkey = sort(k.key)
+    order = [findfirst(c -> c == ch, k.key) for ch in sortedkey]
+    originalorder = [findfirst(c -> c == ch, sortedkey) for ch in k.key]
+    a, b = divrem(length(chars), k.klen)
+    ends = [sum(i -> a + (b >= i ? 1 : 0), 1:k.klen) for i in order]
+    sortends = sort(ends, rev=true)
+    strides = [ 1 + (i > 1 ? ends[i - 1] : 0) : ends[i] for i in order]
+    cols = [chars[strides[i]] for i in originalorder]
+    pairsvector = [cols[i][j] for i in 1:k.klen, j in 1:sortends[i]]
+    
