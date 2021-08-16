@@ -4,10 +4,10 @@ function decrypt(s::String, k)
     order = [findfirst(c -> c == ch, k.key) for ch in sortedkey]
     originalorder = [findfirst(c -> c == ch, sortedkey) for ch in k.key]
     a, b = divrem(length(chars), k.klen)
-    ends = [sum(i -> a + (b >= i ? 1 : 0), 1:k.klen) for i in order]
-    sortends = sort(ends, rev=true)
-    strides = [ 1 + (i > 1 ? ends[i - 1] : 0) : ends[i] for i in order]
+    endpositions = [sum(i -> a + (b >= i ? 1 : 0), 1:k.klen) for i in order]
+    sortedends = sort(endpositions, rev=true)
+    strides = [ 1 + (i > 1 ? endpositions[i - 1] : 0) : endpositionss[i] for i in order]
     cols = [chars[strides[i]] for i in originalorder]
-    pvec = [cols[i][j] for i in 1:k.klen, j in 1:sortends[i]]
+    pvec = [cols[i][j] for i in 1:k.klen, j in 1:sortedends[i]]
     return String([decode(pvec[i], pvec[i + 1], k) for i in 1:2:length(pvec)-1])
 end
