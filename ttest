@@ -8,5 +8,6 @@ function decrypt(s::String, k)
     sortends = sort(ends, rev=true)
     strides = [ 1 + (i > 1 ? ends[i - 1] : 0) : ends[i] for i in order]
     cols = [chars[strides[i]] for i in originalorder]
-    pairsvector = [cols[i][j] for i in 1:k.klen, j in 1:sortends[i]]
-    
+    pvec = [cols[i][j] for i in 1:k.klen, j in 1:sortends[i]]
+    return String([decode(pvec[i], pvec[i + 1], k) for i in 1:2:length(pvec)-1])
+end
