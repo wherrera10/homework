@@ -12,5 +12,4 @@ function decrypt(s::String, k)
     return String([decode(pvec[i], pvec[i + 1], k) for i in 1:2:length(pvec)-1])
 end
 
-displaypoly(p) = reshape(p, (:, p |> length |> isqrt)) |> Matrix |> println
-
+displaypoly(p) = println(Matrix(reshape(p, (:, isqrt(length(p))))))
