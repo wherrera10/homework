@@ -11,3 +11,6 @@ function decrypt(s::String, k)
     pvec = [cols[i][j] for i in 1:k.klen, j in 1:sortedends[i]]
     return String([decode(pvec[i], pvec[i + 1], k) for i in 1:2:length(pvec)-1])
 end
+
+displaypoly(p) = reshape(p, (:, p |> length |> isqrt)) |> Matrix |> println
+
