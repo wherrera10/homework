@@ -3,16 +3,25 @@ function decrypt(s::String, k)
     sortedkey = sort(k.key)
     order = [findfirst(c -> c == ch, k.key) for ch in sortedkey]
     originalorder = [findfirst(c -> c == ch, sortedkey) for ch in k.key]
-    a, b = divrem(length(chars), k.klen)
-    endpositions = [sum(i -> a + (b >= i ? 1 : 0), 1:k.klen) for i in order]
+    a, b = divrem(length(chars), k.keylen)
+    endpositions = [sum(i -> a + (b >= i ? 1 : 0), 1:k.keylen) for i in order]
     sortedends = sort(endpositions, rev=true)
     strides = [ 1 + (i > 1 ? endpositions[i - 1] : 0) : endpositionss[i] for i in order]
     cols = [chars[strides[i]] for i in originalorder]
-    pvec = [cols[i][j] for i in 1:k.klen, j in 1:sortedends[i]]
+    pvec = [cols[i][j] for i in 1:k.keylen, j in 1:sortedends[i]]
     return String([decode(pvec[i], pvec[i + 1], k) for i in 1:2:length(pvec)-1])
 end
 
 displaypoly(p) = println(Matrix(reshape(p, (:, isqrt(length(p))))))
+
+function encrypt(s::String, k)
+    chars = filter(c -> c in k.polybius, uppercase(s))
+    coding = reduce(vcat, [encoding[c] for c in chars])
+    idx = 0
+    cols = [coding[idx] for i in 1:(length(code)-1) \div k.keylen, j in 1:k.keylen if (idx = (j - 1) * k.keylen + i) <= length(code)]
+    ordering = [findfirst(c -> c == ch, k.key) for ch in sort(k.key)]
+    return String(reduce(vcat, [cols[i] for i in ordering]))
+end
 
 
 struct ADFGVX
