@@ -18,7 +18,7 @@ function encrypt(s::String, k)
     chars = filter(c -> c in k.polybius, uppercase(s))
     coding = reduce(vcat, [encoding[c] for c in chars])
     idx = 0
-    cols = [coding[idx] for i in 1:(length(code)-1) \div k.keylen, j in 1:k.keylen if (idx = (j - 1) * k.keylen + i) <= length(code)]
+    cols = [coding[idx] for i in 1:(length(code)-1) \div k.keylen, j in 1:k.keylen if (idx = (j - 1) * k.keylen + i) <= length(code))]
     ordering = [findfirst(c -> c == ch, k.key) for ch in sort(k.key)]
     return String(reduce(vcat, [cols[i] for i in ordering]))
 end
