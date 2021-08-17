@@ -13,3 +13,7 @@ function decrypt(s::String, k)
 end
 
 displaypoly(p) = println(Matrix(reshape(p, (:, isqrt(length(p))))))
+
+encoding::Dict = Dict(polybius[(i - 1) + j] => alphabet[i], alphabet[j] for i in 1:pdims, j in 1:pdims)
+decoding = Dict(last(p) => first(p) for p in encoding)
+
