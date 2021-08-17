@@ -14,6 +14,24 @@ end
 
 displaypoly(p) = println(Matrix(reshape(p, (:, isqrt(length(p))))))
 
-encoding::Dict = Dict(polybius[(i - 1) + j] => alphabet[i], alphabet[j] for i in 1:pdims, j in 1:pdims)
-decoding = Dict(last(p) => first(p) for p in encoding)
+
+struct ADFGVX
+    polybius::Vector{Char}
+    pdim::Int
+    key::Vector{Char}
+    keylen::Int
+    alphabet::Vector{Char}
+    encoding::Dict{Char, Vector{Char}}
+    decoding::Dict{Vector{Char}, Char}
+end
+
+function ADFGVX(s, k, alph = "ADFGVX")
+    alphabet = collect(uppercase(alph))
+    chars = filter(c -> c in alphabet, collect(uppercase(s)))
+    pdim = isqrt(length(chars))
+    encoding::Dict = Dict(polybius[(i - 1) + j] => alphabet[i], alphabet[j] for i in 1:pdim, j in 1:pdim)
+    decoding = Dict(last(p) => first(p) for p in encoding)
+    @assert pdim^2 == length(chars) && pdim == length(alphabet)
+    return ADFGVX(chars, pdim, k, length(k), alphabet, encoding, decoding)
+end
 
