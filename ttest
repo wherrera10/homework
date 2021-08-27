@@ -2,48 +2,48 @@ const multiplicationtable = [
     0  1  2  3  4  5  6  7  8  9;
     1  2  3  4  0  6  7  8  9  5;
     2  3  4  0  1  7  8  9  5  6;
-    3  4  0  1  2  8  9  5  6 7;
+    3  4  0  1  2  8  9  5  6  7;
     4  0  1  2  3  9  5  6  7  8;
     5  9  8  7  6  0  4  3  2  1;
     6  5  9  8  7  1  0  4  3  2;
     7  6  5  9  8  2  1  0  4  3;
     8  7  6  5  9  3  2  1  0  4;
     9  8  7  6  5  4  3  2  1  0]
-
+ 
 const permutationtable = [
-    0  1  2  3  4  5  6  7  8  9; 
-    1  5  7  6  2  8  3  0  9  4; 
-    5  8  0  3  7  9  6  1  4  2; 
-    8  9  1  6  0  4  3  5  2  7; 
-    9  4  5  3  1  2  6  8  7  0; 
-    4  2  8  6  5  7  3  9  0  1; 
-    2  7  9  3  8  0  6  4  1  5; 
+    0  1  2  3  4  5  6  7  8  9;
+    1  5  7  6  2  8  3  0  9  4;
+    5  8  0  3  7  9  6  1  4  2;
+    8  9  1  6  0  4  3  5  2  7;
+    9  4  5  3  1  2  6  8  7  0;
+    4  2  8  6  5  7  3  9  0  1;
+    2  7  9  3  8  0  6  4  1  5;
     7  0  4  6  9  1  3  2  5  8]
-
+ 
+const inv = [0, 4, 3, 2, 1, 5, 6, 7, 8, 9]
+ 
 """
-    Calculate the Verhoeff checksum over `n`. The checksum
-    is returned as Int64. Valid numbers should have a checksum of 0. 
+    verhoeffchecksum(n::Integer, validate=true, terse=true, verbose=false)
+ 
+Calculate the Verhoeff checksum over `n`.
+Terse mode or with single argument: return true if valid (last digit is a correct check digit).
+If checksum mode, return the expected correct checksum digit.
+If validation mode, return true if last digit checks correctly.
 """
-function verhoeffchecksum(tocheck::Integer)::Int64  
+function verhoeffchecksum(n::Integer, validate=true, terse=true, verbose=false)
+    verbose && println("\n", validate ? "Validation" : "Check digit",
+        " calculations for '$n':\n\n", " i  nᵢ  p[i,nᵢ]  c\n------------------")
     # transform number list
-    dig, checkdig = digits(tocheck), 0
-    for (i, n) in enumerate(dig)
-        checkdig = multiplicationtable[checkdig + 1, permutationtable[mod1(i, 8), n + 1] + 1]
+    c, dig = 0, reverse(digits(validate ? n : 10 * n))
+    for i in length(dig):-1:1
+        ni = dig[i]
+        p = permutationtable[(length(dig) - i) % 8 + 1, ni + 1]
+        c = multiplicationtable[c + 1, p + 1]
+        verbose && println(lpad(length(dig) - i, 2), "  $ni      $p    $c")
     end
-    return checkdig
-    end
-
-""" Check if the number provided passes the Verhoeff checksum. """
-isVerhoeffvalid(tocheck::Integer)::Bool = verhoeffchecksum(tocheck) == 0
-
-
-"""
-    Calculate the extra digit that should be appended to the number to
-    make it a valid number.
-"""
-function verhoeffcheckdigit(tocheck)
-    return findfirst(x -> x == 0, 
-        @view(multiplicationtable[verhoeffchecksum(tocheck) + 1, :]))
+    verbose && !validate && println("\ninv($c) = $(inv[c + 1])")
+    !terse && println(validate ? "\nThe validation for '$n' is $(c == 0 ?
+        "correct" : "incorrect")." : "\nThe check digit for '$n' is $(inv[c + 1]).")
+    return validate ? c == 0 : inv[c + 1]
 end
-
-verhoeff_check_digit(2360)
+ 
