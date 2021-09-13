@@ -1,11 +1,4 @@
-son(registry, refnum)
-        if 0 < refnum <= registry.max_instances && registry.instances[refnum] isa Multiton
-            return registry.instances[refnum]
-        else
-            error("Cannot find a Multiton in registry with instance reference number $refnum")
-        end
-    end
-endtruct Multiton{T}
+struct Multiton{T}
     data::T
     function Multiton(registry, refnum, data)
         if 0 < refnum <= registry.max_instances && registry.instances[refnum] isa Nothing
@@ -53,5 +46,3 @@ Multiton is Multiton{String}("zero")
 Multiton is Multiton{Float64}(1.0)  
 ERROR: LoadError: Cannot find a Multiton in registry with instance reference number 5
 =#
-
-
