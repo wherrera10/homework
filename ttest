@@ -1,8 +1,8 @@
 struct Multiton{T}
     data::T
     function Multiton(registry, refnum, data)
+        lock(registry.spinlock)
         if 0 < refnum <= registry.max_instances && registry.instances[refnum] isa Nothing
-            lock(registry.spinlock)
             multiton = new{typeof(data)}(data)
             registry.instances[refnum] = multiton
             unlock(registry.spinlock)
@@ -15,16 +15,17 @@ struct Multiton{T}
         if 0 < refnum <= registry.max_instances && registry.instances[refnum] isa Multiton
             return registry.instances[refnum]
         else
+            unlock(registry.spinlock)
             error("Cannot find a Multiton in registry with instance reference number $refnum")
         end
     end
 end
 
 struct Registry
-        spinlock::Threads.SpinLock
-        max_instances::Int
-        instances::Vector{Union{Nothing, Multiton}}
-        Registry(maxnum) = new(Threads.SpinLock(), maxnum, fill(nothing, maxnum))
+    spinlock::Threads.SpinLock
+    max_instances::Int
+    instances::Vector{Union{Nothing, Multiton}}
+    Registry(maxnum) = new(Threads.SpinLock(), maxnum, fill(nothing, maxnum))
 end
 
 reg = Registry(3)
