@@ -7,7 +7,7 @@ function twoprodpal(factorlength)
     while any(halfnum .!= 0)
         prodnum = evalpoly(Int128(10), [reverse(halfnum); halfnum])
         facs = twofac(factorlength, prodnum)
-        if !isempty(facs)
+        if first(facs) != 0
             println("For factor length $factorlength, $(facs[1]) * $(facs[2]) = $prodnum")
             break
         end
@@ -20,14 +20,16 @@ function twofac(faclength, prodnum)
     for (p, e) in factor(prodnum)
         f = reduce(vcat, [f * p^j for j in 1:e], init=f)
     end
+
+    pairs = [(Int128(0), Int128(0))]
     possiblefacs = filter(x -> length(string(x)) == faclength, f)
     for i in possiblefacs
         j = prodnum ÷ i
-        j ∈ possiblefacs && return sort([i, j])
+        j ∈ possiblefacs && push!(pairs, (min(i, j), max(i, j)))
     end
-    return typeof(prodnum)[]
+    return sort!(pairs, lt = (x, y) -> prod(x) < prod(y))[end]
 end
- 
+
 @Threads.threads for i in 2:12
     twoprodpal(i)
 end
