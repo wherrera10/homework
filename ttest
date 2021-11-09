@@ -1,6 +1,6 @@
 using Lazy
 
-magics = @>> Lazy.range() map(x -> (1 + x^2) * x ÷ 2)  # first 3 values are to be ignored
+magics = @>> Lazy.range() map(x -> (1 + x^2) * x ÷ 2)  filter(x -> x > 2) # first 2 values are to be ignored
 
 @show collect(take(22, magics))[3:end]
 
