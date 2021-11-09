@@ -1,35 +1,7 @@
-using Primes
- 
-function twoprodpal(factorlength)
-    maxpal = Int128(10)^(2 * factorlength) - 1
-    dig = digits(maxpal)
-    halfnum = dig[1:length(dig)÷2]
-    while any(halfnum .!= 0)
-        prodnum = evalpoly(Int128(10), [reverse(halfnum); halfnum])
-        facs = twofac(factorlength, prodnum)
-        if first(facs) != 0
-            println("For factor length $factorlength, $(facs[1]) * $(facs[2]) = $prodnum")
-            break
-        end
-        halfnum = digits(evalpoly(Int128(10), halfnum) - 1)
-    end
-end
- 
-function twofac(faclength, prodnum)
-    f = [one(prodnum)]
-    for (p, e) in factor(prodnum)
-        f = reduce(vcat, [f * p^j for j in 1:e], init=f)
-    end
+using Lazy
 
-    pairs = [(Int128(0), Int128(0))]
-    possiblefacs = filter(x -> length(string(x)) == faclength, f)
-    for i in possiblefacs
-        j = prodnum ÷ i
-        j ∈ possiblefacs && push!(pairs, (min(i, j), max(i, j)))
-    end
-    return sort!(pairs, lt = (x, y) -> prod(x) < prod(y))[end]
-end
+magics = @>> Lazy.range() map(x -> (1 + x^2) * x ÷ 2)  # first 3 values are to be ignored
 
-@Threads.threads for i in 2:12
-    twoprodpal(i)
-end
+@show collect(take(22, magics))[3:end]
+
+@show collect(take(1002, magics))[end]
