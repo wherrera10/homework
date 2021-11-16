@@ -1,13 +1,23 @@
-using Lazy
+""" https://rosettacode.org/wiki/Long_stairs """
 
-magic(x) = (1 + x^2) * x ÷ 2
-magics = @>> Lazy.range() map(magic) filter(x -> x > 10) # first 2 values are filtered out
-println("First 20 magic constants: ", Int.(take(20, magics)))
-println("Thousandth magic constant is: ", collect(take(1000, magics))[end])
-
-println("Smallest magic square with constant greater than:")
-for expo in 1:20
-    goal = big"10"^expo
-    ordr = Int(floor((2 * goal)^(1/3))) + 1
-    println("10^", string(expo, pad=2), "    ", ordr)
+struct LongStairs
+    startstep::Int
+    startlength::Int
+    climbersteps::Int
+    addsteps::Int
 end
+
+Base.length(LongStairs) = typemax(Int)
+Base.eltype(ls::LongStairs) = Vector{Int}
+
+function Base.iterate(s::LongStairs, param = (s.startstep, s.startlength))
+     pos, len = param
+     pos += s.climbersteps
+     pos += sum(pos .> rand(1:len, s.addsteps))
+     len += s.addsteps
+     return [pos, len], (pos, len)
+end
+
+ls = LongStairs(1, 100, 1, 5)
+
+@show collect(Iterators.take(ls, 20))
