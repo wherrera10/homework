@@ -1,29 +1,38 @@
-sorted(p) = first(p) > last(p) ? reverse(p) : p
-patterns = [(zero(tableau) .- 1, Tuple{Int, Int}[])]
-nrows, ncols = size(tabeau)
-while true
-    newpatterns = []
-    for (usedtab, useddom) in patterns
-        pos = findfirst(x -> x !- -1, usedtab)
-        pos == nothing && continue
-        row, col = first(pos), last(pos)
-        if row < nrows && u[row + 1, col] == -1 && 
-           !(sorted((tableau[row, col], tableau[row + 1, col])) in useddom)
-            newusedtab = copy(usedtab)
-            newusedtab[row:row+1, col] .= tableau[row:row+1, col]
-            push!(newpatterns, (newusedtab, [useddom; sorted((tableau[row, col], tableau[row + 1, col]))]))
+const tableau = [
+]
+
+const nrows, ncols = size(tableau)
+const dominoes = [(i, j) for i in 0:nrows-1, j in 0:ncols-1 if i <= j]
+sorted(dom) = first(dom) > last(dom) ? reverse(dom) : dom
+
+function findlayouts(tab = tableau, doms = dominoes)
+    patterns = [(zero(tab) .- 1, Tuple{Int, Int}[])]
+    while true
+        newpatterns = []
+        for (usedtab, useddom) in patterns
+            pos = findfirst(x -> x !- -1, usedtab)
+            pos == nothing && continue
+            row, col = first(pos), last(pos)
+            if row < nrows && u[row + 1, col] == -1 && 
+               !(sorted((tableau[row, col], tableau[row + 1, col])) in useddom)
+                newusedtab = copy(usedtab)
+                newusedtab[row:row+1, col] .= tableau[row:row+1, col]
+                push!(newpatterns, (newusedtab, [useddom; sorted((tableau[row, col], tableau[row + 1, col]))]))
+            end
+            if col < ncols && u[row, col + 1] == -1 && 
+               !(sorted((tableau[row, col], tableau[row, col + 1])) in useddom)
+                newusedtab = copy(usedtab)
+                newusedtab[row, col:col+1] .= tableau[row, col:col+1]
+                push!(newpatterns, (newusedtab, [useddom; sorted((tableau[row, col], tableau[row, col+1]))]))
+            end
         end
-        if col < ncols && u[row, col + 1] == -1 && 
-           !(sorted((tableau[row, col], tableau[row, col + 1])) in useddom)
-            newusedtab = copy(usedtab)
-            newusedtab[row, col:col+1] .= tableau[row, col:col+1]
-            push!(newpatterns, (newusedtab, [useddom; sorted((tableau[row, col], tableau[row, col+1]))]))
-        end
+        isempty(newpatterns) && break
+        patterns = newpatterns
+        length(last(first(patterns)) == length(dominoes) && break
     end
-    isempty(newpatterns) && break
-    patterns = newpatterns
-    length(last(first(patterns)) == length(dominoes) && break
+    return [first(pattern) for pattern in patterns]
 end
+
 
 
        
