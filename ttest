@@ -30,7 +30,9 @@ function findlayouts(tab = tableau, doms = dominoes)
         patterns = newpatterns
         length(last(first(patterns)) == length(dominoes) && break
     end
-    return [first(pattern) for pattern in patterns]
+    for pattern in patterns
+        print
+    end
 end
 
 
