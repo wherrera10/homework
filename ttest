@@ -1,39 +1,60 @@
-const tableau = [
-]
+function _decamelize(cur_string::AbstractString)
+  capital_letters = collect(m.match for m in eachmatch(r"[A-Z]+", cur_string))
+  capital_letters = map(x -> downcase(x), capital_letters)
 
-const nrows, ncols = size(tableau)
-const dominoes = [(i, j) for i in 0:nrows-1, j in 0:ncols-1 if i <= j]
-sorted(dom) = first(dom) > last(dom) ? reverse(dom) : dom
+  lowercase_phrases = split(cur_string, r"([A-Z]+)")
 
-function findlayouts(tab = tableau, doms = dominoes)
-    patterns = [(zero(tab) .- 1, Tuple{Int, Int}[])]
-    while true
-        newpatterns = []
-        for (usedtab, useddom) in patterns
-            pos = findfirst(x -> x !- -1, usedtab)
-            pos == nothing && continue
-            row, col = first(pos), last(pos)
-            if row < nrows && u[row + 1, col] == -1 && 
-               !(sorted((tableau[row, col], tableau[row + 1, col])) in useddom)
-                newusedtab = copy(usedtab)
-                newusedtab[row:row+1, col] .= tableau[row:row+1, col]
-                push!(newpatterns, (newusedtab, [useddom; sorted((tableau[row, col], tableau[row + 1, col]))]))
-            end
-            if col < ncols && u[row, col + 1] == -1 && 
-               !(sorted((tableau[row, col], tableau[row, col + 1])) in useddom)
-                newusedtab = copy(usedtab)
-                newusedtab[row, col:col+1] .= tableau[row, col:col+1]
-                push!(newpatterns, (newusedtab, [useddom; sorted((tableau[row, col], tableau[row, col+1]))]))
-            end
-        end
-        isempty(newpatterns) && break
-        patterns = newpatterns
-        length(last(first(patterns)) == length(dominoes) && break
-    end
-    for pattern in patterns
-        print
-    end
+  cur_array = vcat(
+    map(
+      x -> join(x, "_"),
+      [zip(lowercase_phrases, capital_letters)...]
+    )...
+  )
+
+  cur_string = join(cur_array)
+
+  if length(lowercase_phrases) > length(capital_letters)
+    cur_string *= lowercase_phrases[end]
+  end
+
+  if length(lowercase_phrases) < length(capital_letters)
+    error("Improperly handled string on decamelize: $cur_string")
+  end
+
+  ( startswith(cur_string, "_") ) && ( cur_string = cur_string[2:end] )
+  ( startswith(cur_string, "-") ) && ( cur_string = cur_string[2:end] )
+
+  cur_string
 end
+
+
+function pascalcase(cur_string::AbstractString)
+  replace(
+    titlecase(_defaultcase(cur_string)),
+    " " => ""
+  )
+end
+
+function camelcase(cur_string::AbstractString)
+  lowercasefirst(pascalcase(cur_string))
+end
+
+function camelize(cur_string::AbstractString)
+  cur_string = classify(cur_string)
+
+  cur_string = join(map(x -> lowercasefirst(x), split(cur_string, "/")), "/")
+
+  cur_string
+end
+
+function classify(cur_string::AbstractString)
+  cur_string = capitalize(cur_string)
+
+  cur_string = join(map(x -> uppercasefirst(x), split(cur_string, r"[- _]")))
+
+  cur_string
+end
+
 
 
 
