@@ -1,3 +1,25 @@
+#=
+
+Two common convention for naming of computer program variables are <em>Snake Case</em> and <em>Camel case</em>.
+
+Snake case variables are generally all lower case, with an underscore between words in the variable, as in `snake_case_variable`.
+Camle case variables are generally lower case first (except in Pascal or with class names in many other languages), with an underscore
+between words in the variable, as in `snakeCaseVariable`.
+
+Task:
+
+Write two functions, one to change snake case to camel case and one to change camel case to snake case. Show the results on:
+
+"snakeCase", "snake_case", "variable_10_case", variable10Case
+
+Extra credit task:  Generalize the function enough to change to either snake case or camel case the following:
+
+"ergo RE", "hurry-up-joe!", c://my-docs/happy_friday/12.doc"
+
+
+
+
+
 function _decamelize(cur_string::AbstractString)
   capital_letters = collect(m.match for m in eachmatch(r"[A-Z]+", cur_string))
   capital_letters = map(x -> downcase(x), capital_letters)
