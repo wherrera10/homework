@@ -1,114 +1,92 @@
 #=
+Two common conventions for naming of computer program variables are <em>Snake Case</em> and
+<em>Camel case</em>.
 
-Two common convention for naming of computer program variables are <em>Snake Case</em> and <em>Camel case</em>.
+Snake case variables are generally all lower case, with an underscore between words in the
+variable, as in `snake_case_variable`. Camel case variables are generally lower case first
+(except in some Pascal conventions or with class names in many other languages), with an
+underscore between words in the variable, as in `snakeCaseVariable`.
 
-Snake case variables are generally all lower case, with an underscore between words in the variable, as in `snake_case_variable`.
-Camle case variables are generally lower case first (except in Pascal or with class names in many other languages), with an underscore
-between words in the variable, as in `snakeCaseVariable`.
+Leading underscores are not used in such variables except as part of a different naming
+convention, usually for special internal or system variables. White space is not permitted
+as part of camel case or snake case variable names.
 
 Task:
 
-Write two functions, one to change snake case to camel case and one to change camel case to snake case. Show the results on:
+Write two functions, one to change snake case to camel case and one to change camel case to
+snake case. If possible, generalize the function enough to apply to strings containing
+spaces between words or a `-` dash between words, assuming that iin those cases a space or
+hyphen is a also a separator character, like `_`, for the purpose of creating a new varable
+name. Leading or trailing whitespace may be ignored.
 
-"snakeCase", "snake_case", "variable_10_case", variable10Case
+Show the results on changing to both snake case and camel case on each of the following strings:
 
-Extra credit task:  Generalize the function enough to change to either snake case or camel case the following,
-assuming that '-' or whitespace is to be replaced as a snake-case style separator as '_' is:
-
-"ɛrgo rE tHis", "hurry-up-joe!", c://my-docs/happy_Flag-Day/12.doc"
-
-function camelize(text) {
-    text = text.replace(/[-_\s.]+(.)?/g, (_, c) => c ? c.toUpperCase() : '');
-    return text.substr(0, 1).toLowerCase() + text.substr(1);
-}
-Case-changing characters:
-
-hyphen -
-underscore _
-period .
-space
-
-import re
-
-REG = r"(.*?)_([a-zA-Z])"
-
-def camel(match):
-    return match.group(1) + match.group(2).upper()
-
-def camel_upper(match):
-    return match.group(1)[0].upper() + match.group(1)[1:] + match.group(2).upper()
-
-words = """add
-matrix_add
-diagonal_matrix_add
-pseudo_inverse""".splitlines()
-
-results = [re.sub(REG, camel, w, 0) for w in words]
-print(results)
-# Output:
-# ['add', 'matrixAdd', 'diagonalMatrixAdd', 'pseudoInverse']
+"snakeCase", "snake_case", "variable_10_case", "variable10Case", "ɛrgo rE tHis",
+"hurry-up-joe!", c://my-docs/happy_Flag-Day/12.doc", "  spaces  ", "It was time."
 
 =#
 
+# === Regex methods ===
 
-function _decamelize(cur_string::AbstractString)
-  capital_letters = collect(m.match for m in eachmatch(r"[A-Z]+", cur_string))
-  capital_letters = map(x -> downcase(x), capital_letters)
-
-  lowercase_phrases = split(cur_string, r"([A-Z]+)")
-
-  cur_array = vcat(
-    map(
-      x -> join(x, "_"),
-      [zip(lowercase_phrases, capital_letters)...]
-    )...
-  )
-
-  cur_string = join(cur_array)
-
-  if length(lowercase_phrases) > length(capital_letters)
-    cur_string *= lowercase_phrases[end]
-  end
-
-  if length(lowercase_phrases) < length(capital_letters)
-    error("Improperly handled string on decamelize: $cur_string")
-  end
-
-  ( startswith(cur_string, "_") ) && ( cur_string = cur_string[2:end] )
-  ( startswith(cur_string, "-") ) && ( cur_string = cur_string[2:end] )
-
-  cur_string
+function snakeToCamelCase(s)
+    isempty(s) && return s
+    return split(strip(s), r"[ \-_]+") .|> uppercasefirst |> join |> lowercasefirst
 end
 
-
-function pascalcase(cur_string::AbstractString)
-  replace(
-    titlecase(_defaultcase(cur_string)),
-    " " => ""
-  )
+function camel_to_snake_case(s, sep="_", allsep = r"[ \-_]+")
+    isempty(s) && return s
+    return replace(replace(strip(s), r"[A-Z]+" => x -> sep * lowercase(x)), allsep => sep)
 end
 
-function camelcase(cur_string::AbstractString)
-  lowercasefirst(pascalcase(cur_string))
+for teststring in [
+   "snakeCase", "snake_case", "variable_10_case", "variable10Case",
+   "ɛrgo rE tHis", "hurry-up-joe!", "c://my-docs/happy_Flag-Day/12.doc", " spaces "]
+    for f in [snakeToCamelCase, camel_to_snake_case]
+        println("$f: $teststring  => $(f(teststring))")
+    end
+    println()
 end
 
-function camelize(cur_string::AbstractString)
-  cur_string = classify(cur_string)
+# === char / loop based methods ===
 
-  cur_string = join(map(x -> lowercasefirst(x), split(cur_string, "/")), "/")
-
-  cur_string
+function charSnakeToCamelCase(s, snakechars = [' ', '-', '_'])
+    isempty(s) && return s
+    a, ucflag = Char[], false
+    for c in strip(s)
+        if c in snakechars
+            ucflag = true
+        elseif ucflag
+            push!(a, uppercase(c))
+            ucflag = false
+        else
+            push!(a, c)
+        end
+    end
+    return String(a)
 end
 
-function classify(cur_string::AbstractString)
-  cur_string = capitalize(cur_string)
-
-  cur_string = join(map(x -> uppercasefirst(x), split(cur_string, r"[- _]")))
-
-  cur_string
+function char_camel_to_snake_case(s, sep = '_', snakechars = [' ', '-', '_'])
+    isempty(s) && return s
+    a, lastchar = Char[], first(s)
+    for c in strip(s)
+        if isuppercase(c) && !isempty(a) && lastchar != sep
+            push!(a, sep, lowercase(c))
+        elseif c in snakechars && !(lastchar in snakechars)
+            push!(a, sep)
+            lastchar = sep
+        else
+            push!(a, lowercase(c))
+            lastchar = c
+        end
+    end
+    return String(a)
 end
 
-
-
-
-       
+for teststring in [
+   "snakeCase", "snake_case", "variable_10_case", "variable10Case",
+   "ɛrgo rE tHis", "hurry-up-joe!", "c://my-docs/happy_Flag-Day/12.doc", " spaces "]
+    for f in [snakeToCamelCase, camel_to_snake_case]
+        println("$f: $teststring  => $(f(teststring))")
+    end
+    println()
+end
