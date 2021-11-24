@@ -1,32 +1,3 @@
-#=
-Two common conventions for naming of computer program variables are <em>Snake Case</em> and
-<em>Camel case</em>.
-
-Snake case variables are generally all lower case, with an underscore between words in the
-variable, as in `snake_case_variable`. Camel case variables are generally lower case first
-(except in some Pascal conventions or with class names in many other languages), with an
-underscore between words in the variable, as in `snakeCaseVariable`.
-
-Leading underscores are not used in such variables except as part of a different naming
-convention, usually for special internal or system variables. White space is not permitted
-as part of camel case or snake case variable names.
-
-Task:
-
-Write two functions, one to change snake case to camel case and one to change camel case to
-snake case. If possible, generalize the function enough to apply to strings containing
-spaces between words or a `-` dash between words, assuming that iin those cases a space or
-hyphen is a also a separator character, like `_`, for the purpose of creating a new varable
-name. Leading or trailing whitespace may be ignored.
-
-Show the results on changing to both snake case and camel case on each of the following strings:
-
-"snakeCase", "snake_case", "variable_10_case", "variable10Case", "ɛrgo rE tHis",
-"hurry-up-joe!", c://my-docs/happy_Flag-Day/12.doc", "  spaces  ", "It was time."
-
-=#
-
-# === Regex methods ===
 
 function snakeToCamelCase(s)
     isempty(s) && return s
@@ -38,55 +9,23 @@ function camel_to_snake_case(s, sep="_", allsep = r"[ \-_]+")
     return replace(replace(strip(s), r"[A-Z]+" => x -> sep * lowercase(x)), allsep => sep)
 end
 
-for teststring in [
-   "snakeCase", "snake_case", "variable_10_case", "variable10Case",
-   "ɛrgo rE tHis", "hurry-up-joe!", "c://my-docs/happy_Flag-Day/12.doc", " spaces "]
-    for f in [snakeToCamelCase, camel_to_snake_case]
-        println("$f: $teststring  => $(f(teststring))")
-    end
-    println()
+TESTS = [
+    "snakeCase", "snake_case", "variable_10_case", "variable10Case",
+    "ɛrgo rE tHis", "hurry-up-joe!", "c://my-docs/happy_Flag-Day/12.doc", " spaces "
+]
+
+println("To camel case:")
+for test in TESTS
+    println(lpad(test, 40), " => ", snakeToCamelCase(test))
 end
 
-# === char / loop based methods ===
-
-function charSnakeToCamelCase(s, snakechars = [' ', '-', '_'])
-    isempty(s) && return s
-    a, ucflag = Char[], false
-    for c in strip(s)
-        if c in snakechars
-            ucflag = true
-        elseif ucflag
-            push!(a, uppercase(c))
-            ucflag = false
-        else
-            push!(a, c)
-        end
-    end
-    return String(a)
+println("\nTo snake case:")
+for test in TESTS
+    println(lpad(test, 40), " => ", camel_to_snake_case(test))
 end
 
-function char_camel_to_snake_case(s, sep = '_', snakechars = [' ', '-', '_'])
-    isempty(s) && return s
-    a, lastchar = Char[], first(s)
-    for c in strip(s)
-        if isuppercase(c) && !isempty(a) && lastchar != sep
-            push!(a, sep, lowercase(c))
-        elseif c in snakechars && !(lastchar in snakechars)
-            push!(a, sep)
-            lastchar = sep
-        else
-            push!(a, lowercase(c))
-            lastchar = c
-        end
-    end
-    return String(a)
+println("\nTo kebab case:")
+for test in TESTS
+    println(lpad(test, 40), " => ", camel_to_snake_case(test, "-"))
 end
 
-for teststring in [
-   "snakeCase", "snake_case", "variable_10_case", "variable10Case",
-   "ɛrgo rE tHis", "hurry-up-joe!", "c://my-docs/happy_Flag-Day/12.doc", " spaces "]
-    for f in [snakeToCamelCase, camel_to_snake_case]
-        println("$f: $teststring  => $(f(teststring))")
-    end
-    println()
-end
