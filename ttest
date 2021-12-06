@@ -1,32 +1,25 @@
-func main() {    
-    ex := `<li><a href="/wiki/(.*?)"`
-    re := regexp.MustCompile(ex)
-    page := "http://rosettacode.org/wiki/Category:Programming_Tasks"
-    resp, _ := http.Get(page)
-    body, _ := ioutil.ReadAll(resp.Body)
-    matches := re.FindAllStringSubmatch(string(body), -1)
-    resp.Body.Close()
-    tasks := make([]string, len(matches))
-    for i, match := range matches {
-        tasks[i] = match[1]
-    }
-    const base = "http://rosettacode.org/wiki/"
-    const limit = 3 // number of tasks to print out
-    ex = `(?s)using any language you may know.</div>(.*?)<div id="toc"`
-    ex2 := `</?[^>]*>` // to remove all tags including links
-    re = regexp.MustCompile(ex)
-    re2 := regexp.MustCompile(ex2)
-    for i, task := range tasks {
-        page = base + task
-        resp, _ = http.Get(page)
-        body, _ = ioutil.ReadAll(resp.Body)
-        match := re.FindStringSubmatch(string(body))
-        resp.Body.Close()
-        text := html.UnescapeString(re2.ReplaceAllLiteralString(match[1], ""))
-        fmt.Println(strings.Replace(task, "_", " ", -1), "\n", text)
-        if i == limit-1 {
-            break
-        }
-        time.Sleep(5 * time.Second) // wait 5 seconds before processing next task
-    }
-}
+using HTTP
+
+function gettaskdescriptions(numtoprint = 3)    
+    tasks = String[]
+    page = "http://rosettacode.org/wiki/Category:Programming_Tasks"
+    resp = HTTP.get(page)
+    body = String(resp.body)
+    for m in eachmatch(r"<li><a href=\"/wiki/([^\"]+)\"", body)
+        push!(tasks, m.captures[1])
+    end
+    base = "http://rosettacode.org/wiki/"
+    for (i, task) in enumerate(tasks)
+        page = base * task
+        resp = HTTP.get(page)
+        body = String(resp.body)
+#        m = match(r"using any language you may know\.</div>(.+)<div id=\"toc\"", body)
+        m = match(r"using any language you may know.</div>(.+)<div id=\"toc\""s, body)
+        m != nothing && println(m.captures[1],
+            "\n======================================================\n")
+        i >= numtoprint && break
+        sleep(rand(3:7))   # wait around 5 seconds before processing next task
+    end
+end
+
+gettaskdescriptions()
