@@ -13,10 +13,8 @@ function gettaskdescriptions(numtoprint = 3)
         page = base * task
         resp = HTTP.get(page)
         body = String(resp.body)
-#        m = match(r"using any language you may know\.</div>(.+)<div id=\"toc\"", body)
         m = match(r"using any language you may know.</div>(.+)<div id=\"toc\""s, body)
-        m != nothing && println(m.captures[1],
-            "\n======================================================\n")
+        m != nothing && println(m.captures[1], "\n", "="^60, "\n")
         i >= numtoprint && break
         sleep(rand(3:7))   # wait around 5 seconds before processing next task
     end
