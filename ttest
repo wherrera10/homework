@@ -1,31 +1,32 @@
-
-function snakeToCamelCase(s)
-    isempty(s) && return s
-    return split(strip(s), r"[ \-_]+") .|> uppercasefirst |> join |> lowercasefirst
-end
-
-function camel_to_snake_case(s, sep="_", allsep = r"[ \-_]+")
-    isempty(s) && return s
-    return replace(replace(strip(s), r"[A-Z]+" => x -> sep * lowercase(x)), allsep => sep)
-end
-
-TESTS = [
-    "snakeCase", "snake_case", "variable_10_case", "variable10Case",
-    "ɛrgo rE tHis", "hurry-up-joe!", "c://my-docs/happy_Flag-Day/12.doc", " spaces "
-]
-
-println("To camel case:")
-for test in TESTS
-    println(lpad(test, 40), " => ", snakeToCamelCase(test))
-end
-
-println("\nTo snake case:")
-for test in TESTS
-    println(lpad(test, 40), " => ", camel_to_snake_case(test))
-end
-
-println("\nTo kebab case:")
-for test in TESTS
-    println(lpad(test, 40), " => ", camel_to_snake_case(test, "-"))
-end
-
+func main() {    
+    ex := `<li><a href="/wiki/(.*?)"`
+    re := regexp.MustCompile(ex)
+    page := "http://rosettacode.org/wiki/Category:Programming_Tasks"
+    resp, _ := http.Get(page)
+    body, _ := ioutil.ReadAll(resp.Body)
+    matches := re.FindAllStringSubmatch(string(body), -1)
+    resp.Body.Close()
+    tasks := make([]string, len(matches))
+    for i, match := range matches {
+        tasks[i] = match[1]
+    }
+    const base = "http://rosettacode.org/wiki/"
+    const limit = 3 // number of tasks to print out
+    ex = `(?s)using any language you may know.</div>(.*?)<div id="toc"`
+    ex2 := `</?[^>]*>` // to remove all tags including links
+    re = regexp.MustCompile(ex)
+    re2 := regexp.MustCompile(ex2)
+    for i, task := range tasks {
+        page = base + task
+        resp, _ = http.Get(page)
+        body, _ = ioutil.ReadAll(resp.Body)
+        match := re.FindStringSubmatch(string(body))
+        resp.Body.Close()
+        text := html.UnescapeString(re2.ReplaceAllLiteralString(match[1], ""))
+        fmt.Println(strings.Replace(task, "_", " ", -1), "\n", text)
+        if i == limit-1 {
+            break
+        }
+        time.Sleep(5 * time.Second) // wait 5 seconds before processing next task
+    }
+}
