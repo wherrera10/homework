@@ -1,23 +1,35 @@
-using HTTP
+function savings_table()
+    SEC, MIN, HOUR, DAY, WEEK, MONTH, YEAR = 1, 60, 3600, 28800, 144000, 576000, 6912000
+    shavings = [1, 5, 30, MIN, 5 * MIN, 30 * MIN, HOUR, 6 * HOUR, DAY]
+    frequencies = [[50, DAY], [5, DAY], [1, DAY], [1, WEEK], [1, MONTH], [1, YEAR]]
+    roundto = [SEC, MIN, HOUR, DAY, WEEK, MONTH, YEAR]
+    ts = ["sec", "min", "hour", "day", "week", "month", "year"]
 
-function gettaskdescriptions(numtoprint = 3)    
-    tasks = String[]
-    page = "http://rosettacode.org/wiki/Category:Programming_Tasks"
-    resp = HTTP.get(page)
-    body = String(resp.body)
-    for m in eachmatch(r"<li><a href=\"/wiki/([^\"]+)\"", body)
-        push!(tasks, m.captures[1])
-    end
-    base = "http://rosettacode.org/wiki/"
-    for (i, task) in enumerate(tasks)
-        page = base * task
-        resp = HTTP.get(page)
-        body = String(resp.body)
-        m = match(r"using any language you may know.</div>(.+)<div id=\"toc\""s, body)
-        m != nothing && println(m.captures[1], "\n", "="^60, "\n")
-        i >= numtoprint && break
-        sleep(rand(3:7))   # wait around 5 seconds before processing next task
+    function duration(a)
+        es = ""
+        for rdx = 1:length(roundto)
+            t = a ÷ roundto[rdx]
+            rdx > 1 && t < 1 && return ""
+            es = rpad(t, 2) * string(ts[rdx]) * (t == 1 ? "" : "s")
+        end
+        return es
+    end 
+
+    println("               50/day       5/day       daily      weekly     monthly      yearly")
+    for s = 1:length(shavings)
+        si = shavings[s]
+        line = lpad(duration(si), 10)
+        for f = 1:length(frequencies)
+            per, slot = frequencies[f]
+            if si * per > slot
+                line *= lpad("n/a", 10)
+            else
+                shaving = (5 * YEAR / slot * per) * si
+                line *= lpad(duration(shaving), 10)
+            end
+        end
+        println(line)
     end
 end
 
-gettaskdescriptions()
+savings_table()
