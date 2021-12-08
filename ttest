@@ -1,3 +1,14 @@
+table = [28800 7200 30 * 60 4 * 60 60 5;
+         28800 * 5 3600 * 12 7200 21 * 60 5 * 60 25;
+         144000 * 4 28800 * 3 3600 * 12 3600 * 2 60 * 30 120;
+         144000 * 8 28800 * 6 28800 3600 * 4 3600 5 * 60;
+         576000 * 9 144000 * 4 28800 * 6 3600 * 21 3600 * 5 60 * 25;
+         Inf 576000 * 6 144000 * 5 28800 * 5 28800 3600 * 2;
+         Inf 576000 * 10 576000 * 2 28800 * 2 3600 * 5; 
+         Inf Inf Inf 576000 * 2 144000 * 2 28800;
+         Inf Inf Inf Inf 144000 * 8 28800 * 5] 
+
+
 function savings_table()
     SEC, MIN, HOUR, DAY, WEEK, MONTH, YEAR = 1, 60, 3600, 28800, 144000, 576000, 6912000
     shavings = [1, 5, 30, MIN, 5 * MIN, 30 * MIN, HOUR, 6 * HOUR, DAY]
@@ -7,7 +18,7 @@ function savings_table()
 
     function duration(a)
         es = ""
-        for rdx = 1:length(roundto)
+        for rdx in 1:length(roundto)
             t = a ÷ roundto[rdx]
             rdx > 1 && t < 1 && return ""
             es = rpad(t, 2) * string(ts[rdx]) * (t == 1 ? "" : "s")
@@ -16,10 +27,10 @@ function savings_table()
     end 
 
     println("               50/day       5/day       daily      weekly     monthly      yearly")
-    for s = 1:length(shavings)
+    for s in 1:length(shavings)
         si = shavings[s]
         line = lpad(duration(si), 10)
-        for f = 1:length(frequencies)
+        for f in 1:length(frequencies)
             per, slot = frequencies[f]
             if si * per > slot
                 line *= lpad("n/a", 10)
