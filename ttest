@@ -1,15 +1,226 @@
-using Dates
+""" https://rosettacode.org/mw/index.php?title=Diophantine_linear_system_solving """
 
-table = [28800 7200 30 * 60 4 * 60 60 5;
-         28800 * 5 3600 * 12 7200 21 * 60 5 * 60 25;
-         144000 * 4 28800 * 3 3600 * 12 3600 * 2 60 * 30 120;
-         144000 * 8 28800 * 6 28800 3600 * 4 3600 5 * 60;
-         576000 * 9 144000 * 4 28800 * 6 3600 * 21 3600 * 5 60 * 25;
-         Inf 576000 * 6 144000 * 5 28800 * 5 28800 3600 * 2;
-         Inf 576000 * 10 576000 * 2 28800 * 2 3600 * 5; 
-         Inf Inf Inf 576000 * 2 144000 * 2 28800;
-         Inf Inf Inf Inf 144000 * 8 28800 * 5] 
+using LinearAlgebra
+using OffsetArrays
 
-julia> Dates.canonicalize(Dates.CompoundPeriod(Dates.Minute(50000)))
-4 weeks, 6 days, 17 hours, 20 minutes
+mutable struct LLLProblem
+    comments::Vector{String}
+    nrows::Int
+    ncols::Int
+    mat::Matrix{Int}
+end
 
+function readproblems(io::IO)
+    probs, started, wantcoeff, wrow = LLLProblem[], false, false, 0
+    emptymat = Matrix{Int}(undef, 0, 0)
+    while !eof(io)
+        if !started
+            started = true
+            wrow = 0
+            push!(probs, LLLProblem([], 0, 0, emptymat))
+        end
+        line = strip(readline(io))
+        if line[begin] == '''
+            push!(probs[end].comments, line)
+            if contains(line, "const")
+                wantcoeff = true
+            end
+        elseif (i = tryparse(Int, line)) != nothing # rows or cols
+            i == 0 && tryparse(Int, readline(io)) == 0 && break
+            if probs[end].nrows == 0
+                probs[end].nrows = i
+            else
+                probs[end].ncols = i
+            end
+        else # matrix row
+            wrow += 1
+            if probs[end].mat == emptymat
+                if wantcoeff && wrow == 1
+                    pr = probs[end].nrows - 1
+                    probs[end].nrows = m
+                    probs[end].ncols = m
+                    probs[end].mat = zeros(Int, m, m)
+                    mat[1, m] = 1
+                    p = 10^pr
+                    mat[2, m] = p
+                    for r in 2:m
+
+                    end
+                    started = false
+                else
+                    probs[end].mat = zeros(probs[end].nrows, contains(line, '|') ? probs[end].ncols + 1 : probs[end].ncols)
+                end
+            end
+            if !wantcoeff
+                probs[end].mat[wrow, :] .= parse.(Int, split(line, r"[\s\|]+"))
+                if wrow == probs[end].nrows
+                    started = false
+                    @show probs[end]
+                end
+            end
+        end
+    end
+    return probs
+end
+
+"""
+Algorithm 3. (We denote by bi the i-th row of B.)
+Input: Positive integers s1; : : : ; sm
+Output: am = gcd(s1; : : : ; sm); small multipliers
+bm1; : : : ; bmm; small null space basis
+"""
+function algorithm3(s::Vector{T}) where T <: Integer
+    m = length(s)
+    B = zeros(T, m, m) + I
+    b(i) = @view B[i, :]
+    λ = OffsetArray(zeros(T, m - 1, m - 1), 2:m, 1:m-1)
+    D = OffsetArray(ones(T, m + 1), 0:m)
+    a = deepcopy(s)
+    m1, n1 = 3, 4 # α = m1 / n1
+    k = 2
+
+    function Reduce1(k, i)
+@show "reduce1", k, i
+        q = a[i] != 0 ? T(round(a[k]/a[i])) : 2 * λ[k, i] > D[i] ? T(round(λ[k, i]/D[i])) : 0
+        if q != 0
+            a[k] -= q * a[i]
+            b(k) .-= q .* b(i)
+            λ[k, i] -= q * D[i]
+            for j = 1:i-1
+                λ[k, i] -= q * λ[i, j]
+            end
+        end
+    end
+
+    function Swap(k)
+@show "swap", k
+        a[k], a[k - 1] = a[k - 1], a[k]
+        B[k, :], B[k - 1, :] = B[k - 1, :], B[k, :]
+        for j = 1:k-2
+            λ[k, j] = λ[k - 1, j]
+        end
+        for i = k+1:m
+            t = λ[k - 1] * D[k] - λ[i, k] * λ[k, k - 1]
+            λ[i, k - 1] = (λ[i, k - 1] * λ[k, k - 1] + λ[i, k] * D[k - 2]) ÷ D[k - 1]
+            λ[i, k] = t ÷ D[k - 1]
+        end
+        D[k - 1] = (D[k - 2] * D[k] + λ[k, k - 1]^2) ÷ D[k - 1]
+    end
+
+    # main algorithm
+    while k <= m
+        Reduce1(k, k -1)
+        if a[k - 1] != 0 || a[k - 1] == 0 && a[k] == 0 &&
+           n1 * (D[k - 2] * D[k] + λ[k, k - 1]^2) < m1 * D[k - 1]^2
+            Swap(k)
+            if k > 2
+                k -= 1
+            end
+        else
+            for i = k-2:-1:1
+                Reduce1(k, i)
+            end
+            k += 1
+        end
+    end
+    if a[m] < 0
+        a[m] *= -1
+        b[m] .*= -1
+    end
+    return a, B
+end
+
+function algorithm4(G::Matrix{T}) where T <: Integer
+    m, n = size(G)
+    B = zeros(T, m, m) + I
+    b(i) = @view B[i, :]
+    λ = OffsetArray(zeros(T, m - 1, m - 1), 2:m, 1:m-1)
+    A = deepcopy(G)
+    a(i) = @view A[i, :]
+    D = OffsetArray(ones(T, m + 1), 0:m)
+    m1, n1 = 3, 4 # α = m1 / n1
+    col1, col2 = 0, 0
+
+    function Reduce2(k, i)
+        jarr = [jcol for jcol in 1:n if A[i, jcol] != 0]
+        if !isempty(jarr)
+            j = minimum(jarr)
+            if A[i, col1] < 0
+                Minus(i)
+                a(i) .*= -1
+                b(i) .*= -1
+            end
+        else
+            col1 = n + 1
+        end
+        jarr = [jcol for jcol in 1:n if A[k, jcol] != 0]
+        if !isempty(jarr)
+            col2 = minimum(jarr)
+        else
+            col2 = n + 1
+        end
+        q = col1 <= n ? A[k, col1] ÷ A[i, col1] : 2 * abs(λ[k, i]) > D[i] ? Int(round(λ[k, i] / D[i])) : 0
+        if q != 0
+            a(k) .-= q .* a(i)
+            b(k) .-= q .* b(i)
+            λ[k, i] -= q * D[i]
+            for j = 1:i-1
+                λ[k, i] = λ[k, j] - q * λ[j, i]
+            end
+        end
+    end
+
+    function Swap(k)
+        A[k, :], A[k - 1, :] = A[k - 1, :], A[k, :]
+        B[k, :], B[k - 1, :] = B[k - 1, :], B[k, :]
+        for j = 1:k-2
+            λ[k, j] = λ[k - 1, j]
+        end
+        for i = k+1:m
+            t = λ[K - 1] * D[k] - λ[i, k] * λ[k, k - 1]
+            λ[i, k - 1] = (λ[i, k - 1] * λ[k, k - 1] + λ[i, k] * D[k - 2]) ÷ D[k - 1]
+            λ[i, k] = t ÷ D[k - 1]
+        end
+        D[k - 1] = (D[k - 2] * D[k] + λ[k, k - 1]^2) ÷ D[k - 1]
+    end
+
+    function Minus(j)
+        for r = 2:m, s = 1:r-1
+            if r == j || s == j
+                λ[k, j] -= q * λ[i, j]
+            end
+        end
+    end
+
+    # main algorithm
+    col = findfirst(c -> count(!=(0), A[:, c]) == 1, 1:n)
+    if col != nothing
+        i = findfirst(!=(0), A[:, col])
+        if i == m && A[m, j] < 0
+            a(m) .*= -1
+            B[m, m] = -1
+        end
+    end
+    k = 2
+    while k <= m
+        Reduce2(k, k - 1)
+        if col1 <= min(col1, n) || (col1 == col2 == n + 1 &&
+           n1 * D[k - 2] * D[k] + λ[k, k - 1]^2 < m1 * D[k -1 ]^2)
+            Swap(k)
+            if k > 2
+                k -= 1
+            end
+        else
+            for i = k-2:-1:1
+                Reduce2(k, i)
+            end
+            k += 1
+        end
+    end
+    return A, B
+end
+
+# algorithm3([11608538, 1810081878, 314252913, 10346840])
+
+fh = open("lll.txt")
+@show readproblems(fh)
