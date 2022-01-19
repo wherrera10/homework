@@ -8,6 +8,6 @@ containsitsonlytwodigfactors(n) = (s = string(n); !isprime(n) && all(t -> length
 #seq = Lazy.range(2) filter(containsitsonlytwodigfactors)
 #take(20, seq)
 
-foreach(p -> println(lpad(last(p), 9), first(p) == 10 ? "\n" : ""), enumerate([x for x in 4:29_000_000 if containsitsonlytwodigfactors(x)]))
+foreach(p -> print(lpad(last(p), 9), first(p) == 10 ? "\n" : ""), enumerate([x for x in 4:29_000_000 if containsitsonlytwodigfactors(x)]))
 
 
