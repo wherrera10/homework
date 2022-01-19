@@ -1,5 +1,3 @@
-""" https://rosettacode.org/mw/index.php?title=Diophantine_linear_system_solving """
-
 using LinearAlgebra
 using OffsetArrays
 
@@ -26,7 +24,7 @@ function readproblems(io::IO)
                 wantcoeff = true
             end
         elseif (i = tryparse(Int, line)) != nothing # rows or cols
-            i == 0 && tryparse(Int, readline(io)) == 0 && break
+            i < 1 && break # 0 for the number of  rows to exit
             if probs[end].nrows == 0
                 probs[end].nrows = i
             else
@@ -36,15 +34,31 @@ function readproblems(io::IO)
             wrow += 1
             if probs[end].mat == emptymat
                 if wantcoeff && wrow == 1
+                    if !contains(line, "i")
+                        if !contains(line, '+')
+                           line = line * " + 0i"
+                        else
+                           line = line * "i"
+                        end
+                    end
+                    c = parse(Complex{Float64}, line)
+                    x, y = real(c), imag(c)
                     pr = probs[end].nrows - 1
-                    probs[end].nrows = m
-                    probs[end].ncols = m
-                    probs[end].mat = zeros(Int, m, m)
-                    mat[1, m] = 1
                     p = 10^pr
-                    mat[2, m] = p
-                    for r in 2:m
-
+                    m, n = probs[end].nrows + 3, probs[end].nrows + 5
+                    probs[end].nrows = m
+                    probs[end].ncols = n
+                    probs[end].mat = zeros(Int, m, n)
+                    probs[end].mat[1:m, 1:m] .+= I[1:m, 1:m]
+                    probs[end].mat[1, n - 1] = 1
+                    p, q = 10.0^pr, 0.0
+                    probs[end].mat[2, n - 1] = Int(p)
+                    for r in 3:m-1
+                        t = p
+                        p = p * x +- q * y
+                        q = t * y + q * x
+                        probs[end].mat[r, n - 1] = Int(round(p))
+                        probs[end].mat[r, n] = Int(round(q))
                     end
                     started = false
                 else
@@ -134,11 +148,11 @@ function algorithm4(G::Matrix{T}) where T <: Integer
     m, n = size(G)
     B = zeros(T, m, m) + I
     b(i) = @view B[i, :]
-    λ = OffsetArray(zeros(T, m - 1, m - 1), 2:m, 1:m-1)
+    λ = OffsetArray(zeros(T, m - 1, n - 1), 2:m, 1:n-1)
     A = deepcopy(G)
     a(i) = @view A[i, :]
     D = OffsetArray(ones(T, m + 1), 0:m)
-    m1, n1 = 3, 4 # α = m1 / n1
+    m1, n1 = 80, 81 # α = m1 / n1
     col1, col2 = 0, 0
 
     function Reduce2(k, i)
@@ -187,7 +201,7 @@ function algorithm4(G::Matrix{T}) where T <: Integer
     function Minus(j)
         for r = 2:m, s = 1:r-1
             if r == j || s == j
-                λ[k, j] -= q * λ[i, j]
+                λ[r, s] *= -1
             end
         end
     end
