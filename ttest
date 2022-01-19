@@ -1,12 +1,13 @@
 using Lazy
 using Primes
 
-containsitsonlytwodigfactors(n) = (s = string(n); all(t -> length(t) > 1 && contains(s, t), map(x -> string(x), collect(keys(factor(n))))))
+containsitsonlytwodigfactors(n) = (s = string(n); !isprime(n) && all(t -> length(t) > 1 && contains(s, t), map(x -> string(x), collect(keys(factor(n))))))
 
 
 
 #seq = Lazy.range(2) filter(containsitsonlytwodigfactors)
 #take(20, seq)
 
-[x for x in 1:29_000_000 if containsitsonlytwodigfactors(x)]
+foreach(p -> println(lpad(last(p), 9), first(p) == 10 ? "\n" : ""), enumerate([x for x in 4:29_000_000 if containsitsonlytwodigfactors(x)]))
+
 
