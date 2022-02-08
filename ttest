@@ -1,29 +1,23 @@
-use strict;
-use warnings;
-use feature <say switch>;
-no warnings 'experimental::smartmatch';
+const shaved  = [1, 5, 30, 60, 300, 1800, 3600, 21600, 86400]
+const columns = [" 1 Second", " 5 Seconds", "30 Seconds", " 1 Minute", " 5 Minutes", "30 Minutes", " 1 Hour", " 6 Hours", " 1 Day"]
+const FW, diy, minute, hour, day, week, mult = "%-12s", 365.25, 60, 60 * 60, 60 * 60 * 24, 60 * 60 * 24 * 7, 5
+const month, year = day * diy / 12, day * diy
+const freq = [50 * diy, 5 * diy, diy, diy / 7, 12, 1]
+
+fmt(t, interval) = lpad(lpad(t, 3) * " $interval" * (t > 1 ? "s" : ""), 12)
  
-use constant FW => '%-12s';
-my @shaved  = <1 5 30 60 300 1800 3600 21600 86400>;
-my @columns = (' 1 Second', ' 5 Seconds', '30 Seconds', ' 1 Minute', ' 5 Minutes', '30 Minutes', ' 1 Hour', ' 6 Hours', ' 1 Day');
-my $diy     = 365.25;
-my @freq    = (50*$diy, 5*$diy, $diy, $diy/7, 12, 1);
-my $week    = 7 * (my $day = 24 * (my $hour = 60 * (my $minute = 60)));
-my $month   = (my $year = $day * $diy) / 12;
-my $mult    = 5;
+println(' '^34, "How Often You Do the Task")
+foreach(s -> print(lpad(" | " * s, 12)), ["Shaved-off", "50/Day", "5/Day", "Daily", "Weekly", "Monthly", "Yearly"])
+println("\n", '-'^93)
  
-sub fmt { my($t, $interval) = @_; sprintf FW.' ', (sprintf '%2d', int $t) . ' ' . $interval . ($t > 1 and 's') }
- 
-say ' ' x 34 . 'How Often You Do the Task';
-say sprintf  FW.' | '.(' '.FW)x6, <Shaved-off 50/Day 5/Day Daily Weekly Monthly Yearly>;
-say '-' x 93;
- 
-for my $y (0..8) {
-   my $row = sprintf FW.' | ', $columns[$y];
-   for my $x (0..5) {
-      given ($freq[$x] * $shaved[$y] * $mult) {
-         when ($_ < $minute) { $row .= fmt $_,         "Second" }
-         when ($_ < $hour  ) { $row .= fmt $_/$minute, "Minute" }
+for y in 1:8
+   row = lpad(" | " * columns[y], 12)
+   for x in 1:5
+      t = freq[x] * shaved[y] * mult)
+      if t < minute
+          row .= fmt $_,         "Second"
+      elseif t < hour
+          row .= fmt $_/$minute, "Minute" }
          when ($_ < $day   ) { $row .= fmt $_/$hour,   "Hour"   }
          when ($_ < 14*$day) { $row .= fmt $_/$day,    "Day"    }
          when ($_ < 9*$week) { $row .= fmt $_/$week,   "Week"   }
