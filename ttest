@@ -1,6 +1,6 @@
 const shaved  = [1, 5, 30, 60, 300, 1800, 3600, 21600, 86400]
 const columns = [" 1 Second", " 5 Seconds", "30 Seconds", " 1 Minute", " 5 Minutes", "30 Minutes", " 1 Hour", " 6 Hours", " 1 Day"]
-const FW, diy, minute, hour, day, week, mult = "%-12s", 365.25, 60, 60 * 60, 60 * 60 * 24, 60 * 60 * 24 * 7, 5
+const diy, minute, hour, day, week, mult = 365.25, 60, 60 * 60, 60 * 60 * 24, 60 * 60 * 24 * 7, 5
 const month, year = day * diy / 12, day * diy
 const freq = [50 * diy, 5 * diy, diy, diy / 7, 12, 1]
 
