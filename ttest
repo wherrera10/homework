@@ -20,7 +20,7 @@ For the non-prime bases b from 2 through 16 , find and display here, on this pag
 
 using Primes
 
-isRhonda(n, b) = prod(digits(n, base=base) == b * sum([first(i) for i in factor(n).pairs])
+isRhonda(n, b) = prod(digits(n, base=b)) == b * sum([first(i) for i in factor(n).pe])
 
 isRhonda(25662, 10)
 
