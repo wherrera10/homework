@@ -13,18 +13,10 @@ println("\n", '-'^93)
 for y in 1:8
    row = lpad(" | " * columns[y], 12)
    for x in 1:5
-      t = freq[x] * shaved[y] * mult)
-      if t < minute
-          row .= fmt $_,         "Second"
-      elseif t < hour
-          row .= fmt $_/$minute, "Minute" }
-         when ($_ < $day   ) { $row .= fmt $_/$hour,   "Hour"   }
-         when ($_ < 14*$day) { $row .= fmt $_/$day,    "Day"    }
-         when ($_ < 9*$week) { $row .= fmt $_/$week,   "Week"   }
-         when ($_ < $year  ) { $row .= fmt $_/$month,  "Month"  }
-         default             { $row .= '   n/a       '          }
-      }
-   }
-   say $row;
-}
+      t = freq[x] * shaved[y] * mult
+      row .= t < minute ? fmt(t, "Second") : t < hour ? fmt(t / minute, "Minute") : t < day ? fmt(t / hour,   "Hour") :
+         t < day * 14 ? fmt(t / day, "Day") : t < week * 9 ? fmt(t / week, "Week") : t < year ? fmt(t / month, "Month") : "   n/a       "
+   end
+   println(row)
+end
 
