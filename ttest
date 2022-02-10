@@ -1,26 +1,16 @@
-#=
-A positive integer n is said to be a Rhonda number to base b if the product of the base b digits of n is equal to b times the sum of n's prime factors.
-
-These numbers were named by Kevin Brown after an acquaintance of his whose residence number was 25662, a member of the base 10 numbers with this property.
-
-
-25662 is a Rhonda number to base-10. The prime factorization is 2 × 3 × 7 × 13 × 47; the product of its base-10 digits is equal to the base times the sum of its prime factors:
-
-2 × 5 × 6 × 6 × 2 = 720 = 10 × (2 + 3 + 7 + 13 + 47)
-
-Rhonda numbers only exist in bases that are not a prime.
-
-Rhonda numbers to base 10 always contain at least 1 digit 5 and always contain at least 1 even digit.
-
-
-Task
-For the non-prime bases b from 2 through 16 , find and display here, on this page, at least the first 10 Rhonda numbers to base b. Display the found numbers at least in base 10.
-
-=#
-
 using Primes
 
-isRhonda(n, b) = prod(digits(n, base=b)) == b * sum([first(i) for i in factor(n).pe])
+isRhonda(n, b) = prod(digits(n, base=b)) == b * sum([prod(pair) for pair in factor(n).pe])
 
-isRhonda(25662, 10)
+for b in filter(!isprime, 2:16)
+    n, rhondas = 1, Int[]
+    while length(rhondas) < 10
+        if isRhonda(n, b)
+            push!(rhondas, n)
+#            println([first(pair) for pair in factor(n).pe], digits(n, base=b))
+        end
+        n += 1
+    end
+    println("Base ", lpad(b, 2), ": ", rhondas)
+end
 
