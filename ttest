@@ -3,9 +3,10 @@ using Primes
 function deceptives(N)
     i, ret = 1, Int[]
     while length(ret) < N
-        !isprime(i) && continue
-        r = evalpoly(10, [1 for _ in 1:n-1])
-        (div(r, i) == Int(round(r / i))) && push!(ret, i)
+        if !isprime(i)
+            r = evalpoly(10, [1 for _ in 1:n-1])
+            (div(r, i) == Int(round(r / i))) && push!(ret, i)
+        end
         i += 1
     end
     return ret
