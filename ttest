@@ -1,16 +1,16 @@
 using Primes
-
-function deceptives(N)
-    i, ret = 1, Int[]
-    while length(ret) < N
-        if !isprime(i)
-            r = evalpoly(10, [1 for _ in 1:n-1])
-            (div(r, i) == Int(round(r / i))) && push!(ret, i)
+ 
+function deceptives(numwanted)
+    n, ret = 2, Int[]
+    while length(ret) < numwanted
+        if !isprime(n)
+            r = evalpoly(big"10", [1 for _ in 1:n-1])
+            r % n == 0 && push!(ret, n)
         end
-        i += 1
+        n += 1
     end
     return ret
 end
-
-println(deceptives(10))
-
+ 
+println(deceptives(10))  # [91, 259, 451, 481, 703, 1729, 2821, 2981, 3367, 4141]
+ 
