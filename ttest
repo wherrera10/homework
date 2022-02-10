@@ -1,16 +1,15 @@
 using Primes
 
-isRhonda(n, b) = prod(digits(n, base=b)) == b * sum([prod(pair) for pair in factor(n).pe])
-
-for b in filter(!isprime, 2:16)
-    n, rhondas = 1, Int[]
-    while length(rhondas) < 10
-        if isRhonda(n, b)
-            push!(rhondas, n)
-#            println([first(pair) for pair in factor(n).pe], digits(n, base=b))
-        end
-        n += 1
+function deceptives(N)
+    i, ret = 1, Int[]
+    while length(ret) < N
+        !isprime(i) && continue
+        r = evalpoly(10, [1 for _ in 1:n-1])
+        (div(r, i) == Int(round(r / i))) && push!(ret, i)
+        i += 1
     end
-    println("Base ", lpad(b, 2), ": ", rhondas)
+    return ret
 end
+
+println(deceptives(10))
 
