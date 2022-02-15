@@ -1,16 +1,31 @@
-using Primes
+const colors = ["grey", "yellow", "green"]
  
-function deceptives(numwanted)
-    n, ret = 2, Int[]
-    while length(ret) < numwanted
-        if !isprime(n)
-            r = evalpoly(big"10", [1 for _ in 1:n-1])
-            r % n == 0 && push!(ret, n)
+function wordle(answer, guess)
+    n = length(guess)
+    length(answer) != n && error("The words must be of the same length.")
+    answervector, result = collect(answer), zeros(Int, n)
+    for i in 1:n
+        c = guess[i]
+        ix = findfirst(isequal(c), answervector)
+        if ix == i
+            answervector[i] = "\0"
+            result[i] = 2
+        elseif ix != nothing
+            answervector[ix] = "\0"
+            result[i] = 1
         end
-        n += 1
     end
-    return ret
+    return result
 end
  
-println(deceptives(10))  # [91, 259, 451, 481, 703, 1729, 2821, 2981, 3367, 4141]
- 
+const testpairs = [
+    ["ALLOW", "LOLLY"],
+    ["ROBIN", "ALERT"],
+    ["ROBIN", "SONIC"],
+    ["ROBIN", "ROBIN"]
+]
+for (pair0, pair1) in testpairs
+    res  = wordle(pair0, pair1)
+    res2 = [colors[i] for i in res]
+    println("$pair0 v $pair1 => $res => $res2")
+end
