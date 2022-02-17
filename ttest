@@ -1,3 +1,3 @@
 const filename, p1, p2, sep = "Traceback.txt", "Traceback (most recent call last):", "SystemError", "-"^16 * "\n"
-println(join(map(p -> p[findfirst(p, p1):end], filter(x -> contains(x, p1) && contains(x, p2), split(read(filename, String), "\n\n"))), sep))
+println(join(map(p -> p[findfirst(p, p1):end] * sep, filter(x -> contains(x, p1) && contains(x, p2), split(read(filename, String), "\n\n")))
 
