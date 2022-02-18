@@ -1,3 +1,9 @@
-const filename, pmarker, selector = "Traceback.txt", "Traceback (most recent call last):", "SystemError"
-println(join(map(p -> p[findfirst(p, pmarker):end] * "-"^16 * "\n", filter(x -> contains(x, pmarker) &&
-   contains(x, selector), split(read(filename, String), "\n\n")))
+function twodiagonals(N)
+    mat = zeros(Int, N, N)
+    for i in 1:n
+        mat[i, i], mat[i, n - i + 1] = 1, 1
+    end
+    return mat
+end
+
+
