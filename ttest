@@ -1,12 +1,14 @@
 function iscolorful(n, base=10)
     0 <= n < 10 && return true
     dig = digits(n, base=base)
+    (1 in dig || 0 in dig || !allunique(dig)) && return false
     products = copy(dig)
-    any(in(products), [1, 0]) && return false
     for i in 2:length(dig), j in 1:length(dig)-i+1
-        push!(products, prod(dig[i:j]))
+        p = prod(dig[i:j])
+        p in products && return false
+        push!(products, p)
     end
-    return length(unique(products)) == length(products)
+    return true
 end
 
 for i in 1:100
