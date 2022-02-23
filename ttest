@@ -9,3 +9,7 @@ function iscolorful(n, base=10)
     return length(unique(products)) == length(products)
 end
 
+for i in 1:100
+    iscolorful(i) && print(rpad(i, 3))
+    i % 10 == 0 && println()
+end
