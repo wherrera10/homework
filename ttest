@@ -1,9 +1,11 @@
-function twodiagonals(N)
-    mat = zeros(Int, N, N)
-    for i in 1:n
-        mat[i, i], mat[i, n - i + 1] = 1, 1
+function iscolorful(n, base=10)
+    0 <= n < 10 && return true
+    dig = digits(n, base=base)
+    products = copy(dig)
+    any(in(products), [1, 0]) && return false
+    for i in 2:length(dig), j in 1:length(dig)-i+1
+        push!(products, prod(dig[i:j]))
     end
-    return mat
+    return length(unique(products)) == length(products)
 end
-
 
