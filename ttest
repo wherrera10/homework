@@ -15,7 +15,7 @@ function testbrilliants()
         if isbrilliant(n)
             bcount += 1
             for i in 1:9
-                if n > 10^i && results[i] == 0
+                if n >= 10^i && results[i] == 0
                     results[i] = n
                     positions[i] = bcount
                     println("First >=", lpad(10^i, 12), " is", lpad(bcount, 8),
