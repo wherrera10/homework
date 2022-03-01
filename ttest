@@ -1,6 +1,7 @@
-printrows(vec, columnsize = 15, columns=3)
+function printrows(title, vec, columnsize = 15, columns = 5, rjust=true)
+    println(title)
     for (i, n) in enumerate(vec)
-        print(lpad(vec, columnsize), n % columns == 0 ? "\n" : "")
+        print((rjust ? lpad : rpad)(n, columnsize), i % columns == 0 ? "\n" : "")
     end
     println()
 end
