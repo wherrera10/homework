@@ -1,8 +1,10 @@
-function printrows(title, vec, columnsize = 15, columns = 5, rjust=true)
-    println(title)
-    for (i, n) in enumerate(vec)
-        print((rjust ? lpad : rpad)(n, columnsize), i % columns == 0 ? "\n" : "")
-    end
-    println()
-end
+s = Scene()
 
+function draw_cube_scene(s::Scene)
+    A = FRect3D(Vec3f0(0), Vec3f0(1))
+    B = FRect3D(Vec3f0(1), Vec3f0(1))
+    mesh!(s, A, color = :red)
+    mesh!(s, B, color = :blue)
+    s
+end
+   
