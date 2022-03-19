@@ -1,10 +1,18 @@
-s = Scene()
+using Colors
+using GLMakie
+using GeometryBasics: Rect3f
 
-function draw_cube_scene(s::Scene)
-    A = FRect3D(Vec3f0(0), Vec3f0(1))
-    B = FRect3D(Vec3f0(1), Vec3f0(1))
-    mesh!(s, A, color = :red)
-    mesh!(s, B, color = :blue)
-    s
+let
+    positions = vec(vcat([Point3f(i / 5, j / 5, k / 5) for i = 1:8:56, j = 1:7, k = 1:7],
+                         [Point3f(1 / 5, j / 5, k / 5) for i = 41:48, j = 8:2:21, k = 1:7],
+                         [Point3f(1 / 5, j / 5, k / 5) for i = 31:38, j = 8:2:21, k = 1:7],
+                         ))
+    @show length(positions)
+    fig, ax, obj = meshscatter(positions; marker = Rect3f(Vec3f(-0.5), Vec3f(16)),
+        transparency = true,
+        color = [RGBA(positions[i]..., 0.5) for i in 1:length(positions)],
+        figure = (; resolution = (1200, 800)),
+        show_axis = false
+    )
+    display(fig)
 end
-   
