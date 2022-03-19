@@ -1,18 +1,20 @@
 using Colors
-using GLMakie
 using GeometryBasics: Rect3f
+using GLMakie
 
-let
-    positions = vec(vcat([Point3f(i / 5, j / 5, k / 5) for i = 1:8:56, j = 1:7, k = 1:7],
-                         [Point3f(1 / 5, j / 5, k / 5) for i = 41:48, j = 8:2:21, k = 1:7],
-                         [Point3f(1 / 5, j / 5, k / 5) for i = 31:38, j = 8:2:21, k = 1:7],
-                         ))
-    @show length(positions)
-    fig, ax, obj = meshscatter(positions; marker = Rect3f(Vec3f(-0.5), Vec3f(16)),
-        transparency = true,
-        color = [RGBA(positions[i]..., 0.5) for i in 1:length(positions)],
-        figure = (; resolution = (1200, 800)),
-        show_axis = false
-    )
-    display(fig)
+topbar = vec([Point3f(i / 5, j / 5, k / 5) for i in 1:7, j in 8:3:28, k in 45:50])
+stem = vec([Point3f(i / 5, j / 5, k / 5) for i in 1:7, j in 1:7, k in 1:8:56])
+midbar = vec([Point3f(i / 5, j / 5, k / 5) for i in 1:7, j in 8:2:21, k in 25:29])
+fig = Figure(resolution = (800, 400))
+pos = fig[1, 1]
+meshscatter(pos, topbar; marker = Rect3f(Vec3f(-0.5), Vec3f(16)), transparency = true,
+   color = [RGBA(positions[i]..., 0.5) for i in 1:length(positions)])
+meshscatter!(pos, stem; marker = Rect3f(Vec3f(-0.5), Vec3f(16)), transparency = true,
+   color = [RGBA(positions2[i]..., 0.5) for i in 1:length(positions2)])
+meshscatter!(pos, midbar; marker = Rect3f(Vec3f(-0.5), Vec3f(16)), transparency = true,
+   color = [RGBA(positions3[i]..., 0.5) for i in 1:length(positions3)])
+for _ in 1:28
+    display(fig.scene)
+    rotate!(Accum, fig.scene, 0.25)
+    sleep(0.25)
 end
