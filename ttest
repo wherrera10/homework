@@ -1,14 +1,16 @@
 using Combinatorics
 using Primes
 
+const isprime1000 = primesmask(1000)
+
 function primetriangle(nrows::Integer)
     nrows < 2 && error("number of rows requested must be > 1")
     counts = zeros(Int, nrows)
     counts[begin] = 1
     println("  1  2")
     for row in 2:nrows, p in permutations(2:row)
-        if isprime(p[1] + 1) && isprime(p[end] + row + 1) &&
-            all(i -> isprime(p[i] + p[i+1]), 1:row-2)
+        if isprime1000[p[1] + 1] && isprime1000[p[end] + row + 1] &&
+            all(i -> isprime1000[p[i] + p[i+1]], 1:row-2)
             if counts[row] == 0
                 print("  1")
                 for n in p
