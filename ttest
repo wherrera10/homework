@@ -1,20 +1,25 @@
-using Colors
-using GeometryBasics: Rect3f
-using GLMakie
+using Combinatorics
+using Primes
 
-topbar = vec([Point3f(i / 5, j / 5, k / 5) for i in 1:7, j in 8:3:28, k in 45:50])
-stem = vec([Point3f(i / 5, j / 5, k / 5) for i in 1:7, j in 1:7, k in 1:8:56])
-midbar = vec([Point3f(i / 5, j / 5, k / 5) for i in 1:7, j in 8:2:21, k in 25:29])
-fig = Figure(resolution = (800, 400))
-pos = fig[1, 1]
-meshscatter(pos, topbar; marker = Rect3f(Vec3f(-0.5), Vec3f(16)), transparency = true,
-   color = [RGBA(positions[i]..., 0.5) for i in 1:length(positions)])
-meshscatter!(pos, stem; marker = Rect3f(Vec3f(-0.5), Vec3f(16)), transparency = true,
-   color = [RGBA(positions2[i]..., 0.5) for i in 1:length(positions2)])
-meshscatter!(pos, midbar; marker = Rect3f(Vec3f(-0.5), Vec3f(16)), transparency = true,
-   color = [RGBA(positions3[i]..., 0.5) for i in 1:length(positions3)])
-for _ in 1:28
-    display(fig.scene)
-    rotate!(Accum, fig.scene, 0.25)
-    sleep(0.25)
+function primetriangle(nrows::Integer)
+    nrows < 2 && error("number of rows requested must be > 1")
+    counts = zeros(Int, nrows)
+    counts[begin] = 1
+    println("  1  2")
+    for row in 2:nrows, p in permutations(2:row)
+        if isprime(p[1] + 1) && isprime(p[end] + row + 1) &&
+            all(i -> isprime(p[i] + p[i+1]), 1:row-2)
+            if counts[row] == 0
+                print("  1")
+                for n in p
+                    print(lpad(n, 3))
+                end
+                println(lpad(row + 1, 3))
+            end
+            counts[row] += 1
+        end
+    end
+    println("\n", counts)
 end
+
+primetriangle(17)
