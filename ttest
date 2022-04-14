@@ -1,26 +1,43 @@
-using Combinatorics, Random, Primes
+using Primes
 
-function primetriangle(nrows::Integer)
-    nrows < 2 && error("number of rows requested must be > 1")
-    pmask = primesmask(2 * (nrows + 1))
-    counts, rowstrings = [1; zeros(Int, nrows - 1)], ["" for _ in 1:nrows]
-    @Threads.threads for r in shuffle(2:nrows)
-        for e in permutations(2:2:r), o in permutations(3:2:r)
-            p = Int[]
-            for (x, y) in zip(e, o)
-                push!(p, x, y)
-            end
-            length(e) > length(o) && push!(p, e[end])
-            if pmask[p[end] + r + 1] && pmask[p[begin] + 1] && all(i -> pmask[p[i] + p[i+1]], 1:r-2)
-                if counts[r] == 0
-                    rowstrings[r] = "  1" * prod([lpad(n, 3) for n in p]) * lpad(r + 1, 3) * "\n"
-                end
-                counts[r] += 1
-            end
-        end
+primefactors(n) = collect(keys(factor(n)))
+
+function ErdösSelfridge(n)
+    highfactors = filter(>(3), primefactors(n + 1))
+    category = 1
+    while !isempty(highfactors)
+        highfactors = unique(reduce(vcat, [filter(>(3), primefactors(a + 1)) for a in highfactors]))
+        category += 1
     end
-    println("  1  2\n  1  2  3\n" * prod(rowstrings), "\n", counts)
+    return category
 end
 
-@time primetriangle(19)
+my $sieve = Math::Primesieve.new;
 
+function testES(numshowprimes, numtotalprimes)
+    println("First $numshowprimes by Erdös-Selfridge categories:")
+    dict = Dict{Int, Vector{Int}}(i => [] for i in 1:5)
+    for p in in primes(numshowprimes)
+        push!(dict[ErdösSelfridge(p)], p)
+    end
+    for cat in 1:5
+        println("cat => ", dict[cat])
+    end
+    dict2, firstcat, lastcat = Dict{Int, Tuple{Int}}(i => (0, 0, 0) for i in 1:11)
+    println("\nTotals for first $numtotalprimes primes by Erdös-Selfridge categories:")
+    for p in in primes(numtotalprimes)
+        cat = ErdösSelfridge(p)
+        dict[cat][begin] == 0 && (dict[cat[begin] = cat)
+        dict[cat][end] = cat
+        dict[cat][begin + 1] += 1
+    end
+    for cat in 1:11
+        first, total, last = dict[cat]
+        println("Category $cat => first:", lpad(first, 7), ", total:", lpad(total, 6), ", last:", last)
+    end
+end
+
+testES(200, 1_000_000)
+
+end
+    
