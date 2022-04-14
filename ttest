@@ -1,25 +1,3 @@
-using Combinatorics
-using Primes
-
-function primetriangle(nrows::Integer)
-    nrows < 2 && error("number of rows requested must be > 1")
-    pm = primesmask(2 * (nrows + 1))
-    println("  1  2")
-    for r in 2:nrows
-        for p in permutations(2:r)
-            if pm[p[end] + r + 1] && pm[p[begin] + 1] && all(i -> pm[p[i] + p[i + 1]], 1:r-2)
-                println("  1" * prod([lpad(n, 3) for n in p]) * lpad(r + 1, 3))
-                break
-            end
-        end
-    end
-end
-
-primetriangle(20)
-
-
-
-
 
 using Combinatorics
 using Primes
@@ -29,14 +7,18 @@ function primetriangle(nrows::Integer)
     pmask = primesmask(2 * (nrows + 1))
     counts = zeros(Int, nrows)
     counts[begin] = 1
-    println("  1  2")
-    for r in 2:nrows, p in permutations(2:r)
-        if pmask[p[end] + row + 1] && pmask[p[begin] + 1] && all(i -> pmask[p[i] + p[i+1]], 1:row-2)
-            counts[row] == 0 && println("  1" * prod([lpad(n, 3) for n in p]) * lpad(row + 1, 3))
-            counts[row] += 1
+    rows = ["" for _ in 1:nrows+1]
+    @Threads.threads for r in 2:nrows
+        for p in permutations(2:r)
+            if pmask[p[end] + r + 1] && pmask[p[begin] + 1] && all(i -> pmask[p[i] + p[i+1]], 1:r-2)
+                if counts[r] == 0
+                    rows[r] = "  1" * prod([lpad(n, 3) for n in p]) * lpad(r + 1, 3) * "\n"
+                end
+                counts[r] += 1
+            end
         end
     end
-    println("\n", counts)
+    println("  1  2\n" * prod(rows), "\n", counts)
 end
 
-primetriangle(18)
+@time primetriangle(16)
