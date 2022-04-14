@@ -12,8 +12,6 @@ function ErdösSelfridge(n)
     return category
 end
 
-my $sieve = Math::Primesieve.new;
-
 function testES(numshowprimes, numtotalprimes)
     println("First $numshowprimes by Erdös-Selfridge categories:")
     dict = Dict{Int, Vector{Int}}(i => [] for i in 1:5)
