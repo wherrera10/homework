@@ -1,4 +1,8 @@
-import Base.length, Base.*, Base.string
+#= Generally, in Julia the package Permtations.jl will be used here. As suggested in the task, thecode
+below will not use the standard package and will be from scratch istead. 
+=#
+
+import Base.length, Base.*, Base.string, Base.inv
 
 """ A Perm is a 1-based, gapless range of integers in any order. """
 mutable struct Perm
@@ -11,12 +15,44 @@ mutable struct Perm
 end
 
 Base.length(p::Perm) = length(p.a)
+Base.iterate(p::Perm, state = 1) = state > length(p) ? nothing : (p[state], state + 1)
+
+""" identity for Perm """
+Perm(n::Int) = Perm(1:n)
+
+
+""" Use multiply as operator * to get a Perm that combines the effects of a two Perm permutations """
+function Base.:*(p1:: Perm, p2::Perm)
+    length(p1) != length(p2) && error("To compose permutations, they must be the same length")
+    a = [p1.a[p2.a[i]] for i in eachindex(p1)]
+    return Perm(a)
+end
+
+""" inverse for Perm """
+function Base.inv(p::Perm)
+    a = zeros(Int, length(p))
+    for i in 1:length(p)
+        j = p.a[i]
+        a[j] = i
+    end
+    return Perm(a)
+end
+
+""" given 2 Perms of same length, give the Perm that tranforms one to the other """
+transform(p1::Perm, p2::Perm) = inv(p1) * p2
 
 """ Make a Perm from an iterable of any type"""
 function Perm(iterable)
     items = unique(collect(iterable))
     itemtoint = Dict(p[2] => p[1] for p in enumerate(items))
     return Perm([itemtoint[c] for c in items])
+end
+
+""" given an iterable of equal length and a Perm, return a permuted vector of the iterable's elements """
+function permuted(Base.isiterable, p1::Perm)
+    p2 = Perm(iterable)
+    inttoitem = Dict(enumerate(iterable))
+    return [inttoitem(i) for i in (p1 * p2).a]    
 end
 
 """ get cycles of Perm as a vector of integer vectors, optionally with singles """
@@ -39,19 +75,16 @@ function permcycles(p::Perm, includesingles = false)
     return includesingles ? cycles : filter(c -> length(c) > 1, cycles)
 end
 
-function Base.:*(p1:: Perm, p2::Perm)
-    length(p1) != length(p2) && error("To compose permutations, they must be the same length")
-    a = [p1.a[p2.a[i]] for i in eachindex(p1)]
-    return Perm(a)
+""" Perm prints in cycle or optionally oneline format """
+function Base.print(io::IO, p::Perm; oneline = false, printsinglecycles = false)
+    if length(p) == 0
+        print(io, "()")
+    end
+    if oneline
+        print(io, prod(map(n -> rpad(n, 4), p.a)))
+    else
+        cycles = permcycles(p, includesingles = printsinglecycles)
+        print(io, prod(c -> "(" * string(c)[begin+1:end-1] * ")", cycles)
+    end
 end
 
-""" Perm prints in cycle format """
-function Base.print(io::IO, p::Perm; printsingles = false)
-    if length(p) == 0
-        print("()")
-    end
-    cycles = permcycles(p, includesingles = printsingles)
-    for c in cycles
-        print(io, "(" * string(c)[begin+1:end-1] * ")")
-    end
-end
