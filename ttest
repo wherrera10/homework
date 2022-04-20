@@ -1,4 +1,4 @@
-import Base.*
+import Base.*, Base.string
 
 mutable struct Perm
     a::Vector{Int}
@@ -16,9 +16,24 @@ function Perm(iterable)
     return Perm([itemtoint[c] for c in items])
 end
 
-function cycles(p::Perm)
-
-
+""" get cycles of Perm as a list of lists, optionally with singles """
+function permcycles(p::Perm, includesingles = false)
+    len = length(p.a)
+    cycles = Vector{Vector{Int}}()
+    remaining, i = trues(len), 1
+    while !(i isa Nothing)
+        remaining[i] = false
+        nextcycle = [i]
+        j = p[i]
+        while j != i
+            push!(nextcycle, j)
+            remaining[j] = false
+            j = p[j]
+        end
+        push!(cycles, nextcycle)
+        i = findnext(remaining, i)
+    end
+    return cycles
 end
 
 function Base.:*(p1:: Perm, p2::Perm)
@@ -28,35 +43,11 @@ function Base.:*(p1:: Perm, p2::Perm)
 end
 
 """
-    cycles(p::Permutation)
-Return a list of the cycles in `Permutation` `p`.
-"""
-function cycles(p::Permutation)
-    n = length(p)
-    result = Array{Int,1}[]
-    todo = trues(n)
-    k = 1
-    while k !== nothing
-        todo[k] = false
-        cycle = [k]
-        j = p[k]
-        while j != k
-            push!(cycle, j)
-            todo[j] = false
-            j = p[j]
-        end
-        push!(result, cycle)
-        k = findnext(todo, k)
-    end
-    return result
-end
-
-"""
     cycle_string(p::Permutation)
 Create a nice, prinatble string representation
 from the cycle structure of the permutation `p`.
 """
-function cycle_string(p::AbstractPermutation)::String
+function Base.string(p::Perm)::String
     if length(p) == 0
         return "()"
     end
