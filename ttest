@@ -76,8 +76,7 @@ below will not use the standard package and will be from scratch istead.
 
 function permcycles(p::Perm)
     v, cycles = p.a, Vector{Vector{Int}}()
-    remaining = trues(length(v))
-    i = 1
+    remaining, i = trues(length(v)), 1
     while i !== nothing
         remaining[i] = false
         c = [i]
