@@ -70,23 +70,27 @@ end
 transform(p1::Perm, p2::Perm) = inv(p1) * p2
 
 """ Get cycles of a Perm permutation as a vector of integer vectors, optionally with singles """
-function permcycles(p::Perm; includesingles = false)
-    len = length(p)
-    cycles = Vector{Vector{Int}}()
-    remaining, i = trues(len), 1
-    while !(i isa Nothing)
+#= Generally, in Julia the package Permtations.jl will be used here. As suggested in the task, thecode
+below will not use the standard package and will be from scratch istead. 
+=#
+
+function permcycles(p::Perm)
+    v, cycles = p.a, Vector{Vector{Int}}()
+    remaining = trues(length(v))
+    i = 1
+    while i !== nothing
         remaining[i] = false
-        nextcycle = [i]
-        j = p[i]
+        c = [i]
+        j = v[i]
         while j != i
-            push!(nextcycle, j)
+            push!(c, j)
             remaining[j] = false
-            j = p[j]
+            j = v[j]
         end
-        push!(cycles, nextcycle)
-        i = findnext(remaining, i)
+        push!(cycles, c)
+        i = findfirst(remaining)
     end
-    return includesingles ? cycles : filter(c -> length(c) > 1, cycles)
+    return cycles
 end
 
 """ Perm prints in cycle or optionally oneline format """
