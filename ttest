@@ -3,7 +3,7 @@ using JuMP
 using LinearAlgebra
 
 
-function knightsminimum(N)
+function knightsminimum(N, char)
      knightdeltas = [(1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2)]
 
     model = Model(HiGHS.Optimizer)
@@ -29,7 +29,7 @@ function knightsminimum(N)
     minresult = sum(solution)
     matrixtext = ""
     for i in 1:N, j in 1:N
-        matrixtext *= lpad(x[i, j], 3) * j == N ? "\n" : " "
+        matrixtext *= lpad(x[i, j] == 1 ? char : ' ', 3) * j == N ? "\n" : " "
     end
     return minresult, matrixtext
 end
