@@ -2,9 +2,55 @@ import HiGHS
 using JuMP
 using LinearAlgebra
 
+function queensminimum(N, char = "Q")
+    model = Model(HiGHS.Optimizer)
+    @variable(model, x[1:N, 1:N], Bin)
 
-function knightsminimum(N, char)
-     knightdeltas = [(1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2)]
+    for i in 1:N
+        @constraint(model, sum(x[i, :]) == 1)
+        @constraint(model, sum(x[:, i]) == 1)
+    end
+
+    for i in -(N - 1):(N-1)
+        @constraint(model, sum(LinearAlgebra.diag(x, i)) <= 1)
+        @constraint(model, sum(LinearAlgebra.diag(reverse(x, dims = 1), i)) <= 1)
+    end
+
+    @objective(model, Min, sum(x))
+    optimize!(model)
+
+    solution = round.(Int, value.(x))
+    minresult = sum(solution)
+    matrixtext = ""
+    for i in 1:N, j in 1:N
+        matrixtext *= lpad(x[i, j] == 1 ? char : ' ', 3) * j == N ? "\n" : " "
+    end
+    return minresult, matrixtext
+end
+
+function bishopsminimum(N, char = "B")
+    model = Model(HiGHS.Optimizer)
+    @variable(model, x[1:N, 1:N], Bin)
+
+    for i in -(N - 1):(N-1)
+        @constraint(model, sum(LinearAlgebra.diag(x, i)) <= 1)
+        @constraint(model, sum(LinearAlgebra.diag(reverse(x, dims = 1), i)) <= 1)
+    end
+
+    @objective(model, Min, sum(x))
+    optimize!(model)
+
+    solution = round.(Int, value.(x))
+    minresult = sum(solution)
+    matrixtext = ""
+    for i in 1:N, j in 1:N
+        matrixtext *= lpad(x[i, j] == 1 ? char : ' ', 3) * j == N ? "\n" : " "
+    end
+    return minresult, matrixtext
+end
+
+function knightsminimum(N, char = "N")
+    knightdeltas = [(1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2)]
 
     model = Model(HiGHS.Optimizer)
 
@@ -33,5 +79,4 @@ function knightsminimum(N, char)
     end
     return minresult, matrixtext
 end
-
 
