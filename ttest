@@ -7,7 +7,7 @@ import HiGHS
 using JuMP
 using LinearAlgebra
 
-mstr(x, n) = (s = ""; for i in 1:n, j in 1:n s *= lpad(x[i, j] == 1 ? char : ' ', 3) * j == n ? "\n" : ""; end; s)
+mstring(x, n) = (s = ""; for i in 1:n, j in 1:n s *= lpad(x[i, j] == 1 ? char : ' ', 3) * j == n ? "\n" : ""; end; s)
 
 function queensminimum(N, char = "Q")
     model = Model(HiGHS.Optimizer)
@@ -28,7 +28,7 @@ function queensminimum(N, char = "Q")
 
     solution = round.(Int, value.(x))
     minresult = sum(solution)
-    return minresult, mstr(solution, N)
+    return minresult, mstring(solution, N)
 end
 
 function bishopsminimum(N, char = "B")
@@ -45,7 +45,7 @@ function bishopsminimum(N, char = "B")
 
     solution = round.(Int, value.(x))
     minresult = sum(solution)
-    return minresult, mstr(solution, N)
+    return minresult, mstring(solution, N)
 end
 
 function knightsminimum(N, char = "N")
@@ -72,6 +72,6 @@ function knightsminimum(N, char = "N")
 
     solution = round.(Int, value.(x))
     minresult = sum(solution)
-    return minresult, mstr(solution, N)
+    return minresult, mstring(solution, N)
 end
 
