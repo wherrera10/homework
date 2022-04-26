@@ -22,8 +22,16 @@ function knightsminimum(N)
         @constraint(model, x[i, j] * sum(x[i, j] .+ knightdeltas) == 0)
     end
 
+    @objective(model, Min, sum(x))
     optimize!(model)
 
+    solution = round.(Int, value.(x))
+    minresult = sum(solution)
+    matrixtext = ""
+    for i in 1:N, j in 1:N
+        matrixtext *= lpad(x[i, j], 3) * j == N ? "\n" : " "
+    end
+    return minresult, matrixtext
 end
 
 
