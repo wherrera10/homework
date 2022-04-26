@@ -1,68 +1,29 @@
-"""
-# EightQueensPuzzle
+import HiGHS
+using JuMP
+using LinearAlgebra
 
-Ported to **Julia** from examples in several languages from
-here: https://hbfs.wordpress.com/2009/11/10/is-python-slow
-"""
-module EightQueensPuzzle
 
-export Board, solve!
+function knightsminimum(N)
+     knightdeltas = [(1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2)]
 
-mutable struct Board
-    cols::Int
-    nodes::Int
-    diag45::Int
-    diag135::Int
-    solutions::Int
+    model = Model(HiGHS.Optimizer)
 
-    Board() = new(0, 0, 0, 0, 0)
-end
+    # to simplify the constraints, embed the board of size N inside a board of size n + 4
+    @variable(model, x[1:N+4, 1:N+4], Bin)
 
-"Marks occupancy."
-function mark!(b::Board, k::Int, j::Int)
-    b.cols    ⊻= (1 << j)
-    b.diag135 ⊻= (1 << (j+k))
-    b.diag45  ⊻= (1 << (32+j-k))
-end
+    @constraint(model, x[:, 1:2] .== 0)
+    @constraint(model, x[1:2, :] .== 0)
+    @constraint(model, x[:, N-1:N] .== 0)
+    @constraint(model, x[N-1:N, :] .== 0)
 
-"Tests if a square is menaced."
-function test(b::Board, k::Int, j::Int)
-    b.cols    & (1 << j)        +
-    b.diag135 & (1 << (j+k))    +
-    b.diag45  & (1 << (32+j-k)) == 0
-end
 
-"Backtracking solver."
-function solve!(b::Board, niv::Int, dx::Int)
-    if niv > 0
-        for i in 0:dx-1
-            if test(b, niv, i) == true
-                mark!(b, niv, i)
-                solve!(b, niv-1, dx)
-                mark!(b, niv, i)
-            end
-        end
-    else
-        for i in 0:dx-1
-            if test(b, 0, i) == true
-                b.solutions += 1
-            end
-        end
+    for i in 3:N-2, j in 3:N-2
+        @constraint(model, x[i, j] + sum(x[i, j] .+ knightdeltas) >= 1)
+        @constraint(model, x[i, j] * sum(x[i, j] .+ knightdeltas) == 0)
     end
-    b.nodes += 1
-    b.solutions
+
+    optimize!(model)
+
 end
 
-end # module
-
-using  .EightQueensPuzzle
-
-for n = 1:17
-    b = Board()
-    @show n
-    print("elapsed:")
-    solutions = @time solve!(b, n-1, n)
-    @show solutions
-    println()
-end
 
