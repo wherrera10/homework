@@ -1,3 +1,8 @@
+"""
+Rosetta code task N-queens_minimum_and_knights_and_bishops
+For optimizer details, see https://github.com/ERGO-Code/HiGHS
+"""
+
 import HiGHS
 using JuMP
 using LinearAlgebra
