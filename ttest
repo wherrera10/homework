@@ -9,6 +9,20 @@ using LinearAlgebra
 
 mstring(x, n) = (s = ""; for i in 1:n, j in 1:n s *= lpad(x[i, j] == 1 ? char : ' ', 3) * j == n ? "\n" : ""; end; s)
 
+function diagonals(mat::Matrix{T}, i, j) where T
+   nrows, ncols = size(mat)
+   ondiagonals = T[]
+   for row in 1:nrows
+       if i != row
+           col1 = row - i + j
+           1 <= col1 <= ncols && append!(ondiagonals, mat[row, col1])
+           col2 = j + i - row
+           1 <= col2 <= ncols && append!(ondiagonals, mat[row, col2])
+       end
+   end
+   return ondiagonals
+end
+
 function queensminimum(N, char = "Q")
     model = Model(HiGHS.Optimizer)
     @variable(model, x[1:N, 1:N], Bin)
