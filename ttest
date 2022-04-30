@@ -1,4 +1,4 @@
-""" Rosetta code task N-queens_minimum_and_knights_and_bishops """
+
 
 import HiGHS
 import Cbc
