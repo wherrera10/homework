@@ -1,39 +1,78 @@
-using Combinatorics
-using Plots
-using Primes
- 
-g(n) = iseven(n) ? count(p -> all(isprime, p), partitions(n, 2)) : error("n must be even")
- 
-println("The first 100 G numbers are: ")
- 
-foreach(p -> print(lpad(p[2], 4), p[1] % 10 == 0 ? "\n" : ""), map(g, 4:2:202) |> enumerate)
- 
-println("\nThe value of G(1000000) is ", g(1_000_000))
- 
-x = collect(2:2002)
-y = map(g, 2x)
-scatter(x, y, markerstrokewidth = 0, color = ["red", "blue", "green"][mod1.(x, 3)])
-
 #=
-from cvxpy import Problem, Variable, Minimize
 
-def diagat(mat, n, i, j):
-    """ return the diagonal containing mat[i][j] with mat an n x n square natrix"""
-    return [mat[i + k][j + k] for k in range(-n, n) if 0 <= i + k < n and 0 <= j + k < n]
+{{task}}
 
-def diag90at(mat, n, i, j):
-    """ return the diagonal orthogonal to the regular diagonal containing mat[i][j] """
-    return [mat[i - k][j + k] for k in range(-n, n) if 0 <= i - k < n and 0 <= j + k < n]
+The '''Babylonian spiral''' is a sequnce of points in the plane that are created so as to
+continuously ncrease in vector length while always moving from point to point on strictly
+integral coordinates.
 
-N = 10 
-a = Variable((N, N), boolean=True)
+; Task
+
+Find and show the first 40 (x, y) coordinates of the Babylonian spiral.
+
+; Stretch task
+
+Show in your program how to calculate and plot the first 10000 points in the sequence. Your result
+should look similar to <a href="https://oeis.org/plot2a?name1=A297346&name2=A297347&tform1=untransformed&tform2=untransformed&shift=0&radiop1=xy&drawlines=true"> this.</a>
 
 
-i, j = 2, 3
+; See also
 
-v = diagat(a, N, i, j)
-
-print(v)
-
+;* [[oeis:A256111|OEIS:A256111 - squared distance to the origin of the n-th vertex on a Babylonian Spiral.]]
+;* [[oeis:A297346|OEIS:A297346 - List of successive x-coordinates in the Babylonian Spiral.]]
+;* [[oeis:A297347|OEIS:A297347 - List of successive y-coordinates in the Babylonian Spiral.]]
 
 =#
+
+using Plots
+
+const squarecache = map(x -> x^2, 0:900)
+
+"""
+Get the points for each step along a Babylonia spiral of `nsteps` steps.
+Origin is at (0, 0) with first step one unit in the positive direction along
+the vertical (y) axis. The other points are selected to have integer x and y
+coordinates, progressively concatenating the next longest vector with integer
+x and y coordinates on the grid. The direction of the new vector is chosen to
+be nonzero and clockwise in a direction that minimizes the change in direction
+from the previous vector. See also: oeis.org/A256111, oeis.org/A297346, oeis.org/A297347
+"""
+function babylonianspiral(nsteps)
+    # first line segment is 1 unit in vertical direction, with y vertical, x horizontal
+    xypairs = [(0, 0), (0, 1)]
+    δsquared = 1
+    for _ in 1:nsteps
+        x, y = xypairs[end]
+        θ = atan(y, x)
+        candidates = Tuple{Int64, Int64}[]
+        while isempty(candidates)
+            δsquared += 1
+            i, j = 0, isqrt(δsquared) + 1
+            while true
+                a = squarecache[i + 1]
+                (a > δsquared ÷ 2) && break
+                while true
+                    b = squarecache[j + 1]
+                    (a + b < δsquared) && break
+                    if a + b == δsquared
+                        push!(candidates, (i, j), (-i, j), (i, -j), (-i, -j), (j, i), (-j, i),
+                           (j, -i), (-j, -i))
+                    end
+                    j -= 1
+                end
+                i += 1
+            end
+        end
+        _, idx = findmin(p -> mod1(θ - atan(p[2], p[1]), 2π), candidates)
+        push!(xypairs, candidates[idx])
+    end
+    return accumulate((a, b) -> (a[1] + b[1], a[2] + b[2]), xypairs)
+end
+
+points10000 = babylonianspiral(10000)
+println("The first 40 Babylonian spiral points are:")
+for (i, p) in enumerate(points10000[begin:begin+39])
+     print(rpad(p, 10), i % 10 == 0 ? "\n" : "")
+end
+
+plot(points10000)
