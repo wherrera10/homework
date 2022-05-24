@@ -32,3 +32,29 @@
 
     println("Base sort: ", sort(randarray))
     @btime sort(randarray)
+
+
+function insertionsort(arr::T) where T <: Vector
+    function insert(x, a)
+        if isempty(a)
+            push!(a, x)
+        else
+            y = popfirst!(a)
+            if x <= y
+                pushfirst!(a, y)
+                pushfirst!(a, x)
+            else
+                a = insert(a, x)
+                pushfirst!(a, y)
+            end
+        end
+        return a
+    end
+    function recursiveinsertion(a::T)
+        isempty(a) && return a
+        x = popfirst!(a)
+        return insert(recursiveinsertion(a), x)
+    end
+    return recursiveinsertion(copy(a))
+ end
+ 
