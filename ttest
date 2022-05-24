@@ -1,24 +1,34 @@
-function bubblesort(arr::T) where T
-    function recursebubble(a, remaining, sorted)
-        if length(a) < 2
-            if isempty(remaining)
-                return sorted
+    using BenchmarkTools
+
+    function bubblesort(arr::T) where T <: Vector
+        function recursebubble(a::T, remaining::T, sorted::T)
+            if length(a) < 2
+                if isempty(remaining)
+                    return [a ; sorted]
+                else
+                    x = popfirst!(a)
+                    return recursebubble(remaining, T(), [x ; sorted])
+                end
             else
                 x = popfirst!(a)
-                return recursebubble(remaining, T(), x)
+                y = popfirst!(a)
+                if x > y
+                    pushfirst!(remaining, y)
+                    pushfirst!(a, x)
+                else
+                    pushfirst!(remaining, x)
+                    pushfirst!(a, y)
+                end
+                return recursebubble(a, remaining, sorted)
             end
-        elseif length(a) > 1
-            x = popfirst!(a)
-            y = popfirst!(a)
-            if x > y
-                pushfirst!(remaining, y)
-                pushfirst!(a, x)
-            else
-                pushfirst!(remaining, x)
-                pushfirst!(a, y)
-            end
-            return bubble(a, remaining, sorted)
         end
+        recursebubble(copy(arr), T(), T())
     end
-    bubblesort(a, T(), T())
-end
+
+    randarray = rand(Int8, 100)
+
+    println("Recursive bubble: ", bubblesort(randarray))
+    @btime bubblesort(randarray)
+
+    println("Base sort: ", sort(randarray))
+    @btime sort(randarray)
