@@ -1,60 +1,13 @@
-    using BenchmarkTools
+    replacements = Dict('a' => Dict(1 => 'A', 2 => 'B', 4 => 'C', 5 => 'D'), 'b' => Dict(1 => 'E'), 'r' => Dict(2 => 'F'))
 
-    function bubblesort(arr::T) where T <: Vector
-        function recursebubble(a::T, remaining::T, sorted::T)
-            if length(a) < 2
-                if isempty(remaining)
-                    return [a ; sorted]
-                else
-                    x = popfirst!(a)
-                    return recursebubble(remaining, T(), [x ; sorted])
-                end
-            else
-                x = popfirst!(a)
-                y = popfirst!(a)
-                if x > y
-                    pushfirst!(remaining, y)
-                    pushfirst!(a, x)
-                else
-                    pushfirst!(remaining, x)
-                    pushfirst!(a, y)
-                end
-                return recursebubble(a, remaining, sorted)
-            end
-        end
-        recursebubble(copy(arr), T(), T())
+function trstring(string, repdict)
+    seen, chars = Dict{Char, Int}(), Char[]
+    for c in string
+        i = get!(seen, c, 1)
+        push!(chars, haskey(repdict, c) && haskey(repdict[c], i) ? repdict[c][i] : c)
+        seen[c] += 1
     end
+    return String(chars)
+end
 
-    randarray = rand(Int8, 100)
-
-    println("Recursive bubble: ", bubblesort(randarray))
-    @btime bubblesort(randarray)
-
-    println("Base sort: ", sort(randarray))
-    @btime sort(randarray)
-
-
-function insertionsort(arr::T) where T <: Vector
-    function insert(x, a)
-        if isempty(a)
-            push!(a, x)
-        else
-            y = popfirst!(a)
-            if x <= y
-                pushfirst!(a, y)
-                pushfirst!(a, x)
-            else
-                a = insert(a, x)
-                pushfirst!(a, y)
-            end
-        end
-        return a
-    end
-    function recursiveinsertion(a::T)
-        isempty(a) && return a
-        x = popfirst!(a)
-        return insert(recursiveinsertion(a), x)
-    end
-    return recursiveinsertion(copy(a))
- end
- 
+trstring("abracadabra", replacements)
