@@ -12,7 +12,10 @@ function runwithopts(func, minargs = 0, maxargs = 3)
     end
     ioin = isempty(infile) ? stdin : open(infile, "r")
     ioout = isempty(outfile) ? stdout : open(outfile, "w")
+    
     func(ioin, ioout, debug)
+    !isempty(infile) && close(ioin)
+    !isempty(outfile) && close(ioout)
 end
 
 runwithopts(preprocess)
