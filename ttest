@@ -1,16 +1,18 @@
 function runwithopts(func, minargs, maxargs)
     @assert minargs <= length(ARGS) <= maxargs "Wrong number of arguments"
-    debug, infile, outfile = false, "", stdout
+    debug, infile, outfile = false, "", ""
     for arg in ARGS
         if arg == "-d" || arg == "-debug" 
             debug = true
         elseif isempty(infile)
             infile = arg
-        else
+        elseif isempty(outfile)
             outfile = arg
         end
     end
-    func(infile, outfile, debug)
+    ioin = isempty(infile) ? stdin : open(infile, "r")
+    ioout = isempty(outfile) ? stdout : open(outfile, "w")
+    func(ioin, ioout, debug)
 end
 
 runwithopts(preprocess, 1, 3)
