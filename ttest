@@ -1,13 +1,16 @@
-rep = Dict('a' => Dict(1 => 'A', 2 => 'B', 4 => 'C', 5 => 'D'), 'b' => Dict(1 => 'E'), 'r' => Dict(2 => 'F'))
-
-function trstring(string, repdict)
-    seen, newchars = Dict{Char, Int}(), Char[]
-    for c in string
-        i = get!(seen, c, 1)
-        push!(newchars, haskey(repdict, c) && haskey(repdict[c], i) ? repdict[c][i] : c)
-        seen[c] += 1
+function runwithopts(func, minargs, maxargs)
+    @assert minargs <= length(ARGS) <= maxargs "Wrong number of arguments"
+    debug, infile, outfile = false, "", stdout
+    for arg in ARGS
+        if arg == "-d" || arg == "-debug" 
+            debug = true
+        elseif isempty(infile)
+            infile = arg
+        else
+            outfile = arg
+        end
     end
-    return String(newchars)
+    func(infile, outfile, debug)
 end
 
-trstring("abracadabra", rep)
+runwithopts(preprocess, 1, 3)
