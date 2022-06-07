@@ -1,4 +1,4 @@
-function runwithopts(func, minargs, maxargs)
+function runwithopts(func, minargs = 0, maxargs = 3)
     @assert minargs <= length(ARGS) <= maxargs "Wrong number of arguments"
     debug, infile, outfile = false, "", ""
     for arg in ARGS
@@ -15,4 +15,4 @@ function runwithopts(func, minargs, maxargs)
     func(ioin, ioout, debug)
 end
 
-runwithopts(preprocess, 1, 3)
+runwithopts(preprocess)
