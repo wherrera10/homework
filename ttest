@@ -1,3 +1,27 @@
+
+function test()
+    maxes = zeros(Int, 9)
+    s = "53777433222674772296666685537999"
+    nums = [Int(c - '0') for c in s]
+    i = 0
+    len = length(nums)
+    while i < len
+        i += 1
+        n = nums[i]
+        runlength = something(findnext(!=(n), nums, i + 1), len + 1) - i
+        if runlength > maxes[n]
+            maxes[n] = runlength
+        end
+        i += runlength
+    end
+    maxcount, n = findmax(maxes)
+    println(n, " ", maxcount)
+end
+
+test()
+
+ 
+
 function runwithopts(func, minargs = 0, maxargs = 3)
     @assert minargs <= length(ARGS) <= maxargs "Wrong number of arguments"
     debug, infile, outfile = false, "", ""
