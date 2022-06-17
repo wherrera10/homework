@@ -1,28 +1,28 @@
-const texts = [
-"""The quick brown fox jumped over the lazy dog.""",
-"""I was looking at some rhododendrons in my back garden,
-dressed in my khaki shorts, when the telephone rang.
- 
-As I answered it, I cheerfully glimpsed that the July sun
-caused a fragment of black pine wax to ooze on the velvet quilt
-laying in my patio.""",
-"""sphinx of black quartz, judge my vow."""]
 
-const replacements = [
-    "ch" => "χ", "th" => "θ", "ps" => "ψ", "ph" => "f", r"s(\W)" => s"ς\1",
-    "Ch" => "Χ", "Th" => "Θ", "Ps" => "Ψ", "Ph" => "F", "a" => "α", "b" => "β",
-    "d" => "δ", "e" => "ε", "f" => "φ", "g" => "γ", "h" => "η", "i" => "ι",
-    "j" => "ι", "l" => "λ", "m" => "μ", "n" => "ν", "o" => "ο", "p" => "π",
-    "q" => "κ", "r" => "ρ", "s" => "σ", "t" => "τ", "u" => "υ", "w" => "ω", 
-    "x" => "ξ", "z" => "ζ", "A" => "Α", "B" => "Β", "D" => "Δ", "E" => "Ε",
-    "F" => "Φ", "G" => "Γ", "H" => "Η", "I" => "Ι", "J" => "I", "L" => "Λ",
-    "M" => "Μ", "N" => "Ν", "O" => "Ο", "P" => "Π", "Q" => "Κ", "R" => "Ρ",
-    "S" => "Σ", "T" => "Τ", "U" => "Υ", "W" => "Ω", "X" => "Ξ", "Z" => "Ζ"]
-       
-for txt in texts
-    println("$txt\n=>")
-    for pair in replacements
-        txt = replace(txt, pair)
-    end
-    println("$txt\n", "="^65)
-end
+const asciitable = """
+    __________________________________________________________________________ 
+    |   1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18 |
+    |                                                                          |
+    |1  H                                                                   He |
+    |                                                                          |
+    |2  Li  Be                                          B   C   N   O   F   Ne |
+    |                                                                          |
+    |3  Na  Mg                                          Al  Si  P   S   Cl  Ar |
+    |                                                                          |
+    |4  K   Ca  Sc  Ti  V   Cr  Mn  Fe  Co  Ni  Cu  Zn  Ga  Ge  As  Se  Br  Kr |
+    |                                                                          |
+    |5  Rb  Sr  Y   Zr  Nb  Mo  Tc  Ru  Rh  Pd  Ag  Cd  In  Sn  Sb  Te  I   Xe |
+    |                                                                          |
+    |6  Cs  Ba  *   Hf  Ta  W   Re  Os  Ir  Pt  Au  Hg  Tl  Pb  Bi  Po  At  Rn |
+    |                                                                          |
+    |7  Fr  Ra  °   Rf  Db  Sg  Bh  Hs  Mt  Ds  Rg  Cn  Nh  Fl  Mc  Lv  Ts  Og |
+    |__________________________________________________________________________|
+    |                                                                          |
+    |                                                                          |
+    |8  Lantanoidi* La  Ce  Pr  Nd  Pm  Sm  Eu  Gd  Tb  Dy  Ho  Er  Tm  Yb  Lu |
+    |                                                                          |
+    |9   Aktinoidi° Ak  Th  Pa  U   Np  Pu  Am  Cm  Bk  Cf  Es  Fm  Md  No  Lr |
+    |__________________________________________________________________________|
+    
+    const rows = split(asciitable, "\n")
+    
