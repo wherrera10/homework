@@ -19,7 +19,7 @@ for t in nisograms
     println(rpad(t[3], 8), lpad(t[1], 5), lpad(t[2], 5))
 end
 
-println("\nHeterogram   Length\n", "-"^16)
+println("\nHeterogram   Length\n", "-"^20)
 for t in heterograms
     println(rpad(t[3], 12), lpad(t[2], 5))
 end
