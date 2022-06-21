@@ -1,3 +1,5 @@
+""" Rosetta Code task rosettacode.org/mw/index.php?title=Autogram_checker """
+
 using DataStructures
 
 const textnumbers = Dict("single" => 1, "one" => 1, "two" => 2, "three" => 3, "four" => 4,
@@ -6,6 +8,11 @@ const textnumbers = Dict("single" => 1, "one" => 1, "two" => 2, "three" => 3, "f
     "seventeen" => 17, "eighteen" => 18, "nineteen" => 19, "twenty" => 20, "thirty" => 30,
     "forty" => 40, "fifty" => 50, "sixty" => 60, "seventy" => 70, "eighty" => 80, "ninety" => 90)
 
+"""
+    function phrasetointeger(txt)
+
+Convert text spelled-out numbers from 1 to 999
+"""
 function phrasetointeger(txt)
     words = split(txt, r"\W+")
     n = 0
@@ -16,6 +23,11 @@ function phrasetointeger(txt)
     return n
 end
 
+"""
+    function isautogram(txt, countpunctuation; verbose = true)
+
+Verify an autogram. Count punctuation if second argument is true, error messages if verbose
+"""
 function isautogram(txt, countpunctuation, verbose = true)
     s = lowercase(txt)
     charcounts = counter(s)
@@ -28,12 +40,12 @@ function isautogram(txt, countpunctuation, verbose = true)
         numfromtext = phrasetointeger(mention[begin:spos-1])
         numfromtext == 0 && continue
         c = mention[begin+spos:end]
-        if c == "letters" && numfromtext != len
+        if c == "letters" && numfromtext != len   # verify a total letter count
             verbose && println("The total letter count (should be $len) is incorrect.")
             return false
         end
         ch = contains(c, "comma") ? ',' : contains(c, "apostrophe") ? ''' : contains(c, "hyphen") ? '-' : Char(c[1])
-        if charcounts[ch] == numfromtext
+        if charcounts[ch] == numfromtext   # verify an individual character count
             stillneedmention[ch] = 0
         else
             verbose && println("The count of $ch in the phrase is incorrect.")
@@ -41,7 +53,7 @@ function isautogram(txt, countpunctuation, verbose = true)
         end
     end
     for p in stillneedmention
-        if p[2] > 0
+        if p[2] > 0  # a letter we counted was not counted by the sentence
             verbose && println("The letter and count $p was not mentioned in the counts in the phrase.")
             return false
         end
