@@ -6,9 +6,6 @@ const textnumbers = Dict("single" => 1, "one" => 1, "two" => 2, "three" => 3, "f
     "seventeen" => 17, "eighteen" => 18, "nineteen" => 19, "twenty" => 20, "thirty" => 30,
     "forty" => 40, "fifty" => 50, "sixty" => 60, "seventy" => 70, "eighty" => 80, "ninety" => 90)
 
-const alphabet = collect("abcdefghijklmnopqrstuvwxyz")
-const alphawithpunctuations = Dict(x => 0 for x in [alphabet; collect(raw",.!?-'")])
-
 function phrasetointeger(txt)
     words = split(txt, r"\W+")
     n = 0
