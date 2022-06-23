@@ -16,26 +16,22 @@ end
 
 """ primary operation 1: locate the kth element. """
 function index(v, i, ele)
-    if i >= 0
-        i += v.offset
-        sg = v.base
-        while sg != nil
-            i < length(sg.ele) && return sg.ele[i]
-            i -= length(sg.ele)
-            sg = sg.next
-        end
+    i < 0 && error("index out of range")
+    i += v.offset
+    sg = v.base
+    while sg != nil
+        i < length(sg.ele) && return sg.ele[i + 1]
+        i -= length(sg.ele)
+        sg = sg.next
     end
-    error("index out of range")
 end
 
-// primary operation 2: add an element to the front of the VList.
-func (v vList) cons(a vEle) vList {
-    if v.base == nil {
-        return vList{base: &vSeg{ele: []vEle{a}}}
-    }
-    if v.offset == 0 {
-        l2 := len(v.base.ele) * 2
-        ele := make([]vEle, l2)
+""" primary operation 2: add an element to the front of the VList. """
+function cons(v, a)
+    v.base == nil && return VList(VSeg(nil, a), 0)
+    if v.offset == 0
+        l2 = length(v.base.ele) * 2
+        ele = Vector(undef, l2)
         ele[l2-1] = a
         return vList{&vSeg{v.base, ele}, l2 - 1}
     }
