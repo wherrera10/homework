@@ -6,7 +6,7 @@ mutable struct VList{T} where T
 end
 
 struct VNode end
-nil = VNode()
+const nil = VNode()
 
 mutable struct VSeg{T} where T <: VNode
     next::VNode
@@ -15,19 +15,18 @@ end
 
 
 """ primary operation 1: locate the kth element. """
-function index(v::VList, i, ele)
-    if i >= 0 {
+function index(v, i, ele)
+    if i >= 0
         i += v.offset
-        for sg := v.base; sg != nil; sg = sg.next {
-            if i < len(sg.ele) {
-                return sg.ele[i]
-            }
-            i -= len(sg.ele)
-        }
-    }
-    // consistent with the way Go panics on slice index out of range
-    panic("index out of range")
-}
+        sg = v.base
+        while sg != nil
+            i < length(sg.ele) && return sg.ele[i]
+            i -= length(sg.ele)
+            sg = sg.next
+        end
+    end
+    error("index out of range")
+end
 
 // primary operation 2: add an element to the front of the VList.
 func (v vList) cons(a vEle) vList {
