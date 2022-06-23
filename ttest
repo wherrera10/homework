@@ -66,14 +66,15 @@ function Base.string(v::VList{T}) where T
     return r * "]"
 end
 
-// One more method for demonstration purposes
-func (v vList) printStructure() {
-    fmt.Println("offset:", v.offset)
-    for sg := v.base; sg != nil; sg = sg.next {
-        fmt.Printf("  %q\n", sg.ele) // %q illustrates the string type
-    }
+""" One more method for demonstration purposes """
+function print_structure(v)
+    println("offset: ", v.offset)
+    sg = v.base
+    while sg != nil;  
+        println("  $(sg.ele) # %q illustrates the string type
+        sg = sg.next
     fmt.Println()
-}
+end
 
 // demonstration program using the WP example data
 func main() {
