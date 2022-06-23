@@ -76,29 +76,28 @@ function print_structure(v)
     fmt.Println()
 end
 
-// demonstration program using the WP example data
-func main() {
-    var v vList
-    fmt.Println("zero value for type.  empty vList:", v)
-    v.printStructure()
+""" demonstration program using the WP example data """
+function testVList()
+    v = VList
+    println("zero value for type.  empty vList: $v")
+    print_structure(v)
 
-    for a := '6'; a >= '1'; a-- {
-        v = v.cons(vEle(a))
-    }
-    fmt.Println("demonstrate cons. 6 elements added:", v)
-    v.printStructure()
+    for a in 6:-1:1
+        v = cons(v, VEle(string(a)))
+    end
+    println("demonstrate cons. 6 elements added: $v")
+    print_structure(v)
 
-    v = v.cdr()
+    v = cdr(v)
     fmt.Println("demonstrate cdr. 1 element removed:", v)
-    v.printStructure()
+    print_structure(v)
 
-    fmt.Println("demonstrate length. length =", v.length())
-    fmt.Println()
+    println("demonstrate length. length = ", length(v), "\n")
 
-    fmt.Println("demonstrate element access. v[3] =", v.index(3))
-    fmt.Println()
+    println("demonstrate element access. v[3] = ", index(v, 3), "\n")
+    println()
 
-    v = v.cdr().cdr()
-    fmt.Println("show cdr releasing segment. 2 elements removed:", v)
-    v.printStructure()
-}
+    v = v.cdr(v).cdr(v)
+    fmt.Println("show cdr releasing segment. 2 elements removed: $v")
+    print_structure(v)
+end
