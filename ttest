@@ -104,4 +104,13 @@ function testVList()
     
     # Timings for n = 10, 100, 1000, 1000 sized structures
     
+    for pow in 1:4
+        v = VList
+        for a in 10^pow:-1:1
+            v = cons(v, VEle(string(a)))
+        end
+        
+    end
+    
+    
 end
