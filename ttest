@@ -1,5 +1,7 @@
 import Base.length, Base.string
 
+using BenchmarkTools
+
 """ Rosetta Code task rosettacode.org/wiki/VList """
 
 mutable struct VList{T} where T
@@ -100,4 +102,7 @@ function testVList()
     v = v.cdr(v).cdr(v)
     fmt.Println("show cdr releasing segment. 2 elements removed: $v")
     print_structure(v)
+    
+    # Timings for n = 10, 100, 1000, 1000 sized structures
+    
 end
