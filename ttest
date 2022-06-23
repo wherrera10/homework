@@ -91,13 +91,12 @@ function testVList()
     print_structure(v)
 
     v = cdr(v)
-    fmt.Println("demonstrate cdr. 1 element removed:", v)
+    println("demonstrate cdr. 1 element removed: $v")
     print_structure(v)
 
     println("demonstrate length. length = ", length(v), "\n")
 
     println("demonstrate element access. v[3] = ", index(v, 3), "\n")
-    println()
 
     v = v.cdr(v).cdr(v)
     fmt.Println("show cdr releasing segment. 2 elements removed: $v")
