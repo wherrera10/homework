@@ -1,7 +1,10 @@
 words = Set(filter(w -> length(w) > 6, split(lowercase(read("words.txt", String)), "\s+)))
+reversed = Set{String}()
 for w in words
     r = reverse(w)
-    r in words && println("$w <=> $r")
+    if r in words && !r in reversed
+        println("$w <=> $r")
+        push!(reversed, r)
 end
 
 
