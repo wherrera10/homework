@@ -1,4 +1,4 @@
-import Base.length, Base.string
+import Base.length, Base.string, Base.print
  
 using BenchmarkTools
  
