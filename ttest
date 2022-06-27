@@ -1,19 +1,18 @@
 
-"""
-    enum Edge
-    
+"""  
 Each cell type is identified with 4 bits, with each # bit corresponding to a vertex (MSB -> 4, LSB -> 1).
 A bit is set for vertex v_i is set if z(v_i) > h. So a cell where a contour line only enters from the W edge and exits 
 through the N edge will have the cell type: 0b0111. Note that there are two cases where there are two 
 lines crossing through the same cell: 0b0101, 0b1010.
 """
-const N, S, E, W = (UInt8(1)), (UInt8(2)), (UInt8(4)), (UInt8(8))
+const Edge = UInt8
+const N, S, E, W = (Edge(1)), (Edge(2)), (Edge(4)), (Edge(8))
 const NS, NE, NW = N|S, N|E, N|W
 const SN, SE, SW = S|N, S|E, S|W
 const EN, ES, EW = E|N, E|S, E|W
 const WN, WS, WE = W|N, W|S, W|E
-const NWSE = NW | 0x10 # special (ambiguous case)
-const NESW = NE | 0x10 # special (ambiguous case)
+const NWSE = NW | Edge(0x10) # special (ambiguous case)
+const NESW = NE | Edge(0x10) # special (ambiguous case)
 
 # Maps cell type to crossing types for non-ambiguous cells
 const edge_LUT = (SW, SE, EW, NE, 0x0, NS, NW, NW, NS, 0x0, NE, EW, SE, SW)
@@ -24,7 +23,7 @@ const edge_LUT = (SW, SE, EW, NE, 0x0, NS, NW, NW, NS, 0x0, NE, EW, SE, SW)
 
 Given the row and column indices of the lower left vertex, get the location where the contour level crosses the specified edge
 """
-function interpolate(x, y, z::AbstractMatrix, h::Number, ind, edge::UInt8, ::Type{VT}) where {VT}
+function interpolate(x, y, z::AbstractMatrix, h::Number, ind, edge::EdgeUInt8, ::Type{VT}) where {VT}
     xi, yi = ind
     @inbounds if edge == W
         y_interp = y[yi] + (y[yi + 1] - y[yi]) * (h - z[xi, yi]) / (z[xi, yi + 1] - z[xi, yi])
