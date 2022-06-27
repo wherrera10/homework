@@ -1,149 +1,393 @@
-import Base.length, Base.string, Base.print
- 
-using BenchmarkTools
- 
-abstract type VNode end
- 
-struct VNil <: VNode end
-const nil = VNil()
- 
-mutable struct VSeg{T} <: VNode
-    next::VNode
-    ele::Vector{T}
-end
- 
-mutable struct VList
-    base::VNode
-    offset::Int
-    VList(b = nil, o = 0) = new(b, o)
-end
- 
-""" primary operation 1: locate the kth element. """
-function index(v, i)
-    i < 0 && error("index out of range")
-    i += v.offset
-    sg = v.base
-    while sg !== nil
-        i < length(sg.ele) && return sg.ele[i + 1]
-        i -= length(sg.ele)
-        sg = sg.next
+
+"""
+    enum Edge
+    
+Each cell type is identified with 4 bits, with each # bit corresponding to a vertex (MSB -> 4, LSB -> 1).
+A bit is set for vertex v_i is set if z(v_i) > h. So a cell where a contour line only enters from the W edge and exits 
+through the N edge will have the cell type: 0b0111. Note that there are two cases where there are two 
+lines crossing through the same cell: 0b0101, 0b1010.
+"""
+const N, S, E, W = (UInt8(1)), (UInt8(2)), (UInt8(4)), (UInt8(8))
+const NS, NE, NW = N|S, N|E, N|W
+const SN, SE, SW = S|N, S|E, S|W
+const EN, ES, EW = E|N, E|S, E|W
+const WN, WS, WE = W|N, W|S, W|E
+const NWSE = NW | 0x10 # special (ambiguous case)
+const NESW = NE | 0x10 # special (ambiguous case)
+
+# Maps cell type to crossing types for non-ambiguous cells
+const edge_LUT = (SW, SE, EW, NE, 0x0, NS, NW, NW, NS, 0x0, NE, EW, SE, SW)
+
+
+""" 
+    function interpolate(x, y, z::AbstractMatrix, h::Number, ind, edge::UInt8, ::Type{VT}) where {VT}
+
+Given the row and column indices of the lower left vertex, get the location where the contour level crosses the specified edge
+"""
+function interpolate(x, y, z::AbstractMatrix, h::Number, ind, edge::UInt8, ::Type{VT}) where {VT}
+    xi, yi = ind
+    @inbounds if edge == W
+        y_interp = y[yi] + (y[yi + 1] - y[yi]) * (h - z[xi, yi]) / (z[xi, yi + 1] - z[xi, yi])
+        x_interp = x[xi]
+    elseif edge == E
+        y_interp = y[yi] + (y[yi + 1] - y[yi]) * (h - z[xi + 1, yi]) / (z[xi + 1, yi + 1] - z[xi + 1, yi])
+        x_interp = x[xi + 1]
+    elseif edge == N
+        y_interp = y[yi + 1]
+        x_interp = x[xi] + (x[xi + 1] - x[xi]) * (h - z[xi, yi + 1]) / (z[xi + 1, yi + 1] - z[xi, yi + 1])
+    elseif edge == S
+        y_interp = y[yi]
+        x_interp = x[xi] + (x[xi + 1] - x[xi]) * (h - z[xi, yi]) / (z[xi + 1, yi] - z[xi, yi])
     end
+
+    return VT <: Tuple ? (x_interp, y_interp) : VT(x_interp, y_interp)
 end
- 
-""" primary operation 2: add an element to the front of the VList. """
-function cons(v::VList, a)
-    v.base === nil && return VList(VSeg(nil, [a]), 0)
-    if v.offset == 0
-        newlen = length(v.base.ele) * 2
-        ele = Vector{typeof(a)}(undef, newlen)
-        ele[newlen] = a
-        return VList(VSeg(v.base, ele), newlen - 1)
+
+"""
+    function interpolate(x::AbstractRange, y::AbstractRange, z::AbstractMatrix, h::Number, ind, edge::UInt8, ::Type{VT}) where {VT}
+
+Given a range of xs and ys, interpolate along the specified edge 
+"""
+function interpolate(x::AbstractRange, y::AbstractRange, z::AbstractMatrix, h::Number, ind, edge::UInt8, ::Type{VT}) where {VT}
+    xi, yi = ind
+    @inbounds if edge == W
+        y_interp = y[yi] + step(y) * (h - z[xi, yi]) / (z[xi, yi + 1] - z[xi, yi])
+        x_interp = x[xi]
+    elseif edge == E
+        y_interp = y[yi] + step(y) * (h - z[xi + 1, yi]) / (z[xi + 1, yi + 1] - z[xi + 1, yi])
+        x_interp = x[xi + 1]
+    elseif edge == N
+        y_interp = y[yi + 1]
+        x_interp = x[xi] + step(x) * (h - z[xi, yi + 1]) / (z[xi + 1, yi + 1] - z[xi, yi + 1])
+    elseif edge == S
+        y_interp = y[yi]
+        x_interp = x[xi] + step(x) * (h - z[xi, yi]) / (z[xi + 1, yi] - z[xi, yi])
     end
-    v.base.ele[v.offset] = a
-    v.offset -= 1
-    return v
+
+    return VT <: Tuple ? (x_interp, y_interp) : VT(x_interp, y_interp)
 end
- 
-""" primary operation 3: obtain new array beginning at second element of old array """
-function cdr(v)
-    v.base === nil && error("cdr on empty VList")
-    v.offset += 1
-    return v.offset < length(v.base.ele) ? v : VList(v.base.next, 0)
-end
- 
-""" primary operation 4:  compute the length of the list.  (It's O(1).) """
-Base.length(v::VList) = (v.base === nil) ? 0 : length(v.base.ele) * 2 - v.offset - 1
- 
-""" A handy method:  satisfy string interface for easy output. """
-function Base.string(v::VList)
-    v.base === nil && return "[]"
-    r = "[" * string(v.base.ele[v.offset+1])
-    sg, sl = v.base, v.base.ele[v.offset+2:end]
-    while true
-        r *= " " * join(sl, " ")
-        sg = sg.next
-        sg === nil && break
-        sl = sg.ele
+
+function interpolate(x::AbstractMatrix, y::AbstractMatrix, z::AbstractMatrix, h::Number, ind, edge::UInt8, ::Type{VT}) where {VT}
+    xi, yi = ind
+    @inbounds if edge == W
+        Δ = [y[xi,  yi+1] - y[xi,  yi  ], x[xi,  yi+1] - x[xi,  yi  ]].*(h - z[xi,  yi  ])/(z[xi,  yi+1] - z[xi,  yi  ])
+        y_interp = y[xi,yi] + Δ[1]
+        x_interp = x[xi,yi] + Δ[2]
+    elseif edge == E
+        Δ = [y[xi+1,yi+1] - y[xi+1,yi  ], x[xi+1,yi+1] - x[xi+1,yi  ]].*(h - z[xi+1,yi  ])/(z[xi+1,yi+1] - z[xi+1,yi  ])
+        y_interp = y[xi+1,yi] + Δ[1]
+        x_interp = x[xi+1,yi] + Δ[2]
+    elseif edge == N
+        Δ = [y[xi+1,yi+1] - y[xi,  yi+1], x[xi+1,yi+1] - x[xi,  yi+1]].*(h - z[xi,  yi+1])/(z[xi+1,yi+1] - z[xi,  yi+1])
+        y_interp = y[xi,yi+1] + Δ[1]
+        x_interp = x[xi,yi+1] + Δ[2]
+    elseif edge == S
+        Δ = [y[xi+1,yi  ] - y[xi,  yi  ], x[xi+1,yi  ] - x[xi,  yi  ]].*(h - z[xi,  yi  ])/(z[xi+1,yi  ] - z[xi,  yi  ])
+        y_interp = y[xi,yi] + Δ[1]
+        x_interp = x[xi,yi] + Δ[2]
     end
-    return r * "]"
+
+    return VT <: Tuple ? (x_interp, y_interp) : VT(x_interp, y_interp)
 end
- 
-""" Basic print for VList """
-Base.print(io::IO, v::VList) = print(io, string(v))
- 
-""" One more method for demonstration purposes """
-function print_structure(v::VList)
-    println("offset: ", v.offset)
-    sg = v.base
-    while sg !== nil
-        println("  $(sg.ele)") # illustrates the string type
-        sg = sg.next
-    end
-    println()
+
+
+
+import Base: push!, length, eltype, show
+
+struct Curve2{T}
+    vertices::Vector{T}
 end
- 
-""" demonstration program using the WP example data """
-function testVList()
-    v = VList()
-    println("zero value for type.  empty VList: $v")
-    print_structure(v)
- 
-    for a in '6':-1:'1'
-        v = cons(v, a)
+Curve2(::Type{T}) where {T} = Curve2(T[])
+show(io::IO, ::MIME"text/plain", c2::Curve2) = write(io, "$(typeof(c2))\n  with $(length(c2.vertices)-1) vertices")
+show(io::IO, ::MIME"text/plain", c2s::Vector{Curve2{T}}) where {T} = write(io, "$(typeof(c2s))\n  $(length(c2s)) contour line(s)")
+
+struct ContourLevel{T, L}
+    level::L
+    lines::Vector{Curve2{T}}
+end
+ContourLevel(h::T) where {T <: AbstractFloat} = ContourLevel(h, Curve2{NTuple{2,T}}[])
+ContourLevel(h::T) where {T} = ContourLevel(Float64(h))
+show(io::IO, ::MIME"text/plain", cl::ContourLevel) = write(io, "$(typeof(cl))\n  at $(level(cl)) with $(length(lines(cl))) line(s)")
+show(io::IO, ::MIME"text/plain", cls::Vector{ContourLevel{T}}) where {T} = write(io, "$(typeof(cls))\n  $(length(cls)) contour level(s)")
+"""
+`lines(c)` Extracts an iterable collection of isolines from a contour level.
+Use [`coordinates`](@ref) to get the coordinates of a line.
+"""
+lines(cl::ContourLevel) = cl.lines
+"""
+`level(c)` Indicates the `z`-value at which the contour level `c` was traced.
+"""
+level(cl::ContourLevel) = cl.level
+
+struct ContourCollection{Tlevel<:ContourLevel}
+    contours::Vector{Tlevel}
+end
+ContourCollection() = ContourCollection(Float64)
+ContourCollection(::Type{Tlevel}) where {Tlevel} = ContourCollection(ContourLevel{Tlevel}[])
+show(io::IO, ::MIME"text/plain", cc::ContourCollection) = write(io, "$(typeof(cc))\n with $(length(levels(cc))) level(s).")
+
+"""
+Turns the output of [`contours`](@ref) into an iterable with each of the traced
+contour levels. Each of the objects support [`level`](@ref) and
+[`coordinates`](@ref).
+"""
+levels(cc::ContourCollection) = cc.contours
+
+"""
+`contour(x, y, z, level::Number)` Trace a single contour level, indicated by the
+argument `level`.
+You'll usually call [`lines`](@ref) on the output of `contour`, and then iterate
+over the result.
+"""
+function contour(x, y, z, level::Number; VT=nothing)
+    if !(axes(x) == (axes(z,1),) && axes(y) == (axes(z,2),) || axes(x) == axes(y) == axes(z))
+        throw(ArgumentError("Incompatible input axes in `Contour.contour`."))
     end
-    println("demonstrate cons. 6 elements added: $v")
-    print_structure(v)
- 
-    v = cdr(v)
-    println("demonstrate cdr. 1 element removed: $v")
-    print_structure(v)
- 
-    println("demonstrate length. length = ", length(v), "\n")
- 
-    println("demonstrate element access. v[3] = ", index(v, 3), "\n")
- 
-    v = v |> cdr |> cdr
-    println("show cdr releasing segment. 2 elements removed: $v")
-    print_structure(v)
- 
-    # Timings for n = 10, 100, 1000, 1000 sized structures
- 
-    for i in 1:4
-        v = VList()
-        c = Char[]
-        for a in 10^i:-1:1
-            v = cons(v, a)
-            push!(c, a)
+    VT = VT === nothing ? NTuple{2,promote_type(map(eltype, (x, y, z))...)} : VT
+    trace_contour(x, y, z, level, get_level_cells(z, level), VT)
+end
+
+"""
+`contours` returns a set of isolines.
+You'll usually call [`levels`](@ref) on the output of `contours`.
+"""
+contours(::Any...) = error("This method exists only for documentation purposes")
+
+"""
+`contours(x,y,z,levels)` Trace the contour levels indicated by the `levels`
+argument.
+"""
+contours(x, y, z, levels) = ContourCollection([contour(x, y, z, l) for l in levels])
+
+"""
+`contours(x,y,z,Nlevels::Integer)` Trace `Nlevels` contour levels at heights
+chosen by the library (using the  [`contourlevels`](@ref) function).
+"""
+function contours(x, y, z, Nlevels::Integer)
+    contours(x, y, z, contourlevels(z, Nlevels))
+end
+
+"""
+`contours(x,y,z)` Trace 10 automatically chosen contour levels.
+"""
+contours(x, y, z) = contours(x, y, z, 10)
+
+"""
+`contourlevels(z,n)` Examines the values of `z` and chooses `n` evenly spaced
+levels to trace.
+"""
+function contourlevels(z, n)
+    zmin, zmax = extrema(z)
+    dz = (zmax - zmin) / (n + 1)
+    range(zmin + dz; step = dz, length = n)
+end
+
+"""
+`coordinates(c)` Returns the coordinates of the vertices of the contour line as
+a tuple of lists.
+"""
+function coordinates(c::Curve2{T}) where {T}
+    N = length(c.vertices)
+    E = eltype(T)
+    xlist = Vector{E}(undef, N)
+    ylist = Vector{E}(undef, N)
+
+    for (i, v) in enumerate(c.vertices)
+        xlist[i] = v[1]
+        ylist[i] = v[2]
+    end
+    xlist, ylist
+end
+
+# The marching squares algorithm defines 16 cell types
+# based on the edges that a contour line enters and exits
+# through. The edges of the cells are identified using
+# compass directions, while the vertices are ordered as
+# follows:
+#
+#      N
+#  4 +---+ 3
+# W  |   |  E
+#  1 +---+ 2
+#      S
+#
+# Each cell type is identified with 4 bits, with each
+# bit corresponding to a vertex (MSB -> 4, LSB -> 1).
+# A bit is set for vertex v_i is set if z(v_i) > h. So a cell
+# where a contour line only enters from the W edge and exits
+# through the N edge will have the cell type: 0b0111
+# Note that there are two cases where there are two
+# lines crossing through the same cell: 0b0101, 0b1010.
+const N, S, E, W = (UInt8(1)), (UInt8(2)), (UInt8(4)), (UInt8(8))
+const NS, NE, NW = N|S, N|E, N|W
+const SN, SE, SW = S|N, S|E, S|W
+const EN, ES, EW = E|N, E|S, E|W
+const WN, WS, WE = W|N, W|S, W|E
+const NWSE = NW | 0x10 # special (ambiguous case)
+const NESW = NE | 0x10 # special (ambiguous case)
+
+# Maps cell type to crossing types for non-ambiguous cells
+const edge_LUT = (SW, SE, EW, NE, 0x0, NS, NW, NW, NS, 0x0, NE, EW, SE, SW)
+
+# The way a contour crossing goes through a cell is labeled
+# by combining compass directions (e.g. a NW crossing connects
+# the N edge and W edges of the cell).  The Cell type records
+# the type of crossing that a cell contains.  While most
+# cells will have only one crossing, cell type 5 and 10 will
+# have two crossings.
+function get_next_edge!(cells::Dict, key, entry_edge::UInt8)
+    cell = pop!(cells, key)
+    if cell == NWSE
+        if entry_edge == N || entry_edge == W
+            cells[key] = SE
+            cell = NW
+        else #SE
+            cells[key] = NW
+            cell = SE
         end
-        println("Testing index for VList of size ", 10^i)
-        arr = rand(1:10^i-1, 100)
-        @btime let
-            n = 0
-            for k in $arr
-                n = index($v, k)
+    elseif cell == NESW
+        if entry_edge == N || entry_edge == E
+            cells[key] = SW
+            cell = NE
+        else #SW
+            cells[key] = NE
+            cell = SW
+        end
+    end
+    return cell ⊻ entry_edge
+end
+
+# N, S, E, W
+const next_map = ((0,1), (0,-1), (1,0), (-1,0))
+const next_edge = (S,N,W,E)
+
+@inline function advance_edge(ind, edge)
+    n = trailing_zeros(edge) + 1
+    nt = ind .+ next_map[n]
+    return nt, next_edge[n]
+end
+
+@inline function get_first_crossing(cell)
+    if cell == NWSE
+        return NW
+    elseif cell == NESW
+        return NE
+    else
+        return cell
+    end
+end
+
+@inline function _get_case(z, h)
+    case = z[1] > h ? 0x01 : 0x00
+    z[2] > h && (case |= 0x02)
+    z[3] > h && (case |= 0x04)
+    z[4] > h && (case |= 0x08)
+    case
+end
+
+function get_level_cells(z, h::Number)
+    cells = Dict{Tuple{Int,Int},UInt8}()
+    x_ax, y_ax = axes(z)
+
+    @inbounds for xi in first(x_ax):last(x_ax)-1
+        for yi in first(y_ax):last(y_ax)-1
+            elts = (z[xi, yi], z[xi + 1, yi], z[xi + 1, yi + 1], z[xi, yi + 1])
+            case = _get_case(elts, h)
+
+            # Contour does not go through these cells
+            if iszero(case) || case == 0x0f
+                continue
+            end
+
+            # Process ambiguous cells (case 5 and 10) using
+            # a bilinear interpolation of the cell-center value.
+            if case == 0x05
+                cells[(xi, yi)] = 0.25*sum(elts) >= h ? NWSE : NESW
+            elseif case == 0x0a
+                cells[(xi, yi)] = 0.25*sum(elts) >= h ? NESW : NWSE
+            else
+                cells[(xi, yi)] = edge_LUT[case]
             end
         end
-        println("Testing index for vector of size ", 10^i)
-        @btime let n = 0
-            for k in $arr
-                n = $c[k]
-            end
-        end
-        println("Testing adding an element for VList of size ", 10^i)
-        @btime let n = cons($v, 0) end
-        println("Testing adding an element for vector of size ", 10^i)
-        @btime let n = push!($c, '\0') end
- 
-        println("Testing new array beginning at second element for VList of size ", 10^i)
-        @btime let m = cdr($v) end
-        println("Testing new vector beginning at second element for vector of size ", 10^i)
-        @btime let m = pop!(copy($c)) end
- 
-        println("Testing length for VList of size ", 10^i)
-        @btime let n = length($v) end
-        println("Testing length for vector of size ", 10^i)
-        @btime let n = length($c) end
     end
+
+    return cells
 end
- 
-testVList()
+
+
+# Given a cell and a starting edge, we follow the contour line until we either
+# hit the boundary of the input data, or we form a closed contour.
+function chase!(cells, curve, x, y, z, h, start, entry_edge, xi_range, yi_range, ::Type{VT}) where VT
+
+    ind = start
+
+    # When the contour loops back to the starting cell, it is possible
+    # for it to not intersect with itself.  This happens if the starting
+    # cell contains a saddle-point. So a loop is only closed if the
+    # contour returns to the starting edge of the starting cell
+    loopback_edge = entry_edge
+
+    @inbounds while true
+        exit_edge = get_next_edge!(cells, ind, entry_edge)
+
+        push!(curve, interpolate(x, y, z, h, ind, exit_edge, VT))
+
+        ind, entry_edge = advance_edge(ind, exit_edge)
+
+        !((ind[1], ind[2], entry_edge) != (start[1], start[2], loopback_edge) &&
+           ind[2] ∈ yi_range && ind[1] ∈ xi_range) && break
+    end
+
+    return ind
+end
+
+
+function trace_contour(x, y, z, h::Number, cells::Dict, VT)
+
+    contours = ContourLevel(h, Curve2{VT}[])
+
+    x_ax, y_ax = axes(z)
+    xi_range = first(x_ax):last(x_ax)-1
+    yi_range = first(y_ax):last(y_ax)-1
+
+
+    # When tracing out contours, this algorithm picks an arbitrary
+    # starting cell, then first follows the contour in one direction
+    # until it either ends up where it started # or at one of the boundaries.
+    # It then tries to trace the contour in the opposite direction.
+
+    @inbounds while length(cells) > 0
+        contour_arr = VT[]
+
+        # Pick initial box
+        ind, cell = first(cells)
+
+        # Pick a starting edge
+        crossing = get_first_crossing(cell)
+        starting_edge = 0x01 << trailing_zeros(crossing)
+
+        # Add the contour entry location for cell (xi_0,yi_0)
+        push!(contour_arr, interpolate(x, y, z, h, ind, starting_edge, VT))
+
+        # Start trace in forward direction
+        ind_end = chase!(cells, contour_arr, x, y, z, h, ind, starting_edge, xi_range, yi_range, VT)
+
+        if ind == ind_end
+            push!(contours.lines, Curve2(contour_arr))
+            continue
+        end
+
+        ind, starting_edge = advance_edge(ind, starting_edge)
+
+        if ind[2] ∈ yi_range && ind[1] ∈ xi_range
+            # Start trace in reverse direction
+            chase!(cells, reverse!(contour_arr), x, y, z, h, ind, starting_edge, xi_range, yi_range, VT)
+        end
+
+        push!(contours.lines, Curve2(contour_arr))
+    end
+
+    return contours
+
+end
+
