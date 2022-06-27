@@ -90,10 +90,6 @@ function interpolate(x::AbstractMatrix, y::AbstractMatrix, z::AbstractMatrix, h:
     return VT <: Tuple ? (x_interp, y_interp) : VT(x_interp, y_interp)
 end
 
-
-
-import Base: push!, length, eltype, show
-
 struct Curve2{T}
     vertices::Vector{T}
 end
