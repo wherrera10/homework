@@ -1,24 +1,25 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
+from numpy import array, round
 from skimage import measure
 
+example = array([
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 1, 1, 0],
+    [0, 0, 1, 1, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0]
+])
 
-# Construct some test data
-x, y = np.ogrid[-np.pi:np.pi:100j, -np.pi:np.pi:100j]
-r = np.sin(np.exp((np.sin(x)**3 + np.cos(y)**2)))
+def transform(xy, xmax):
+    x, y = xy
+    return (y, xmax - x)
+
 
 # Find contours at a constant value of 0.8
-contours = measure.find_contours(r, 0.8)
+contours = round(measure.find_contours(example, 0.1))[0]
+print('[', ', '.join([str((p[1], 6 - p[0])) for p in contours]), ']')
 
-# Display the image and plot all contours found
-fig, ax = plt.subplots()
-ax.imshow(r, cmap=plt.cm.gray)
+# [ (3.0, 1.0), (2.0, 2.0), (2.0, 2.0), (1.0, 3.0), (1.0, 4.0), (2.0, 5.0), (3.0, 5.0), (4.0, 4.0), (4.0, 3.0), (4.0, 2.0), (3.0, 1.0) ]
 
-for contour in contours:
-    ax.plot(contour[:, 1], contour[:, 0], linewidth=2)
-
-ax.axis('image')
-ax.set_xticks([])
-ax.set_yticks([])
-plt.show()
+     
+    
