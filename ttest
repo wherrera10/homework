@@ -1,25 +1,34 @@
-from numpy import array, round
-from skimage import measure
+NOP(c) = (c.ip = mod1(c.ip + 1, 32))
+LDA(c) = (c.accum = c.ram[c.ram[c.ip] & 0b00011111 + 1]; c.ip = mod1(c.ip + 1, 32))
+STA(c) = (c.ram[c.ram[c.ip] & 0b00011111 + 1] = c.accum; c.ip = mod1(c.ip + 1, 32))
+ADD(c) = (c.accum += c.ram[c.ram[c.ip] & 0b00011111 + 1]; c.ip = mod1(c.ip + 1, 32))
+SUB(c) = (c.accum -= c.ram[c.ram[c.ip] & 0b00011111 + 1]; c.ip = mod1(c.ip + 1, 32))
+BRZ(c) = (c.ip = (c.accum == 0) ? c.ram[c.ip] & 0b00011111 + 1 : mod1(c.ip + 1, 32))
+JMP(c) = (c.ip = c.ram[c.ip] & 0b00011111 + 1)
+STP(c) = (println("Program completed with accumulator value $(c.accum).\n"); c.isready = false)
+ 
+const step = [NOP, LDA, STA, ADD, SUB, BRZ, JMP, STP]
+const assemblywords = Dict(s => i - 1 for (i, s) in pairs(["NOP", "LDA", "STA", "ADD", "SUB", "BRZ", "JMP", "STP"]))
+ 
+function interpret(text::String)
+    ip, accum, isready, ram = 1, 0, true, zeros(UInt8, 32)
+    for (i, line) in pairs(strip.(split(text, "\n")))
+        if isempty(line)
+           ram[i] = 0
+        elseif (m = match(r"(\w\w\w)\s+(\d\d?)", line)) != nothing
+            ram[i] = UInt8((assemblywords[m.captures[1]] << 5) | parse(UInt8, m.captures[2]))
+        elseif (m = match(r"(\w\w\w)", line)) != nothing
+            ram[i] = UInt8(assemblywords[m.match] << 5)
+        elseif (m = match(r"\d\d?", line)) != nothing
+                ram[i] = parse(UInt8, m.match)
+        else
+            error("Compilation error at line $i: error parsing <$line>")
+        end
+    end
+    while isready
+        step[ram[ip] >> 5 + 1]
+    end    
+    return accum
+end
 
-example = array([
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 1, 0],
-    [0, 0, 1, 1, 0],
-    [0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 0]
-])
 
-def transform(xy, xmax):
-    x, y = xy
-    return (y, xmax - x)
-
-
-# Find contours at a constant value of 0.8
-contours = round(measure.find_contours(example, 0.1))[0]
-print('[', ', '.join([str((p[1], 6 - p[0])) for p in contours]), ']')
-
-# [ (3.0, 1.0), (2.0, 2.0), (2.0, 2.0), (1.0, 3.0), (1.0, 4.0), (2.0, 5.0), (3.0, 5.0), (4.0, 4.0), (4.0, 3.0), (4.0, 2.0), (3.0, 1.0) ]
-
-     
-    
