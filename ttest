@@ -1,10 +1,10 @@
 # positive directions: right, down, clockwise
-const Directions = Dict( # clockwise from North
-	N  => (x= 0, y=-1),
-	E  => (x= 1, y= 0),
-	S  => (x= 0, y= 1),
-	W  => (x=-1, y= 0),
-]
+const Directions = ( # clockwise from North
+	N  = (x= 0, y=-1),
+	E  = (x= 1, y= 0),
+	S  = (x= 0, y= 1),
+	W  = (x=-1, y= 0),
+)
 
 const dxdybList = [
 	[0, 0, 1], # same position
@@ -13,19 +13,18 @@ const dxdybList = [
 	[1, 1, 8], # right and down
 ]
  
-const cases = ["W", "N", "W", "S", "S", nil, "S", "E", "", "N", "W", "E", "E", "N"]
+const cases = ["W", "N", "W", "S", "S", "", "S", "E", "", "N", "W", "E", "E", "N"]
  
 function identifyPerimeter(iLayer, startingX, startingY, data)
 	resultDirections = []
 	resultPositions = []
 	currentX, currentY = startingX, startingY
-	direction, prevDirection
 	while true
 		mask = 0
-		for d in pairs(dxdybList)
+		for d in dxdybList
 			dx, dy, b = d[1], d[2], d[3]
 			mx, my = currentX + dx, currentY + dy 
-			if mx > 1 && my > 1 && data[my-1] && data[my-1][mx-1] && data[my-1][mx-1] == iLayer
+			if mx > 1 && my > 1 && data[my-1, mx-1] == iLayer
 				mask += b
 			end
 		end
@@ -50,15 +49,15 @@ function identifyPerimeter(iLayer, startingX, startingY, data)
 	end
 end
  
-function findFirstOnLayer (iLayer, data)
-	for y in eachindex(data), x in eachindex(data) # from 1 to height, from 1 to width
-		data[y, x] == iLayer && return x, y # only one contour
+function findFirstOnLayer(iLayer, data)
+	for c in CartesianIndices(data) # from 1 to height, from 1 to width
+		data[c] == iLayer && return c[2], c[1] # only one contour
 	end
 end
  
-function msMain (iLayer, data)
+function msMain(iLayer, data)
 	rootX, rootY = findFirstOnLayer(iLayer, data)
-	println("root: x= $rootX  y= $rootY")
+	println("root: x = $rootX,  y = $rootY")
 	directions, positions = identifyPerimeter(iLayer, rootX, rootY, data)
 	println("directions amount: $length(directions)")
 	println("directions: $directions")
@@ -70,13 +69,13 @@ function msMain (iLayer, data)
 	println("positions: $tupPositions.")
 end
  
-local example = {
-	{0, 0, 0, 0, 0, 0},
-	{1, 0, 0, 0, 0, 1},
-	{0, 1, 1, 0, 1, 0},
-	{0, 1, 1, 1, 1, 0},
-	{0, 1, 0, 1, 1, 0},
-	{1, 0, 0, 0, 0, 1},
-}
- 
-msMain (1, example)
+const example = [
+    0 0 0 0 0 0;
+    1 0 0 0 0 1;
+    0 1 1 0 1 0;
+    0 1 1 1 1 0;
+    0 1 0 1 1 0;
+    1 0 0 0 0 1;
+]
+
+msMain(1, example)
