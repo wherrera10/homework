@@ -1,81 +1,31 @@
-# positive directions: right, down, clockwise
-const Directions = ( # clockwise from North
-	N  = (x= 0, y=-1),
-	E  = (x= 1, y= 0),
-	S  = (x= 0, y= 1),
-	W  = (x=-1, y= 0),
-)
+def kmp_search(S, W):
+"""
+    input:
+        an array of characters, S (the text to be searched)
+        an array of characters, W (the word sought)
+    output:
+        an array of integers, P (positions in S at which W is found)
+        an integer, nP (number of positions)
 
-const dxdybList = [
-	[0, 0, 1], # same position
-	[1, 0, 2], # right
-	[0, 1, 4], # down
-	[1, 1, 8], # right and down
-]
- 
-const cases = ["W", "N", "W", "S", "S", "", "S", "E", "", "N", "W", "E", "E", "N"]
- 
-function identifyPerimeter(iLayer, startingX, startingY, data)
-	resultDirections = []
-	resultPositions = []
-	currentX, currentY = startingX, startingY
-	while true
-		mask = 0
-		for d in dxdybList
-			dx, dy, b = d[1], d[2], d[3]
-			mx, my = currentX + dx, currentY + dy 
-			if mx > 1 && my > 1 && data[my-1, mx-1] == iLayer
-				mask += b
-			end
-		end
-		direction = cases[mask]		
-		if isempty(direction)
-			if mask == 6
-				direction = (prevDirection == "E") ? "N" : "S"
-			elseif mask == 9 then
-				direction = (prevDirection == "S") ? "E" : "W"
- 			else
-				error("no mask: $mask by x: $currentX y: $currentY")
-			end
-		end
-		push!(resultDirections, direction)
-		push!(resultPositions, currentX, currentY)
-		vDir = Directions[direction]
-		currentX, currentY = currentX + vDir.x, currentY + vDir.y
-		prevDirection = direction
-		if startingX == currentX && startingY == currentY
-			return resultDirections, resultPositions
-		end
-	end
-end
- 
-function findFirstOnLayer(iLayer, data)
-	for c in CartesianIndices(data) # from 1 to height, from 1 to width
-		data[c] == iLayer && return c[2], c[1] # only one contour
-	end
-end
- 
-function msMain(iLayer, data)
-	rootX, rootY = findFirstOnLayer(iLayer, data)
-	println("root: x = $rootX,  y = $rootY")
-	directions, positions = identifyPerimeter(iLayer, rootX, rootY, data)
-	println("directions amount: $length(directions)")
-	println("directions: $directions")
- 
-	tupPositions = Tuple{Int, Int}[]
-	for i in 1:2:length(positions)
-		push!(tupPositions, (positions[i], positions[i + 1]))
-	end
-	println("positions: $tupPositions.")
-end
- 
-const example = [
-    0 0 0 0 0 0;
-    1 0 0 0 0 1;
-    0 1 1 0 1 0;
-    0 1 1 1 1 0;
-    0 1 0 1 1 0;
-    1 0 0 0 0 1;
-]
-
-msMain(1, example)
+    define variables:
+        an integer, j ← 0 (the position of the current character in S)
+        an integer, k ← 0 (the position of the current character in W)
+        an array of integers, T (the table, computed elsewhere)
+"""
+    nP = 0
+    P = {}
+    while j < len(S):
+        if W[k] == S[j]:
+            j += 1
+            k += 1
+            if k = len(W):
+                # (occurrence found, if only first occurrence is needed, m ← j - k  may be returned here)
+                P[nP] = j - k
+		nP += 1
+                k = T[k] # (T[length(W)] can't be -1)
+        else:
+            let k ← T[k]
+            if k < 0 then
+                let j ← j + 1
+                let k ← k + 1
+		
