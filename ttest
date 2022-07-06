@@ -42,6 +42,8 @@ def kmp_search(S, W):
 """
     nP = 0
     P = {}
+    T = kmp_table(W)
+    
     while j < len(S):
         if W[k] == S[j]:
             j += 1
@@ -52,8 +54,10 @@ def kmp_search(S, W):
 		nP += 1
                 k = T[k] # (T[length(W)] can't be -1)
         else:
-            let k ← T[k]
-            if k < 0 then
-                let j ← j + 1
-                let k ← k + 1
-		
+            k = T[k]
+            if k < 0:
+                j += 1
+                k += 1
+    
+    return P, nP
+    
