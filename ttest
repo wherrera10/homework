@@ -1,3 +1,31 @@
+def kmp_table(W):
+    """
+    input:
+        an array of characters, W (the word to be analyzed)
+    output:
+        an array of integers, T (the table to be filled)
+
+    define variables:
+        an integer, pos ← 1 (the current position we are computing in T)
+        an integer, cnd ← 0 (the zero-based index in W of the next character of the current candidate substring)
+    """
+    T = [-1] x len(W)
+    pos = 1
+    cnd = 0
+    while pos < len(W):
+        if W[pos] == W[cnd]:
+            T[pos] = T[cnd]
+        else:
+            T[pos] = cnd
+            while cnd >= 0 and W[pos] != W[cnd]:
+                cnd = T[cnd]
+        pos += 1
+	cnd += 1
+
+    T[pos] = cnd # (only needed when all word occurrences are searched)
+    return T
+
+
 def kmp_search(S, W):
 """
     input:
