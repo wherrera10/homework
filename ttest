@@ -53,36 +53,25 @@ define variables (one based indexing in Julia differs from the Wikipedia example
     an array of integers, T (the table, computed elsewhere)
 """
 function kmp_search(S, W)
-    len_pattern = length(pattern)
-    len_rawtext = length(rawtext)    
-    i, P = 1, Int[]   
-    
-    #get lps
-    lps=get_lps(pattern)
+    lenW, lenS = length(W), length(S)    
+    i, P = 1, Int[]      
+    T = kmp_table(W) # get pattern table
 
-    #normal naïve search
-    while i<=(len_rawtext-len_pattern+1)
-        stop=true
-        j=1
-        while j<=len_pattern
-            if rawtext[i+j-1]!=pattern[j]
-                stop=false
-                break
+    while i <= lenS - lenW + 1
+        j = 1
+        for j in 1:lenW
+            if S[i + j - 1] != W[j]
+                # pattern not found, so skip unnecessary inner loops
+		i += T[j] + 1
+                @goto next_i
             end
-            j+=1
         end
-        
-        #until a mismatch
-        #we leverage lps to skip unnecessary inner loops
-        if stop
-            push!(output,i)
-            i+=1
-        else
-            i=i+lps[j]+1            
-        end
-        
+	# found pattern so add to output
+        push!(P, i)
+        i += 1
+	@label next_i
     end                
-    return output    
+    return P    
 end
 
 function kmp_search(S, W)
