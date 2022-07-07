@@ -48,53 +48,29 @@ output:
     an array of integers, P (positions in S at which W is found)
 
 define variables (one based indexing in Julia differs from the Wikipedia example):
-    an integer, j ← 1 (the position of the current character in S)
-    an integer, k ← 1 (the position of the current character in W)
+    an integer, i ← 1 (the position of the current character in S)
+    an integer, j ← 1 (the position of the current character in W)
     an array of integers, T (the table, computed elsewhere)
 """
 function kmp_search(S, W)
     lenW, lenS = length(W), length(S)    
     i, P = 1, Int[]      
     T = kmp_table(W) # get pattern table
-
     while i <= lenS - lenW + 1
         j = 1
         for j in 1:lenW
             if S[i + j - 1] != W[j]
                 # pattern not found, so skip unnecessary inner loops
 		i += T[j] + 1
-                @goto next_i
+                @goto next_outer_loop
             end
         end
-	# found pattern so add to output
+	# found pattern W in S, so add to output P
         push!(P, i)
         i += 1
-	@label next_i
+	@label next_outer_loop
     end                
     return P    
 end
 
-function kmp_search(S, W)
-    j, k, lenS, lenW = 1, 1, 0, length(S), length(W)
-    P = Int[]
-    T = kmp_table(W)
-    while j <= lenS
-        if W[k] == S[j]
-            j += 1
-            k += 1
-            if k > lenW
-                # occurrence found: if only first occurrence is needed, m ← j - k  may be returned here
-                push!(P, j - k)
-                k = T[k] # (T[length(W)] can't be -1)
-	    end
-        else
-            k = T[k]
-            if k < 1:
-                j += 1
-                k += 1
-            end
-	end
-    end
-    return P, nP
-end
 
