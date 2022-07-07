@@ -51,8 +51,8 @@ function kmp_search(S, W)
         if W[k] == S[j]
             j += 1
             k += 1
-            if k = lenW
-                # (occurrence found, if only first occurrence is needed, m ← j - k  may be returned here)
+            if k > lenW
+                # occurrence found: if only first occurrence is needed, m ← j - k  may be returned here
                 push!(P, j - k)
                 k = T[k] # (T[length(W)] can't be -1)
 	    end
