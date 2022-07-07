@@ -7,26 +7,36 @@ input:
 output:
     an array of integers, T (the table to be filled)
 define variables:
-    an integer, pos ← 1 (the current position we are computing in T)
-    an integer, cnd ← 0 (the zero-based index in W of the next character of the current candidate substring)
+    an integer, i ← 2 (the current one-based position we are computing in T)
+    an integer, j ← 0 (the additive to index i in W of the next character of the current candidate substring)
 """
 function kmp_table(W)
-    T = fill(-1, length(W))
-    len, pos, cnd = length(W), 2, 1
-    while pos < len
-        if W[pos] == W[cnd]
-            T[pos] = T[cnd]
-        else
-            T[pos] = cnd
-            while cnd >= 1 && W[pos] != W[cnd]
-                cnd = T[cnd]
-	end
-        pos += 1
-	cnd += 1
+    len = length(W)
+    T = zeros(Int, len)
+    # start with the second letter of W, looking for patterns in W
+    i = 2
+    while i < len
+        j, maybematch = 0, true
+        while maybematch
+            # compute the longest proper prefix
+            if W[i + j] == W[j + 1]
+                T[i + j] = T[i + j - 1] + 1
+            else
+                T[i + j] = 0 # back to start
+                maybematch = false
+            end
+            j += 1
+            # avoid overshooting end with index
+            if i + j > len
+                maybematch = false
+            end
+        end
+        
+        # entry in T found, so begin at next starting point along W
+        i += j
     end
-    T[pos] = cnd # (only needed when all word occurrences are searched)
     return T
-end
+end    
 
 """
     function kmp_search(S, W)
@@ -36,13 +46,45 @@ input:
     an array of characters, W (the word sought)
 output:
     an array of integers, P (positions in S at which W is found)
-    an integer, nP (number of positions)
 
 define variables (one based indexing in Julia differs from the Wikipedia example):
     an integer, j ← 1 (the position of the current character in S)
     an integer, k ← 1 (the position of the current character in W)
     an array of integers, T (the table, computed elsewhere)
 """
+function kmp_search(S, W)
+    len_pattern = length(pattern)
+    len_rawtext = length(rawtext)    
+    i, P = 1, Int[]   
+    
+    #get lps
+    lps=get_lps(pattern)
+
+    #normal naïve search
+    while i<=(len_rawtext-len_pattern+1)
+        stop=true
+        j=1
+        while j<=len_pattern
+            if rawtext[i+j-1]!=pattern[j]
+                stop=false
+                break
+            end
+            j+=1
+        end
+        
+        #until a mismatch
+        #we leverage lps to skip unnecessary inner loops
+        if stop
+            push!(output,i)
+            i+=1
+        else
+            i=i+lps[j]+1            
+        end
+        
+    end                
+    return output    
+end
+
 function kmp_search(S, W)
     j, k, lenS, lenW = 1, 1, 0, length(S), length(W)
     P = Int[]
