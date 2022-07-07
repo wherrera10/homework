@@ -1,64 +1,69 @@
 
-def kmp_table(W):
-    """
-    input:
-        an array of characters, W (the word to be analyzed)
-    output:
-        an array of integers, T (the table to be filled)
+"""
+    function kmp_table(W)
 
-    define variables:
-        an integer, pos ← 1 (the current position we are computing in T)
-        an integer, cnd ← 0 (the zero-based index in W of the next character of the current candidate substring)
-    """
-    T = [-1] x len(W)
-    pos = 1
-    cnd = 0
-    while pos < len(W):
-        if W[pos] == W[cnd]:
+input:
+    an array of characters, W (the word to be analyzed)
+output:
+    an array of integers, T (the table to be filled)
+define variables:
+    an integer, pos ← 1 (the current position we are computing in T)
+    an integer, cnd ← 0 (the zero-based index in W of the next character of the current candidate substring)
+"""
+function kmp_table(W)
+    T = fill(-1, length(W))
+    len, pos, cnd = length(W), 2, 1
+    while pos < len
+        if W[pos] == W[cnd]
             T[pos] = T[cnd]
-        else:
+        else
             T[pos] = cnd
-            while cnd >= 0 and W[pos] != W[cnd]:
+            while cnd >= 1 && W[pos] != W[cnd]
                 cnd = T[cnd]
+	end
         pos += 1
 	cnd += 1
-
+    end
     T[pos] = cnd # (only needed when all word occurrences are searched)
     return T
+end
 
-
-def kmp_search(S, W):
 """
-    input:
-        an array of characters, S (the text to be searched)
-        an array of characters, W (the word sought)
-    output:
-        an array of integers, P (positions in S at which W is found)
-        an integer, nP (number of positions)
-
-    define variables:
-        an integer, j ← 0 (the position of the current character in S)
-        an integer, k ← 0 (the position of the current character in W)
-        an array of integers, T (the table, computed elsewhere)
-"""
-    nP = 0
-    P = {}
-    T = kmp_table(W)
+    function kmp_search(S, W)
     
-    while j < len(S):
-        if W[k] == S[j]:
+input:
+    an array of characters, S (the text to be searched)
+    an array of characters, W (the word sought)
+output:
+    an array of integers, P (positions in S at which W is found)
+    an integer, nP (number of positions)
+
+define variables (one based indexing in Julia differs from the Wikipedia example):
+    an integer, j ← 1 (the position of the current character in S)
+    an integer, k ← 1 (the position of the current character in W)
+    an array of integers, T (the table, computed elsewhere)
+"""
+function kmp_search(S, W)
+    j, k, lenS, lenW = 1, 1, 0, length(S), length(W)
+    P = Int[]
+    T = kmp_table(W)
+    while j <= lenS
+        if W[k] == S[j]
             j += 1
             k += 1
-            if k = len(W):
+            if k = lenW
                 # (occurrence found, if only first occurrence is needed, m ← j - k  may be returned here)
-                P[nP] = j - k
-		nP += 1
+                push!(P, j - k)
                 k = T[k] # (T[length(W)] can't be -1)
-        else:
+	    end
+        else
             k = T[k]
-            if k < 0:
+            if k < 1:
                 j += 1
                 k += 1
-    
+            end
+	end
+    end
     return P, nP
-    
+end
+
