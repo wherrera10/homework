@@ -1,76 +1,87 @@
 
-"""
-    function kmp_table(W)
+from collections import Counter
+from itertools import chain
+from random import choice, sample
 
-input:
-    an array of characters, W (the word to be analyzed)
-output:
-    an array of integers, T (the table to be filled)
-define variables:
-    an integer, i ← 2 (the current one-based position we are computing in T)
-    an integer, j ← 0 (the additive to index i in W of the next character of the current candidate substring)
-"""
-function kmp_table(W)
-    len = length(W)
-    T = zeros(Int, len)
-    # start with the second letter of W, looking for patterns in W
-    i = 2
-    while i < len
-        j, maybematch = 0, true
-        while maybematch
-            # compute the longest proper prefix
-            if W[i + j] == W[j + 1]
-                T[i + j] = T[i + j - 1] + 1
-            else
-                T[i + j] = 0 # back to start
-                maybematch = false
-            end
-            j += 1
-            # avoid overshooting end with index
-            if i + j > len
-                maybematch = false
-            end
-        end
-        
-        # entry in T found, so begin at next starting point along W
-        i += j
-    end
-    return T
-end    
+w, h, s = 96, 50, 9
+N = 3
 
-"""
-    function kmp_search(S, W)
+def setup():
+    size(w*f, h*f, P2D)
+    background('#FFFFFF')
+    frameRate(1000)
+    noStroke()
     
-input:
-    an array of characters, S (the text to be searched)
-    an array of characters, W (the word sought)
-output:
-    an array of integers, P (positions in S at which W is found)
+    global W, A, H, directions, patterns, freqs
+    
+    img = loadImage('Flowers.png') 
+    iw, ih = img.width, img.height
+    kernel = tuple(tuple(i + n*iw for i in xrange(N)) for n in xrange(N))
+    directions = ((-1, 0), (1, 0), (0, -1), (0, 1))
+    all = []
+        
+    for y in xrange(ih):
+        for x in xrange(iw):
+            cmat = tuple(tuple(img.pixels[((x+n)%iw)+(((a[0]+iw*y)/iw)%ih)*iw] for n in a) for a in kernel)
+            for r in xrange(4):
+                cmat = zip(*cmat[::-1])
+                all.append(cmat)
+                all.append(cmat[::-1])
+                all.append([a[::-1] for a in cmat])
 
-define variables (one based indexing in Julia differs from the Wikipedia example):
-    an integer, i ← 1 (the position of the current character in S)
-    an integer, j ← 1 (the position of the current character in W)
-    an array of integers, T (the table, computed elsewhere)
-"""
-function kmp_search(S, W)
-    lenW, lenS = length(W), length(S)    
-    i, P = 1, Int[]      
-    T = kmp_table(W) # get pattern table
-    while i <= lenS - lenW + 1
-        j = 1
-        for j in 1:lenW
-            if S[i + j - 1] != W[j]
-                # pattern not found, so skip unnecessary inner loops
-		i += T[j] + 1
-                @goto next_outer_loop
-            end
-        end
-	# found pattern W in S, so add to output P
-        push!(P, i)
-        i += 1
-	@label next_outer_loop
-    end                
-    return P    
-end
+    all = [tuple(chain.from_iterable(p)) for p in all] 
+    c = Counter(all)
+    freqs = c.values()
+    patterns = c.keys()
+    npat = len(freqs) 
+    
+    W = dict(enumerate(tuple(set(range(npat)) for i in xrange(w*h))))
+    A = dict(enumerate(tuple(set() for dir in xrange(len(directions))) for i in xrange(npat)))
+    H = dict(enumerate(sample(tuple(npat if i > 0 else npat-1 for i in xrange(w*h)), w*h)))
+    
+    for i1 in xrange(npat):
+        for i2 in xrange(npat):
+            if [n for i, n in enumerate(patterns[i1]) if i%N!=(N-1)] == [n for i, n in enumerate(patterns[i2]) if i%N!=0]:
+                A[i1][0].add(i2)
+                A[i2][1].add(i1)
+            if patterns[i1][:(N*N)-N] == patterns[i2][N:]:
+                A[i1][2].add(i2)
+                A[i2][3].add(i1)
+           
+          
+def draw():    
+    global H, W
 
+    if not H:
+        print 'finished'
+        noLoop()
+        return
+        
+    emin = min(H, key = H.get) 
+    id = choice([idP for idP in W[emin] for i in xrange(freqs[idP])])
+    W[emin] = {id}
+    del H[emin]
+    
+    stack = {emin}
+    while stack:
+        idC = stack.pop() 
+        for dir, t in enumerate(directions):
+            x = (idC%w + t[0])%w
+            y = (idC/w + t[1])%h
+            idN = x + y * w 
+            if idN in H: 
+                possible = {n for idP in W[idC] for n in A[idP][dir]}
+                if not W[idN].issubset(possible):
+                    intersection = possible & W[idN] 
+                
+                    if not intersection:
+                        print 'contradiction'
+                        noLoop()
+                        return
+                        
+                    W[idN] = intersection
+                    H[idN] = len(W[idN]) - random(.1)
+                    stack.add(idN)
 
+    fill(patterns[id][0])
+    rect((emin%w) * s, (emin/w) * s, s, s)
