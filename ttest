@@ -6,10 +6,12 @@ function encrypt(message, poly)
     return String([poly[CartesianIndex(numbers[i], numbers[i+1]) for i in 1:2:length(numbers)-1]
 end
  
-sub decrypt ($message, %poly) {
-   %poly.invert.hash{reverse [Z] (reverse flat %poly{$message.comb}».words».reverse).batch($message.chars)}.join
-}
- 
+function decrypt(message, poly)
+   positions = [find(==(c), poly)[1] for c in message]
+   numbers = vcat([c[1] for c in positions], [c[2] for c in positions])
+   return String([poly[i, i+1] for i in 1:2:length(numbers)-1])
+end
+
  
 for 'ABCDEFGHIKLMNOPQRSTUVWXYZ', 'ATTACKATDAWN',
     'BGWKZQPNDSIOAXEFCLUMTHYVR', 'FLEEATONCE',
