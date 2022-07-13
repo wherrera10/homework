@@ -1,39 +1,21 @@
+#=
+Global variables are automatically hidden by assignment to an undeclared variable of the same name within a function 
+when running a program outside the Julia REPL (Julia's command line interactive mode) but this behavior does not occur inside the REPL.
 
-'''
-    function bcd_decode(data::Vector{codeunit}, decimals::Int)    
+For example:
 
-Decode BCD number
-data: packed BCD;  decimals: decimal places for placing decimal point
-'''
-function bcd_decode(data::Vector{codeunit}, decimals::Int)
-    res = 0
-    for n, b in enumerate(reversed(data)):
-        res += (b & 0x0F) * 10 ** (n * 2 - decimals)
-        res += (b >> 4) * 10 ** (n * 2 + 1 - decimals)
-    return res
-    
-'''
-    function bcd_encode(s::AbstractString)
+=#
 
-Encode BCD number
-x is a string representation of a real number
-'''
-function bcd_encode(s::AbstractString)
-    s = trim(s)
-    if (decimal = findfirst(==('.'), s)) != nothing
-        s = s[begin:decimal-1] * s[decimal+1:end]
-    end
-    len = length(s)
-    if isodd(len)
-        s = '0' * s
-        len += 1
-    end
-    bcd = zeros(UInt8, div(len, 2))
-    for i in 1:2:len-1
-        bcd[i] = (s[len-i+1] - Int('0')) | ((s[len-i] - Int('0')) << 4)
-    end
-    return bcd, decimal
+r = 0
+
+function areacircle(radius)
+    r = pi * radius * radius
 end
-    
 
+println("r is $r")
+
+#+
+Inside the REPL, the with above Julia prints 
+
+If the above is placed in a text file and run as a script, Julia prints
 
