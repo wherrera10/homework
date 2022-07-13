@@ -1,21 +1,32 @@
-#=
-Global variables are automatically hidden by assignment to an undeclared variable of the same name within a function 
-when running a program outside the Julia REPL (Julia's command line interactive mode) but this behavior does not occur inside the REPL.
+In Julia, an ordinary `struct` is copied to a new object by assignment, and the resulting object cannot be changed:
 
-For example:
+julia> struct S x::Int end
+julia> a = S(3)
+S(3)
+julia> b = a
+S(3)
+julia> b.x = 5
+ERROR: setfield: immutable struct of type 5 cannot be changed
+julia> a
+S(3)
 
-=#
+But, also in Julia, a `mutable struct` is not copied, but with assignment instead a new _reference_ to the original struct is created.
+The undelying mutable struct's data will be changed in value for both variables if changed by either variable's reference:
 
-r = 0
+julia> mutable struct Sm x::Int end
+julia> a = Sm(3)
+Sm(3)
+julia> b = a
+Sm(3)
+julia> b.x = 5
+5
+julia> a
+Sm(5)
 
-function areacircle(radius)
-    r = pi * radius * radius
+This can be important with passing a struct to a function. Such a function might change that struct's contents as seen by the 
+calling code, if the struct is mutable. In Julia, functions that change the contents of an array or struct that is passed to them
+are by convention to be named with an exclamation point, as in
+
+function doublearray!(array)
+    array .*= 2
 end
-
-println("r is $r")
-
-#+
-Inside the REPL, the with above Julia prints 
-
-If the above is placed in a text file and run as a script, Julia prints
-
