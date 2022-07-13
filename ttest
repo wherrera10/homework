@@ -1,28 +1,27 @@
-polybius(text) = reshape(collect(text), isqrt(length(text), :)
- 
+polybius(text) = reshape(collect(text), isqrt(length(text)), :)
+
 function encrypt(message, poly)
-    positions = [find(==(c), poly)[1] for c in message]
+    positions = [findall(==(c), poly)[1] for c in message]
     numbers = mapreduce(coord -> [coord[1], coord[2]], vcat, positions)
-    return String([poly[CartesianIndex(numbers[i], numbers[i+1]) for i in 1:2:length(numbers)-1]
-end
- 
-function decrypt(message, poly)
-   positions = [find(==(c), poly)[1] for c in message]
-   numbers = vcat([c[1] for c in positions], [c[2] for c in positions])
-   return String([poly[i, i+1] for i in 1:2:length(numbers)-1])
+    return String([poly[CartesianIndex(numbers[i], numbers[i+1])] for i in 1:length(numbers)÷2-1])
 end
 
- 
-for 'ABCDEFGHIKLMNOPQRSTUVWXYZ', 'ATTACKATDAWN',
-    'BGWKZQPNDSIOAXEFCLUMTHYVR', 'FLEEATONCE',
-    (flat '_', '.', 'A'..'Z', 'a'..'z', 0..9).pick(*).join, 'The invasion will start on the first of January 2023.'.subst(/' '/, '_', :g)
- -> $polybius, $message {
-    my %polybius = polybius $polybius;
-    say "\nUsing polybius:\n\t" ~ $polybius.comb.batch($polybius.chars.sqrt.narrow).join: "\n\t";
-    say "\n  Message : $message";
-    say "Encrypted : " ~ my $encrypted = encrypt $message, %polybius;
-    say "Decrypted : " ~ decrypt $encrypted, %polybius;
-}
+function decrypt(message, poly)
+   positions = [findall(==(c), poly)[1] for c in message]
+   numbers = vcat([c[1] for c in positions], [c[2] for c in positions])
+@show length(numbers)
+   return String([poly[i, i+1] for i in 1:length(numbers)÷2-1])
+end
+
+for (key, text) in [("ABCDEFGHIKLMNOPQRSTUVWXYZ", "ATTACKATDAWN"), ("BGWKZQPNDSIOAXEFCLUMTHYVR", "FLEEATONCE"), 
+   (['_'; ','; 'A':'Z'; 'a':'z'; '0':'9'], "The invasion will start on the first of January 2023.")]
+    poly = polybius(key)
+    encrypted = encrypt(text, poly)
+    decrypted = decrypt(encrypted, poly)
+    println("\nUsing polybius:\n\t")
+    display(poly)
+    println("\n  Message: $text   Encrypted: $encrypted   Decrypted: $decrypted")
+end
 
 
 
