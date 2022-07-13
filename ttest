@@ -1,16 +1,16 @@
 polybius(text) = reshape(collect(text), isqrt(length(text)), :)
 
 function encrypt(message, poly)
+    n = length(message)
     positions = [findall(==(c), poly)[1] for c in message]
     numbers = mapreduce(coord -> [coord[1], coord[2]], vcat, positions)
-    return String([poly[CartesianIndex(numbers[i], numbers[i+1])] for i in 1:length(numbers)÷2-1])
+    return String([poly[CartesianIndex(numbers[i], numbers[n+i])] for i in 1:2n-1])
 end
 
 function decrypt(message, poly)
    positions = [findall(==(c), poly)[1] for c in message]
    numbers = vcat([c[1] for c in positions], [c[2] for c in positions])
-@show length(numbers)
-   return String([poly[i, i+1] for i in 1:length(numbers)÷2-1])
+   return String([poly[i, i+1] for i in 1:length(numbers)-1])
 end
 
 for (key, text) in [("ABCDEFGHIKLMNOPQRSTUVWXYZ", "ATTACKATDAWN"), ("BGWKZQPNDSIOAXEFCLUMTHYVR", "FLEEATONCE"), 
