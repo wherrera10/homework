@@ -1,45 +1,63 @@
 There are several "gotchas" in Julia related to when and how a variable or object is considered constant versus non-constant.
-In Julia, a global object declared as const is constant:
+In Julia, a global object declared as `const` is constant:
 
-const x = 2
-x = 1 # will trigger a JIT Julia compiler error
+:const x = 2
+:x = 1 # will trigger a JIT Julia compiler error
 
 However, arrays in Julia are mutable even if the variable name of the array is constant:
 
-const a = [1, 2, 3]
-push(a, 4; a[2] = 0; # No error, and A is now [1, 0, 4]
-a = [0, 0] # compiler error triggered by this, since we are assigning a itself not its contents
+:const a = [1, 2, 3]
+:push(a, 4; a[2] = 0; # No error, and A is now [1, 0, 4]
+:a = [0, 0] # compiler error triggered by this, since we are assigning a itself not its contents
 
 If you want the contents of a list to be immutable, make a tuple instead of an array:
-t = (1, 2, 3)  # now t[2] = 0 is flagged as an error
+:t = (1, 2, 3)  # now t[2] = 0 is flagged as an error
 
-In Julia, a struct declared as a struct is immutable, yet can contain mutable arrays:
+In Julia, a `struct` declared as a `struct` is immutable, yet can contain arrays that remain mutable even as part of an immutable struct:
 
-struct S
-    x::Int
-    a::Vector{Int}
-end
+:struct S
+    ::x::Int
+    ::a::Vector{Int}
+:end
 
-s = S(5, [3, 6])
+:s = S(5, [3, 6])
 
-s.x = 2 # ERROR
-s.a[1] = 2 # Not an error!
+:s.x = 2 # ERROR
+:s.a[1] = 2 # Not an error!
 
-a struct declared as mutable is fully mutable:
+and, a `struct` declared as `mutable` is fully mutable:
 
-mutable struct SM
-    x::Int
-    a::Vector{Int}
-end
+:mutable struct SM
+    ::x::Int
+    ::a::Vector{Int}
+:end
 
-s = SM(5, [3, 6])
+:s = SM(5, [3, 6])
 
-s.x = 2 # Not an error
-s.a[1] = 2 # Not an error
+:s.x = 2 # Not an error
+:s.a[1] = 2 # Not an error
 
 
-In Julia, a variable declared in global scope (outside of a function) can be changed in global scope
+In Julia, a non`const`variable declared in global scope (outside of a function) can be changed in global scope
 without any issue (although handling of global variables is done with extra bookeeping and may be slow).
 However, such a variable can only be read inside a function. Attempts to change such a variable in a function
 result in an "undeclared variable" error unless the variable is declared within the function with the global
 keyword:
+
+h = 5  # h is a global variable
+
+function triangle(b)
+    return  h * b / 2
+end
+
+triangle(10) # returns 25, no error
+
+function changeh(b)
+    h = b  # error here!
+end
+
+function change_declared_h(b)
+    global h
+    h = b  # no error here!
+end
+
