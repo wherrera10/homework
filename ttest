@@ -1,38 +1,3 @@
-polybius(text) = reshape(collect(text), isqrt(length(text)), :)
-
-function encrypt(message, poly)
-    n = length(message)
-    positions = [findall(==(c), poly)[1] for c in message]
-    numbers = mapreduce(coord -> [coord[1], coord[2]], vcat, positions)
-    return String([poly[CartesianIndex(numbers[i], numbers[n+i])] for i in 1:2n-1])
-end
-
-function decrypt(message, poly)
-   positions = [findall(==(c), poly)[1] for c in message]
-   numbers = vcat([c[1] for c in positions], [c[2] for c in positions])
-   return String([poly[i, i+1] for i in 1:length(numbers)-1])
-end
-
-for (key, text) in [("ABCDEFGHIKLMNOPQRSTUVWXYZ", "ATTACKATDAWN"), ("BGWKZQPNDSIOAXEFCLUMTHYVR", "FLEEATONCE"), 
-   (['_'; ','; 'A':'Z'; 'a':'z'; '0':'9'], "The invasion will start on the first of January 2023.")]
-    poly = polybius(key)
-    encrypted = encrypt(text, poly)
-    decrypted = decrypt(encrypted, poly)
-    println("\nUsing polybius:\n\t")
-    display(poly)
-    println("\n  Message: $text   Encrypted: $encrypted   Decrypted: $decrypted")
-end
-
-
-
-
-
-
-
-
-
-
-
 
 In Julia, an ordinary `struct` is copied to a new object by assignment, and the resulting object cannot be changed:
 
