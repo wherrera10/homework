@@ -44,20 +44,21 @@ However, such a variable can only be read inside a function. Attempts to change 
 result in an "undeclared variable" error unless the variable is declared within the function with the global
 keyword:
 
-h = 5  # h is a global variable
+:h = 5  # h is a global variable
 
-function triangle(b)
-    return  h * b / 2
-end
+:function triangle(b)
+    ::return  h * b / 2
+:end
 
-triangle(10) # returns 25, no error
+:triangle(10) # returns 25, no error
 
-function changeh(b)
-    h = b  # error here!
-end
+:function changeh(b)
+    ::h = b  # error here!
+:end
 
-function change_declared_h(b)
-    global h
-    h = b  # no error here!
-end
+:function change_declared_h(b)
+    ::global h
+    ::h = b  # no error here!
+:end
+
 
