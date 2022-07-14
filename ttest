@@ -1,5 +1,17 @@
+There are several "gotchas" in Julia related to when and how a variable or object is considered constant versus non-constant.
+In Julia, a global object declared as const is constant:
+
+const x = 2
+x = 1 # will trigger a JIT Julia compiler error
+
+However, arrays in Julia are mutable even if the variable name of the array is constant:
+
 const a = [1, 2, 3]
-push(a, 4; a[2] = 0; # these change a's contents but not what a is (a reference to the array)
+push(a, 4; a[2] = 0; # No error, and A is now [1, 0, 4]
+a = [0, 0] # compiler error triggered by this, since we are assigning a itself not its contents
+
+If you want the contents of a list to be immutable, make a tuple instead of an array:
+t = (1, 2, 3)  # now t[2] = 0 is flagged as an error
 
 In Julia, a struct declared as a struct is immutable in its contents:
 
