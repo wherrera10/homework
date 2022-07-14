@@ -1,3 +1,19 @@
+a(n)=print("n=",n)
+s = p = vector(n-2)
+t = p[1] = p[2] = 2
+s[1] = 1/2
+while t > 1
+    p[t] = nextprime(p[t] + 1)
+    s[t]=s[t-1]+1/p[t]
+    if s[t] == 1 || s[t] + (n-t)/p[t]<=1
+        t--
+    if(t<n-2,t++;p[t]=max(p[t-1],s[t-1]/(1-s[t-1])),\
+c=numerator(s[n-2]);d=denominator(s[n-2]);k=d^2+c-d;f=divisors(k);\
+for(i=1,(length(f)+1)\2,h=f[i];if((h+d)%(d-c)==0&&(k/h+d)%(d-c)==0,\
+r1=(h+d)/(d-c);r2=(k/h+d)/(d-c);\
+if(r1>p[n-2]&&r2>p[n-2]&&r1!=r2&&isprime(r1)&&isprime(r2),\
+w=d*r1*r2;print(w);write("giuga.txt",w)))))))
+
 
 In Julia, an ordinary `struct` is copied to a new object by assignment, and the resulting object cannot be changed:
 
