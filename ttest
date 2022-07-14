@@ -1,49 +1,33 @@
-a(n)=print("n=",n)
-s = p = vector(n-2)
-t = p[1] = p[2] = 2
-s[1] = 1/2
-while t > 1
-    p[t] = nextprime(p[t] + 1)
-    s[t]=s[t-1]+1/p[t]
-    if s[t] == 1 || s[t] + (n-t)/p[t]<=1
-        t--
-    if(t<n-2,t++;p[t]=max(p[t-1],s[t-1]/(1-s[t-1])),\
-c=numerator(s[n-2]);d=denominator(s[n-2]);k=d^2+c-d;f=divisors(k);\
-for(i=1,(length(f)+1)\2,h=f[i];if((h+d)%(d-c)==0&&(k/h+d)%(d-c)==0,\
-r1=(h+d)/(d-c);r2=(k/h+d)/(d-c);\
-if(r1>p[n-2]&&r2>p[n-2]&&r1!=r2&&isprime(r1)&&isprime(r2),\
-w=d*r1*r2;print(w);write("giuga.txt",w)))))))
+const a = [1, 2, 3]
+push(a, 4; a[2] = 0; # these change a's contents but not what a is (a reference to the array)
 
+In Julia, a struct declared as a struct is immutable in its contents:
 
-In Julia, an ordinary `struct` is copied to a new object by assignment, and the resulting object cannot be changed:
-
-julia> struct S x::Int end
-julia> a = S(3)
-S(3)
-julia> b = a
-S(3)
-julia> b.x = 5
-ERROR: setfield: immutable struct of type 5 cannot be changed
-julia> a
-S(3)
-
-But, also in Julia, a `mutable struct` is not copied, but with assignment instead a new _reference_ to the original struct is created.
-The undelying mutable struct's data will be changed in value for both variables if changed by either variable's reference:
-
-julia> mutable struct Sm x::Int end
-julia> a = Sm(3)
-Sm(3)
-julia> b = a
-Sm(3)
-julia> b.x = 5
-5
-julia> a
-Sm(5)
-
-This can be important with passing a struct to a function. Such a function might change that struct's contents as seen by the 
-calling code, if the struct is mutable. In Julia, functions that change the contents of an array or struct that is passed to them
-are by convention to be named with an exclamation point, as in
-
-function doublearray!(array)
-    array .*= 2
+struct S
+    x::Int
+    a::Vector{Int}
 end
+
+s = S(5, [3, 6])
+
+s.x = 2 # ERROR
+s.a[1] = 2 # Not an error!
+
+a struct declared as mutable is fully mutable:
+
+mutable struct SM
+    x::Int
+    a::Vector{Int}
+end
+
+s = SM(5, [3, 6])
+
+s.x = 2 # Not an error
+s.a[1] = 2 # Not an error
+
+
+In Julia, a variable declared in global scope (outside of a function) can be changed in global scope
+without any issue (although handling of global variables is done with extra bookeeping and may be slow).
+However, such a variable can only be read inside a function. Attempts to change such a variable in a function
+result in an "undeclared variable" error unless the variable is declared within the function with the global
+keyword:
