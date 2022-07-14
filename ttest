@@ -13,7 +13,7 @@ a = [0, 0] # compiler error triggered by this, since we are assigning a itself n
 If you want the contents of a list to be immutable, make a tuple instead of an array:
 t = (1, 2, 3)  # now t[2] = 0 is flagged as an error
 
-In Julia, a struct declared as a struct is immutable in its contents:
+In Julia, a struct declared as a struct is immutable, yet can contain mutable arrays:
 
 struct S
     x::Int
