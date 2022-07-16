@@ -3,13 +3,17 @@ using Primes
 """
     function frugalness(n, b, base = 10)
     
-calculate the number of digits in base `base` to write the factor expansion of `n` and then 
-Analyze for wa
+calculate d1: the number of digits in base `base` required to write the factor expansion of `n`, ie
+12 -> 2^2 * 3^2 is 4 digits, 7 -> 7 is 1 digit, 20 -> 5 * 2^2 is 3 digits
+
+calculate d2: the number of digits in base `base` to represent `n` itself
+
+return -1 if frugal (d1 > d2), 0 if equidigital (d1 == d2), -1 if wasteful (d1 > d2)
 """
 function frugalness(n, b, base = 10)
-    factorsum = sum(p -> sum(digits(p[2], base=base) + p[1] == 1 ? 0 : sum(digits(p[1], base=base), factors(n).pe)
-    return [Int.digits(n, b).count, digits]
-}
+    factorsum = sum(p -> ndigits(p[2], base=base) + p[1] == 1 ? 0 : ndigits(p[1], base=base), factors(n).pe)
+    return sign(factorsum + ndigits(n, base=base)
+end
  
 for (b in [10, 11]) {
     var w = []
