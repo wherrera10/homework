@@ -11,8 +11,7 @@ calculate d2: the number of digits in base `base` to represent `n` itself
 return -1 if frugal (d1 > d2), 0 if equidigital (d1 == d2), -1 if wasteful (d1 > d2)
 """
 function frugalness(n, b, base = 10)
-    factorsum = sum(p -> ndigits(p[2], base=base) + p[1] == 1 ? 0 : ndigits(p[1], base=base), factors(n).pe)
-    return sign(factorsum + ndigits(n, base=base)
+    return sign(sum(p -> ndigits(p[2], base=base) + p[1] == 1 ? 0 : ndigits(p[1], base=base), factors(n).pe) > factorsum + ndigits(n, base=base))
 end
  
 for (b in [10, 11]) {
