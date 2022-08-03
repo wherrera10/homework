@@ -1,6 +1,6 @@
 using Primes
 
-ispanbasenonprime(n) = (d = digits(n); !isprime(n) && all(b -> !isprime(evalpoly(b, d)), maximum(d)+1:n))
+ispanbasenonprime(n) = (d = digits(n); all(b -> !isprime(evalpoly(b, d)), maximum(d)+1:max(10, n)))
 
 panbase2500 = filter(ispanbasenonprime, 2:2500)
 oddpanbase2500 = filter(isodd, panbase2500)
