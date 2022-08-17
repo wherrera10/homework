@@ -6,7 +6,7 @@ issuperPoulet(n) = !isprime(n) && big"2"^(n - 1) % n == 1 && all(d -> (big"2"^d 
 
 spoulets = filter(issuperPoulet, 1:12_000_000)
 
-println("The first 20 super-Poulet numbers are: ", spoulets[1:20]
+println("The first 20 super-Poulet numbers are: ", spoulets[1:20])
 
 idx1m = findfirst(>(1_000_000), spoulets)
 idx10m = findfirst(>(10_000_000), spoulets)
