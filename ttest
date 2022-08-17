@@ -2,5 +2,5 @@ using Primes
 
 divisors(n) = @view sort(vec(map(prod, Iterators.product((p.^(0:m) for (p, m) in eachfactor(n))...))))[begin:end-1]
 
-ispseudo(n, base) = !isprime(n) && big"2"^(n - 1) % n == 1 && all(d -> (big"2"^d - 2) % d == 0, divisors(n))
+issuperPoulet(n) = !isprime(n) && big"2"^(n - 1) % n == 1 && all(d -> (big"2"^d - 2) % d == 0, divisors(n))
 
