@@ -1,18 +1,44 @@
-#using Formatting
+using BenchmarkTools
 
-function KlamerRado(N)
-    kr = falses(100 * N)
-    krcount = 1
-    kr[1] = true
-    for i in 1:30N
-        if kr[i]
-            kr[2i + 1] = true
-            kr[3i + 1] = true
+@btime length(intersect([1,2,3,4,5], [3,4,5,6]))
+  952.174 ns (15 allocations: 1.12 KiB)
+3
+
+@btime count(x -> x in [3,4,5,6], [1,2,3,4,5])
+  220.577 ns (6 allocations: 576 bytes)
+3
+
+@btime count(x -> any(==(x), [3,4,5,6]), [1,2,3,4,5])
+  219.630 ns (6 allocations: 576 bytes)
+3
+
+function count_matches(x,y)
+    sort!(x) # or x = sort(x) 
+    sort!(y) # or y = sort(y)
+    i = j = 1
+    matches = 0
+    while i <= length(x) && j <= length(y)
+        if x[i] == y[j]
+            i += 1 
+            j += 1
+            matches += 1
+        elseif x[i] < y[j]
+            i += 1
+        else 
+            j += 1
         end
-    end
-    return [i for i in eachindex(kr) if kr[i]]
+    end 
+    matches
 end
 
-kr1m = KlamerRado(1000000)
+function count_matches1(x,y)
+    length(intersect(Set(x), Set(y)))
+end
 
-println(kr1m[1000000])
+function count_matches2(x, y)
+    count(n -> any(==(n), x), y)
+end
+
+@btime count_matches(x, y)  setup=(x = rand(1:1000,10000); y = rand(1:1000,10000)) evals=1
+@btime count_matches1(x, y) setup=(x = rand(1:1000,10000); y = rand(1:1000,10000)) evals=1
+@btime count_matches2(x, y) setup=(x = rand(1:1000,10000); y = rand(1:1000,10000)) evals=1
