@@ -1,32 +1,23 @@
-using BenchmarkTools
 
-function count_matches(x,y)
-    sort!(x) # or x = sort(x) 
-    sort!(y) # or y = sort(y)
-    i = j = 1
-    matches = 0
-    while i <= length(x) && j <= length(y)
-        if x[i] == y[j]
-            i += 1 
-            j += 1
-            matches += 1
-        elseif x[i] < y[j]
-            i += 1
-        else 
-            j += 1
-        end
-    end 
-    matches
-end
-
-function count_matches1(x,y)
-    length(intersect(Set(x), Set(y)))
-end
-
-function count_matches2(x, y)
-    count(n -> any(==(n), x), y)
-end
-
-@btime count_matches(x, y)  setup=(x = rand(1:1000,10000); y = rand(1:1000,10000)) evals=1
-@btime count_matches1(x, y) setup=(x = rand(1:1000,10000); y = rand(1:1000,10000)) evals=1
-@btime count_matches2(x, y) setup=(x = rand(1:1000,10000); y = rand(1:1000,10000)) evals=1
+def generate_cyclops():
+    right = 0
+    while True:
+        s = str(right)
+        if all(c != '0' for c in s):
+            yield int(s + '0' + s)
+        else:
+            right += 1
+             
+# Generate a stream of palindromic cyclops numbers, in increasing numeric order, from 0
+def palindromiccyclops:
+  def r: explode|reverse|implode;
+  def c: . as $n
+    | if $n == 0 then "0"
+      elif $n == 1
+      then (range(1;10)|tostring) as $base
+      | $base + "0" + ($base | r)
+      else (range(pow(10;$n-1); pow(10; $n))|tostring|select(test("0")|not)) as $base
+      | $base + "0" + ($base | r)
+      end;
+  range(0; infinite) | c | tonumber;
+  
