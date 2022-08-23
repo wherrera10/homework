@@ -1,23 +1,30 @@
-
 def generate_cyclops():
-    right = 0
+    left, right = '1', '1'
     while True:
-        s = str(right)
-        if all(c != '0' for c in s):
-            yield int(s + '0' + s)
-        else:
-            right += 1
-             
-# Generate a stream of palindromic cyclops numbers, in increasing numeric order, from 0
-def palindromiccyclops:
-  def r: explode|reverse|implode;
-  def c: . as $n
-    | if $n == 0 then "0"
-      elif $n == 1
-      then (range(1;10)|tostring) as $base
-      | $base + "0" + ($base | r)
-      else (range(pow(10;$n-1); pow(10; $n))|tostring|select(test("0")|not)) as $base
-      | $base + "0" + ($base | r)
-      end;
-  range(0; infinite) | c | tonumber;
-  
+        if all(c == '9' for c in right)
+            if all(c == '9' for c in left
+                left = right = '1' * (len(right) + 1)
+            else
+                for i in range(len(left)-1, -1, -1):
+                    if left[i] < '9'
+                        left = left[:i] + char(left[i] + 1) + left[i+1:]
+                        break
+        else
+            for i in range(len(right)-1, -1, -1):
+                if right[i] < '9'
+                    right = right[:i] + char(right[i] + 1) + right[i+1:]
+                    break
+        yield int(left + '0' + right)
+        
+  def generate_palindromic_cyclops():
+    right = '1'
+    while True:
+        if all(c == '9' for c in right)
+            right = right = '1' * (len(right) + 1)
+        else
+            for i in range(len(right)-1, -1, -1):
+                if right[i] < '9'
+                    right = right[:i] + char(right[i] + 1) + right[i+1:]
+                    break
+        yield int(right + '0' + right)
+        
