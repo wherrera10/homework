@@ -1,17 +1,5 @@
 using BenchmarkTools
 
-@btime length(intersect([1,2,3,4,5], [3,4,5,6]))
-  952.174 ns (15 allocations: 1.12 KiB)
-3
-
-@btime count(x -> x in [3,4,5,6], [1,2,3,4,5])
-  220.577 ns (6 allocations: 576 bytes)
-3
-
-@btime count(x -> any(==(x), [3,4,5,6]), [1,2,3,4,5])
-  219.630 ns (6 allocations: 576 bytes)
-3
-
 function count_matches(x,y)
     sort!(x) # or x = sort(x) 
     sort!(y) # or y = sort(y)
