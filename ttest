@@ -1,51 +1,13 @@
-""" Rosetta Code task rosettacode.org/wiki/Sieve_of_Pritchard """
-
-""" Pritchard sieve of primes up to limit, uses limit for type of the primes """
-
-""" using Julia 1.0 (on Tio.run) """
-
-function pritchard(limit::T) where T <: Integer
-    members = Set(one(T))
-    steplength = 1 # wheel size 
-    prime = T(2)
-    primes = T[]
-    nlimit = prime * steplength # wheel limit
-    ac = 2 # added count, since adding 1 & 2 during initialization
-    rc = 1 # removed count, since 1 will be removed at the end
-    rtlim = T(floor(sqrt(limit))) # this allows the main loop to go
-    while prime <= rtlim # one extra time, eliminating the follow-up for
-                         # the last partial wheel (if present)
-        if steplength < limit
-            for w in members
-                n = w + steplength
-                while n <= nlimit
-                    push!(members, n)
-                    ac += 1
-                    n += steplength
-                end
-            end
-            steplength = nlimit # advance wheel size
-        end
-        np = 5
-        for w in sort!(collect(members))
-            if np == 5 && w > prime np = w end
-            n = prime * w
-            if n > nlimit break end 
-            rc += 1
-            delete!(members, n)
-        end
-        if np < prime break end
-        push!(primes, prime)
-        # this works, but doubles the runtime for limit = 1000000
-        # prime = prime == 2 ? 3 : sort!(collect(members))[2]
-        # this is faster
-        prime = prime == 2 ? 3 : np
-        
-        nlimit = min(steplength * prime, limit) # advance wheel limit 
+map(container) do item
+   @async begin
+       WebSockets.open(url) do ws 
+          payload = generatepayload(item)
+          if writeguarded(ws, JSON3.write(payload))
+              while isopen(ws)
+                 data, success = readguarded(ws)
+                 ### process data 
+              end
+           end
+       end
     end
-    delete!(members, 1)
-    println("up to ",limit, ", added:", ac, " removed:", rc, " prime count:", length(primes) + length(members) )
-    return sort!(append!(primes, members))
 end
-
-println(pritchard(150))
