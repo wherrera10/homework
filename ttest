@@ -12,7 +12,7 @@ map(container) do item
            end
        catch y
            @debug y  # log something here
-           close(ws) 
+          
        end
     end
 end
