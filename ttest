@@ -1,13 +1,18 @@
 map(container) do item
-   @async begin
-       WebSockets.open(url) do ws 
-          payload = generatepayload(item)
-          if writeguarded(ws, JSON3.write(payload))
-              while isopen(ws)
-                 data, success = readguarded(ws)
-                 ### process data 
-              end
+   @async while true
+       try
+           WebSockets.open(url) do ws 
+              payload = generatepayload(item)
+              if writeguarded(ws, JSON3.write(payload))
+                  while isopen(ws)
+                     data, success = read(ws)
+                     ### process data 
+                  end
+               end
            end
+       catch y
+           @debug y  # log something here
+           close(ws) 
        end
     end
 end
