@@ -1,18 +1,22 @@
-map(container) do item
-   @async while true
-       try
-           WebSockets.open(url) do ws 
-              payload = generatepayload(item)
-              if writeguarded(ws, JSON3.write(payload))
-                  while isopen(ws)
-                     data, success = read(ws)
-                     ### process data 
-                  end
-               end
-           end
-       catch y
-           @debug y  # log something here
-          
-       end
+struct SquareSums
+    sums::Vector{Tuple{Int, Int, Int}}
+    SquareSums() = new(Tuple{Int, Int, Int}[])
+end
+
+function iterate(sqs::SquareSums, state = 1)
+    while isempty(sqs.sums) || state^2 <= sqs.sums[1][1]
+        push!(sqs.sums, (state * state, state, 0))
+        state += 1
     end
+    sort!(sqs.sums)
+    s, xy = sqs.sums[1][1], Tuple{Int, Int}[]
+    while !isempty(sqs.sums) && sqs.sums[1][1] == s # pop all vectors with same length
+        _, a, b = popfirst!(sqs.sums)
+        push!(xy, (a, b))
+        if a > b
+            push!(sqs.sums, (a * a + (b + 1) * (b + 1), a, b + 1))
+        end
+    end
+    sort!(sqs.sums)
+    return xy, n
 end
