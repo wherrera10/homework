@@ -1,37 +1,73 @@
-struct SquareSums
-    sums::Vector{Tuple{Int, Int, Int}}
-    SquareSums() = new(Tuple{Int, Int, Int}[])
-end
+using Continuables
+using DataStructures
+using Plots
 
-function Base.iterate(sqs::SquareSums, state = 1)
-    while isempty(sqs.sums) || state^2 <= sqs.sums[1][1]
-        push!(sqs.sums, (state * state, state, 0))
-        state += 1
+struct SquareSums end
+
+function Base.iterate(ss::SquareSums, state = (1, PriorityQueue{Tuple{Int, Int, Int}, Int}()))
+    i, sums = state
+    while isempty(sums) || i^2 <= peek(sums)[2]
+        enqueue!(sums, (i^2, i, 0) => i^2)
+        i += 1
     end
-    sort!(sqs.sums)
-    nextsum, xy = sqs.sums[1][1], Tuple{Int, Int}[]
-    while !isempty(sqs.sums) && sqs.sums[1][1] == nextsum # pop all vectors with same length
-        _, a, b = popfirst!(sqs.sums)
-        push!(xy, (a, b), (b, a), (-a, b), (a, -b))
+    nextsum, xy = peek(sums)[2], Tuple{Int, Int}[]
+    while !isempty(sums) && peek(sums)[2] == nextsum # pop all vectors with same length
+        nextsum, a, b = dequeue!(sums)
+        push!(xy, (a, b))
         if a > b
-            push!(sqs.sums, (a * a + (b + 1) * (b + 1), a, b + 1))
+            hsq = a^2 + (b + 1)^2
+            enqueue!(sums, (hsq, a, b + 1) => hsq)
         end
     end
-    return unique(xy), state
+    return xy, (i, sums)
+end
+
+@cont function squaresums()
+    i, sums = 1, PriorityQueue{Tuple{Int, Int, Int}, Int}()
+    while true
+        while isempty(sums) || i^2 <= peek(sums)[2]
+            enqueue!(sums, (i^2, i, 0) => i^2)
+            i += 1
+        end
+        nextsum, xy = peek(sums)[2], Tuple{Int, Int}[]
+        while !isempty(sums) && peek(sums)[2] == nextsum # pop all vectors with same length
+            nextsum, a, b = dequeue!(sums)
+            push!(xy, (a, b))
+            if a > b
+                hsq = a^2 + (b + 1)^2
+                enqueue!(sums, (hsq, a, b + 1) => hsq)
+            end
+        end
+        cont(xy)
+    end
 end
 
 function babylonian_spiral(N)
-    sqs = SquareSums()
-    xydeltas = [(0, 0)]
-    for xys in sqs
-        lastdx, lastdy = xydeltas[end]
-        theta = atan(lastdy, lastdx)
-        sort!(xys, by = p -> mod1(theta - atan(p[2], p[1]), 2π))
-        push!(xydeltas, xys[begin])
-        length(xydeltas) >= N && break
+    sqsums = squaresums()
+    dx, dy, xydeltas = 0, 1, [(0, 0)]
+    @label done
+    if length(xydeltas) > 1
+        return accumulate((a, b) -> (a[1] + b[1], a[2] + b[2]), @view xydeltas[begin:N])
     end
-    return accumulate((a, b) -> (a[1] + b[1], a[2] + b[2]), @view xydeltas[begin:N])
+    map(squaresums) do xys
+        for i in 1:length(xys)
+            a, b = xys[i]
+            a != b && push!(xys, (b, a))
+            a != 0 && push!(xys, (-a, b), (b, -a))
+            b != 0 && push!(xys, (a, -b), (-b, a))
+            a * b != 0 && push!(xys, (-a, -b), (-b, -a))
+        end
+        filter!(p -> p[1] * dy - p[2] * dx >= 0, xys)
+        _, idx = findmax(p -> p[1] * dx + p[2] * dy, xys)
+        dx, dy = xys[idx]
+        push!(xydeltas, (dx, dy))
+        length(xydeltas) >= N # && @goto done
+    end
 end
 
 println("The first 40 Babylonian spiral points are:")
-@show babylonian_spiral(40)
+for (i, p) in enumerate(babylonian_spiral(40))
+    print(rpad(p, 10), i % 10 == 0 ? "\n" : "")
+end
+
+Plots.plot(babylonian_spiral(100_000))
