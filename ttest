@@ -1,20 +1,7 @@
-julia> issquare(n) = isqrt(n)^2 == n
-issquare (generic function with 1 method)
+issquare(n) = isqrt(n)^2 == n
+is_subunit_square(n) = issquare(n) && all(>(0), (d = digits(n))) && issquare(evalpoly(d .- 1, 10))
 
-julia> issquare(121)
-true
+for i in 1:2000
+    is_subunit_square(i) && println(i)
+end
 
-julia> issquare(37)
-false
-
-julia> issquare(36)
-true
-
-julia> is_subunit_square(n) = issquare(n) && issquare(subunit(n))
-is_subunit_square (generic function with 1 method)
-
-julia> subunit(n, base=10) = evalpoly((digits(n, base=base) .- 1), base)
-
-subunit (generic function with 2 methods)
-
-julia> subunit(n, base=10) = evalpoly((digits(n, base=base) .- 1), base)
