@@ -1,7 +1,24 @@
-issquare(n) = isqrt(n)^2 == n
-is_subunit_square(n) = issquare(n) && all(>(0), (d = digits(n))) && issquare(evalpoly(d .- 1, 10))
 
-for i in 1:2000
-    is_subunit_square(i) && println(i)
+""" Return true iff `n` decreased in all digits by 1 is a square of some integer """
+is_subunit_square(n) = (d = digits(n); all(>(0), d) && issquare(evalpoly(10, d .- 1)))
+
+for i in 1:10^9
+    is_subunit_square(i^Int128(2)) && println(i^2)
 end
 
+
+1       
+36
+3136
+24336
+118336
+126736
+5973136
+71526293136
+113531259136
+137756776336
+318723477136
+118277763838638336
+118394723955598336
+126825269186126736
+264779654424693136
