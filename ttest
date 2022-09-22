@@ -1,42 +1,20 @@
-""" Rosetta code Wagstaff_primes task """
+julia> issquare(n) = isqrt(n)^2 == n
+issquare (generic function with 1 method)
 
-from sympy import isprime
+julia> issquare(121)
+true
 
-def wagstaff(N):
-    """ find first N Wagstaff primes """
-    pri, wcount = 2, 0
-    while wcount < N:
-        pri +=1
-        if isprime(pri):
-            wag = (2**pri + 1) // 3
-            if isprime(wag):
-                wcount += 1
-                print(f'{wcount: 2}: {pri: 5} => ', 
-                      f'{wag:,}' if wcount < 11 else f'[{len(str(wag))} digit number]')
+julia> issquare(37)
+false
 
+julia> issquare(36)
+true
 
+julia> is_subunit_square(n) = issquare(n) && issquare(subunit(n))
+is_subunit_square (generic function with 1 method)
 
-wagstaff(22)
- 1:     3 =>  3
- 2:     5 =>  11
- 3:     7 =>  43
- 4:    11 =>  683
- 5:    13 =>  2,731
- 6:    17 =>  43,691
- 7:    19 =>  174,763
- 8:    23 =>  2,796,203
- 9:    31 =>  715,827,883
- 10:    43 =>  2,932,031,007,403
- 11:    61 =>  [18 digit number]
- 12:    79 =>  [24 digit number]
- 13:   101 =>  [30 digit number]
- 14:   127 =>  [38 digit number]
- 15:   167 =>  [50 digit number]
- 16:   191 =>  [58 digit number]
- 17:   199 =>  [60 digit number]
- 18:   313 =>  [94 digit number]
- 19:   347 =>  [104 digit number]
- 20:   701 =>  [211 digit number]
- 21:  1709 =>  [514 digit number]
- 22:  2617 =>  [788 digit number]
- 
+julia> subunit(n, base=10) = evalpoly((digits(n, base=base) .- 1), base)
+
+subunit (generic function with 2 methods)
+
+julia> subunit(n, base=10) = evalpoly((digits(n, base=base) .- 1), base)
