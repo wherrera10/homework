@@ -2,6 +2,15 @@
 
 using Primes
 
+function Zsigmondy(a, b, limit = 30)
+    aexp, bexp = map(n -> a^n, 0:limit), map(n -> b^n, 0:limit)
+    for n in 1:limit
+        my @divisors = divisors(@aexp[$n] - @bexp[$n]).sort: -*;
+        @divisors.first: -> $d { all (1..^$n).map: -> $m { (@aexp[$m] - @bexp[$m]) gcd $d == 1 } }
+    end
+end
+
+
 function zs(n, a, b)
     dn = a^n - b^n
     isprime(dn) && return dn
