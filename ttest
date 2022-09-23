@@ -1,22 +1,22 @@
-''' Rosetta code task: rosettacode.org/wiki/Two%27s_complement '''
+''' Rosetta code task: rosettacode.org/wiki/Zsigmondy_numbers '''
 
-from sys import byteorder
+using Primes
 
+function zs(n, a, b)
+    dn = a^n - b^n
+    isprime(dn) && return dn
+    divs = divisors(dn)
+    dms = map(m -> a^m - b^m, 1:n)
+    for d in divs
+        all(dm -> gcd(dm, d) == 1, dms) && return d
+    end
+    return 1
+end
 
-def twos_complement(val, byts):
-    '''
-    Return the two's-complement of `val`.
-    `val` can be either a string representation in base 10 or an integer
-    '''
-    val = int(str(val), 2)
-    return int.from_bytes(val.to_bytes(byts, byteorder=byteorder, signed=False),
-                          byteorder=byteorder, signed=True)
+abs = [ [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [3, 2], [5, 3], [7, 3], [7, 5] ]
+for (a, b) in abs
+    lim = (a == 7 && b != 3) ? 18 : 20
+    println("Zsigmony(n, %(a), %(b)) - first %(lim) terms:")
+    println("$d", (1..lim).map { |n| zs.call(n, a, b) }.toList)
+end
 
-
-test_set = [-2**31, -2**31 + 1, -2, -1, 0, 1, 2, 2**31 - 2, 2**31 - 1]
-
-for b in test_set:
-    byts = ~b + 1
-    if byts > 2**31:
-        byts -= 2**32
-    print(f'{b} -> {byts}')
