@@ -15,8 +15,7 @@ end
 
 abs = [ [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [3, 2], [5, 3], [7, 3], [7, 5] ]
 for (a, b) in abs
-    lim = (a == 7 && b != 3) ? 18 : 20
-    println("Zsigmony(n, %(a), %(b)) - first %(lim) terms:")
-    println("$d", (1..lim).map { |n| zs.call(n, a, b) }.toList)
+    limit = (a == 7 && b != 3) ? 18 : 20
+    println("Zsigmony(n, $a, $b) - first $limit terms: ", [zs(n, a, b) for n in 1:limit])
 end
 
