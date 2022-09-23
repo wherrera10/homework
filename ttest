@@ -7,7 +7,7 @@ issquare(n::Integer) = isqrt(n)^2 == n
 """ Return true if `n` after decrenment of each digits by 1 is a square of another integer """
 is_subunit_square(n) = (d = digits(n); all(>(0), d) && issquare(evalpoly(10, d .- 1)))
 
-ssq = [i^2 for i in Int128(1):10^9 if is_subunit_square(i^2)]
+ssq = [i^2 for i in 1:10^9 if is_subunit_square(i^2)]
 
 println("Subunit squares starting with `1`: ", filter(j -> string(j)[1] == '1', ssq))
 println("Subunit squares not starting with `1`: ", filter(j -> string(j)[1] != '1', ssq))
