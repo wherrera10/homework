@@ -1,16 +1,16 @@
-const max_area, half_max, areas = 1000, 500, falses(max_area)
+def is_inconsummate(n):
+    '''
+    A inconsummate number is a non-negative integer that cannot be formed by any integer N divided by the the digital sum of N
+    '''
+    digitalsum = sum(d * 10^i for i, d in enumerate(reverse([int(c) for c in str(n)])))
+    max
+    for i in range(0, 
 
-for i in 1:max_area
-    for j in 1:maxlength
-        i * j > half_max && break
-        for k in 1:maxlength
-            area = 2 * (i * j + i * k + j * k)
-            area > max_area && break
-            areas[area] = true
-        end
-    end
-end
+def generate_inconsummate():
+    count = 0
+    for n in 0:10^9
+        if is_inconsummate(n):
+            count += 1
+            yield n, count
 
-println("Even surface areas < $max_area NOT achievable by any regular integer-valued cuboid:\n",
-    [n for n in eachindex(areas) if areas[n]])
-   
+
