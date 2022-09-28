@@ -1,11 +1,9 @@
 
-minimum_digitsums = [Int(ceil((10^i - 1) / 9i)) for i in 1:10]
-
-max_to_search(n) = minimum_digitsum[findfirst(>(n), minimum_digitsums)]
 digitalsum(n) = sum(d * 10^i for i, d in enumerate(reverse([int(c) for c in str(n)])))
        
 def generate_inconsummate(max_wanted):
-    limit = max_to_search(max_wanted)
+    minimum_digitsums = [(10^i, Int(ceil((10^i - 1) / 9i))) for i in 1:10]
+    limit = min(p[0] for p in minimum_digitsum if p[1] > max_wanted)
     arr = fill(0, limit)
     for n in range(limit):
         dsum = digitalsum(n)
