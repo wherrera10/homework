@@ -1,16 +1,24 @@
-def is_inconsummate(n):
-    '''
-    A inconsummate number is a non-negative integer that cannot be formed by any integer N divided by the the digital sum of N
-    '''
-    digitalsum = sum(d * 10^i for i, d in enumerate(reverse([int(c) for c in str(n)])))
-    max
-    for i in range(0, 
 
-def generate_inconsummate():
-    count = 0
-    for n in 0:10^9
-        if is_inconsummate(n):
-            count += 1
-            yield n, count
+minimum_digitsums = [Int(ceil((10^i - 1) / 9i)) for i in 1:10]
 
+max_to_search(n) = minimum_digitsum[findfirst(>(n), minimum_digitsums)]
+digitalsum(n) = sum(d * 10^i for i, d in enumerate(reverse([int(c) for c in str(n)])))
+       
+def generate_inconsummate(max_wanted):
+    limit = max_to_search(max_wanted)
+    arr = fill(0, limit)
+    for n in range(limit):
+        dsum = digitalsum(n)
+        rem = n % dsum
+        if rem % dsum == 0:
+            arr[n] = rem
+            
+     count = 0
+     for n in range(max_search):
+         if n > 0:
+             count += 1
+             yield n, count
+
+
+     
 
