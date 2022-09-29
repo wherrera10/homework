@@ -1,3 +1,37 @@
+""" Rosetta code rosettacode.org/wiki/ """
+
+using Primes
+
+function proper_divisors(n)
+    f = [one(n)]
+    for (p, e) in factor(n)
+        f = reduce(vcat, [f * p^j for j in 1:e], init = f)
+    end
+    return length(f) == 1 ? [one(n), n] : @view sort!(f)[begin:end-1]
+end
+
+function cubed_is_prod_divisors()
+    nfound = 0
+    for num in 1:typemax(Int32)
+        if num == 1 || num^3 == prod(proper_divisors(num))
+            nfound += 1
+            if nfound <= 50
+                print(rpad(num, 6), nfound % 10 == 0 ? "\n" : "")
+            elseif nfound == 500
+                println("\nFive hundreth: $num")
+            elseif nfound == 5000
+                println("\nFive thousandh: $num")
+            elseif nfound == 50000
+                println("\nFifty thousandth: $num")
+                break
+            end
+        end
+    end
+end
+
+cubed_is_prod_divisors()
+
+
 ''' Rosetta code rosettacode.org/wiki/ '''
 
 from numpy import prod
