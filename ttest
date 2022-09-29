@@ -1,20 +1,19 @@
-''' Rosetta code rosettacode.org/wiki/Product_of_min_and_max_prime_factors '''
+''' Rosetta code rosettacode.org/wiki/ '''
 
+from numpy import prod
+from sympy import divisors
 
-from sympy import factorint
-
-NUM_WANTED = 100
-
-def prod_min_max(num):
-    ''' return the product of the minimum and maximum prime factors of n '''
-    fac = factorint(num, multiple=True)
-    return fac[0] * fac[-1] if len(fac) > 0 else 1 
-
-
-for n in range(1, NUM_WANTED + 1):
-    print(f'{prod_min_max(n):5}', end='\n' if n % 10 == 0  else '')
-
-
-    
-     
-
+N = 0
+for num in range(1, 300_000):
+    divprod = prod(divisors(num)[:-1]) if num > 1 else 1
+    if num * num * num == divprod:
+        N += 1
+        if N <= 50:
+            print(f'{num:5}', end='\n' if N % 10 == 0 else '')
+        elif N == 500:
+            print('Five hundreth: {num:,}')
+        elif N == 5000:
+            print('Five thousandth:", {num:,}')
+        elif N == 50000:
+            print('Fifty thousandth: {num:,}')
+            break
