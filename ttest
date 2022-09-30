@@ -34,20 +34,23 @@ cubed_is_prod_divisors()
 
 ''' Rosetta code rosettacode.org/wiki/ '''
 
-from numpy import prod
+''' Rosetta code rosettacode.org/wiki/ '''
+
+from functools import reduce
 from sympy import divisors
 
-N = 0
-for num in range(1, 300_000):
-    divprod = prod(divisors(num)[:-1]) if num > 1 else 1
+
+numfound = 0
+for num in range(1, 1_000_000):
+    divprod = reduce(lambda x, y: x * y, divisors(num)[:-1])if num > 1 else 1
     if num * num * num == divprod:
-        N += 1
-        if N <= 50:
-            print(f'{num:5}', end='\n' if N % 10 == 0 else '')
-        elif N == 500:
-            print('Five hundreth: {num:,}')
-        elif N == 5000:
-            print('Five thousandth:", {num:,}')
-        elif N == 50000:
-            print('Fifty thousandth: {num:,}')
+        numfound += 1
+        if numfound <= 50:
+            print(f'{num:5}', end='\n' if numfound % 10 == 0 else '')
+        if numfound == 500:
+            print(f'\nFive hundreth: {num:,}')
+        if numfound == 5000:
+            print(f'\nFive thousandth: {num:,}')
+        if numfound == 50000:
+            print(f'\nFifty thousandth: {num:,}')
             break
