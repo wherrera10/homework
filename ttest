@@ -9,6 +9,9 @@ Chi-squared distribution for values 1 through 10 of the <em>k</em> variable.  Ca
 standard deviation, and show a histogram of the data. Mention any native language support for the generation of 
 the gamma function.
 
+; Stretch task:
+# Plot the Chi-squared distribution for several values of k.
+
 ;Reference:
 * [[Statistics/Basic]]
 * [[Statistics/Normal_distribution]]
