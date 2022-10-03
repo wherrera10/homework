@@ -1,4 +1,26 @@
 {{draft task}}
+
+A toothpick of length L and thickness and width T units is randomly spun and dropped on a grid which has parallel
+lines of negligible width, spaced W <= L units apart. The toothpick will come to rest on one of its long faces on the grid.
+
+Using Monte Carlo methods, calculate the proportion of drops where the toothpick crosses one of the parallel lines, with the 
+following numbers:
+
+Toothpick Length     Width/Thickness   Line Spacing
+----------------------------------------------------
+       20                 1                 20
+       40                 5                 20
+       40                 1                 80
+       
+You may assume for the purposes of the simulation that if the toothpick just touches a line that it does not cross that line.
+
+
+
+
+
+
+
+
 The [[wp:Chi-squared_distribution|Chi-squared]]  (χ2) distribution is a frequently used distribution in statistics. 
 The <em>chi-squared</em> distribution can be calculated from the gamma function as follows:
 
@@ -17,6 +39,6 @@ the gamma function.
 * [[Statistics/Normal_distribution]]
 
 ;See also
-[[https://www.itl.nist.gov/div898/handbook/eda/section3/eda3666.htm NIST page onn the Chi-Square Distribution]]
+[[https://www.itl.nist.gov/div898/handbook/eda/section3/eda3666.htm NIST page on the Chi-Square Distribution]]
 <br><br>
 
