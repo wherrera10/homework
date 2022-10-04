@@ -1,45 +1,16 @@
-{{draft task}}
 
-A toothpick of length Length and thickness and width Width units is randomly spun and dropped on a grid which has parallel
-lines of negligible width Spacing, where Spacing is <= Length units apart. The toothpick will come to rest on one of its long faces 
-on the grid each time it is dropped.
-
-Using Monte Carlo methods, calculate the proportion of drops where the toothpick crosses one of the parallel lines, with the 
-following numbers:
-
-Toothpick Length     Width/Thickness   Line Spacing
-----------------------------------------------------
-       20                 1                 20
-       40                 5                 20
-       40                 1                 80
-       
-You may assume for the purposes of the simulation that if the toothpick just touches a line that it does not cross that line.
-
-hypot = sqrt(Length * Length + Width * Width)
-x_projection = hypot * sin(theta)
-p_crossing = x_projection / Spacing
-
-(integral over theta = 0 to pi/2) hypot * sin(theta) / Spacing
-
-(hypot / Spacing)  (-cos(theta) from 0 to pi) == hypot / Spacing
+function meissel_mertens(nprimes = 10^6, epsilon = 1E-13)
+    pri, mei_mer = 1, big"0"
+    while true
+        pri = nextprime(pri + 1)
+        delta = big"1" / pri
+        mei_mer += delta
+        delta < epsilon && return mie_mer
+    end
+end
 
 
 
-
-
-
-The [[wp:Chi-squared_distribution|Chi-squared]]  (χ2) distribution is a frequently used distribution in statistics. 
-The <em>chi-squared</em> distribution can be calculated from the gamma function as follows:
-
-
-;The task:
-# Take a uniform random number generator and create a large (you decide how large) set of numbers that follow a 
-Chi-squared distribution for values 1 through 10 of the <em>k</em> variable.  Calculate the dataset's mean and 
-standard deviation, and show a histogram of the data. Mention any native language support for the generation of 
-the gamma function.
-
-; Stretch task:
-# Plot the Chi-squared distribution for several values of k.
 
 ;Reference:
 * [[Statistics/Basic]]
@@ -48,4 +19,3 @@ the gamma function.
 ;See also
 [[https://www.itl.nist.gov/div898/handbook/eda/section3/eda3666.htm NIST page on the Chi-Square Distribution]]
 <br><br>
-
