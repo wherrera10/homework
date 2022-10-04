@@ -1,12 +1,12 @@
 
 """ Return Meissel-Mertons constant. Note builtin Euler gamma constant is γ = 0.5772156649015... """
 function meissel_mertens(epsilon = eps(Float64))
-    pri, mei_mer = 1, 0.0
+    pri, mm_sum = 1, 0.0
     while true
         pri = nextprime(pri + 1)
         delta = 1.0 / pri
-        mei_mer += delta
-        delta < epsilon && return mie_mer + γ
+        mm_sum = log(1 - delta) + delta
+        delta < epsilon && return mm_sum + γ
     end
 end
 
