@@ -24,8 +24,8 @@ for (i, seq) in enumerate(listing)
     print(rpad(seq2, 20), i % 4 == 0 ? "\n" : "")
 end
 
-""" loop to count the sequences """
-function count_facnumbers(n)
+""" Get factorization sequence count """
+function count_multiple_sequences(n)
     f = divisors(n)[begin+1:end-1]
     arr = [[1]]
     while true
@@ -46,11 +46,6 @@ function count_facnumbers(n)
     return scount
 end
 
-
-end
-
-""" Get factorization sequence count """
-count_multiple_sequences(n) = length(more_multiples([1], factors(n)[begin:end-1])) + 1
 
 println("\nOEIS A163272: ")
 for n in 0:2_400_000
