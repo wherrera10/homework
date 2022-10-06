@@ -24,6 +24,31 @@ for (i, seq) in enumerate(listing)
     print(rpad(seq2, 20), i % 4 == 0 ? "\n" : "")
 end
 
+""" loop to count the sequences """
+function count_facnumbers(n)
+    f = divisors(n)[begin+1:end-1]
+    arr = [[1]]
+    while true
+        new_arr = empty(arr)
+        for a in arr, i in a
+            if i > a[end] && i % a[end] == 0
+                pro = prod(a) * i
+                if pro == n
+                    scount += 1
+                elseif pro < n
+                    push!(new_arr, [a; i])
+                end
+            end
+        end
+        isempty(new_arr) && break
+        arr == new_arr
+    end
+    return scount
+end
+
+
+end
+
 """ Get factorization sequence count """
 count_multiple_sequences(n) = length(more_multiples([1], factors(n)[begin:end-1])) + 1
 
