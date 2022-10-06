@@ -26,25 +26,24 @@ end
 
 """ Get factorization sequence count """
 function count_multiple_sequences(n)
-    f = divisors(n)[begin+1:end-1]
-    arr = [[1]]
+    f = factors(n)[begin+1:end-1]
+    scount, arr = 0, [[1]]
     while true
         new_arr = empty(arr)
-        for a in arr, i in a
+        for a in arr, i in f
             if i > a[end] && i % a[end] == 0
-                pro = prod(a) * i
-                if pro == n
-                    scount += 1
-                elseif pro < n
+                scount += 1
+                if i < f[end]
                     push!(new_arr, [a; i])
                 end
             end
         end
         isempty(new_arr) && break
-        arr == new_arr
+        arr = new_arr
     end
-    return scount
+    return scount + 1
 end
+
 
 
 println("\nOEIS A163272: ")
