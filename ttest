@@ -1,3 +1,5 @@
+""" F(n) = sum over k( F( n / a(k) ) + 1, where a are the k divisors of n """
+
 using Primes
 
 """ Return the factors of n, including 1, n """
