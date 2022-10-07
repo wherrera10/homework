@@ -12,10 +12,20 @@ function more_multiples(to_seq, from_seq)
     return append!(onemores, mapreduce(seq -> more_multiples(seq, from_seq), append!, onemores))
 end
 
-listing = sort!(push!(map(a -> push!(a, 48), more_multiples([1], factors(48)[begin:end-1])), [1, 48]))
+""" Uses the first definition and recursion to count the sequences with less memory usage """
+function count_multiples(to_seq, from_seq)
+    onemores = [[to_seq; i] for i in from_seq if i > to_seq[end] && i % to_seq[end] == 0]
+    isempty(onemores) && return 0
+    return length(onemores) + sum(count_multiples(seq, from_seq) for seq in onemores)
+end
+
+""" count all the factorization sequences of n """
+factorization_counts(n) = count_multiples([1], factors(n)[begin+1:end-1]) + 1 # + 1 for [1, n]
+
+listing = sort!(push!(map(a -> push!(a, 48), more_multiples([1], factors(48)[begin+1:end-1])), [1, 48]))
 println("48 sequences using first definition:")
 for (i, seq) in enumerate(listing)
-    print(rpad(seq, 20), i % 4 == 0 ? "\n" : "")
+    print(rpad(seq, 22), i % 4 == 0 ? "\n" : "")
 end
 
 println("\n48 sequences using second definition:")
@@ -24,31 +34,9 @@ for (i, seq) in enumerate(listing)
     print(rpad(seq2, 20), i % 4 == 0 ? "\n" : "")
 end
 
-""" Get factorization sequence count """
-function count_multiple_sequences(n)
-    f = factors(n)[begin+1:end-1]
-    scount, arr = 0, [[1]]
-    while true
-        new_arr = empty(arr)
-        for a in arr, i in f
-            if i > a[end] && i % a[end] == 0
-                scount += 1
-                if i < f[end]
-                    push!(new_arr, [a; i])
-                end
-            end
-        end
-        isempty(new_arr) && break
-        arr = new_arr
-    end
-    return scount + 1
-end
-
-
-
 println("\nOEIS A163272: ")
 for n in 0:2_400_000
-    if n == 0 || count_multiple_sequences(n) == n
+    if n == 0 || factorization_counts(n) == n
         print(n, ",  ")
     end
 end
