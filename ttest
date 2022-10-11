@@ -19,11 +19,15 @@ function Base.iterate(acs::AdditionChains, state = 0)
     return newchain, state + 1
 end
 
-function first_ending(acs::AdditionChains, n)
+function first_ending!(acs::AdditionChains, n)
     idx = findfirst(a -> a[end] == n, acs.chains)
     if idx == nothing
-        for chain in 
-
+        for chain in acs()
+            chain[end] == n && return chain
+        end
+    end
+    return acs.chains[idx]
+end
 
 for (i, arr) in enumerate(get_addition_lists()[1:100])
     print(rpad(length(arr) - 1, 3))
