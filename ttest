@@ -1,19 +1,22 @@
-
-function get_addition_lists(maxlength = 11)
-    allsums = [[1]]
-    while all(a -> length(a) < maxlength, allsums)
-        for i in 1:length(allsums), j in 1:length(allsums[i])
-            push!(allsums, [allsums[i]; allsums[i][end] + allsums[i][j]])
-        end
-        endings = unique(map(a -> a[end], allsums))
-        newallsums = empty(allsums)
-        for n in endings
-            push!(newallsums, sort!(filter(a -> a[end] == n, allsums), by = length)[begin])
-        end
-        allsums = sort!(newallsums, by = a -> a[end])
-    end
-    return allsums
+acs
+struct AdditionChains
+    chains::Vector{Vector{Int}}
+    AdditionChains() = new([[1]]
 end
+
+function Base.iterate(acs::AdditionChains, state = (1, 1))
+    i, j = state
+    newchain = [acs.chains[i]; acs.chains[i][end] + acs.chains[j]]
+    if j == length(acs.chains[i])
+        i += 1
+        j = 1
+    else
+        j += 1
+    end
+    push!(acs.chains. newchain)
+    return newchain, (i, j)
+end
+
 
 for (i, arr) in enumerate(get_addition_lists()[1:100])
     print(rpad(length(arr) - 1, 3))
