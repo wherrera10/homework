@@ -1,4 +1,4 @@
-acs
+
 struct AdditionChains
     chains::Vector{Vector{Int}}
     AdditionChains() = new([[1]]
