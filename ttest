@@ -1,21 +1,28 @@
 
 struct AdditionChains
     chains::Vector{Vector{Int}}
-    AdditionChains() = new([[1]]
+    last_chain::Int
+    last_element::Int
+    AdditionChains() = new([[1]], 1, 1)
 end
 
-function Base.iterate(acs::AdditionChains, state = (1, 1))
-    i, j = state
+function Base.iterate(acs::AdditionChains, state = 0)
+    i, j = acs.last_chain, acs.last_element
     newchain = [acs.chains[i]; acs.chains[i][end] + acs.chains[j]]
     if j == length(acs.chains[i])
-        i += 1
-        j = 1
+        acs.last_chain += 1
+        acs.last_element = 1
     else
-        j += 1
+        acs.last_element += 1
     end
     push!(acs.chains. newchain)
-    return newchain, (i, j)
+    return newchain, state + 1
 end
+
+function first_ending(acs::AdditionChains, n)
+    idx = findfirst(a -> a[end] == n, acs.chains)
+    if idx == nothing
+        for chain in 
 
 
 for (i, arr) in enumerate(get_addition_lists()[1:100])
