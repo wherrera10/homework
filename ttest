@@ -1,4 +1,7 @@
-The infinite list c contains all addition chains, ordered by length. It is defined inductively in terms of itself, by taking a list x from c and two elements from x, and appending their sum to x. The function f finds the first list in c that ends with the desired number.
+#=
+The infinite list c contains all addition chains, ordered by length. 
+It is defined inductively in terms of itself, by taking a list x from c and two elements from x, 
+and appending their sum to x. The function f finds the first list in c that ends with the desired number.
 
 c=            -- c is the list of lists
  [1]:         -- containing [1] and
@@ -12,4 +15,13 @@ f n=          -- f on input n is:
  |x<-c,       -- where x is drawn from c and
   last x==n]  -- x ends with n,
  !!0          -- return its first element.
+=#
+
+
+nextlist(arr, apos, pos1, pos2) = [arr[apos]; arr[apos][pos1] + arr[apos][pos2]]
+
+function get_addition_lists(maxlength = 11)
+    allsums = [[1]]
+    apos, pos1, pos2 = 1, 1, 1
+    
 
