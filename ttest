@@ -1,44 +1,15 @@
-""" F(n) = sum over k( F( n / a(k) ) + 1, where a are the k divisors of n """
+The infinite list c contains all addition chains, ordered by length. It is defined inductively in terms of itself, by taking a list x from c and two elements from x, and appending their sum to x. The function f finds the first list in c that ends with the desired number.
 
-using Primes
+c=            -- c is the list of lists
+ [1]:         -- containing [1] and
+ [x           -- each list x
+  ++[a+b]     -- extended with a+b
+ |x<-c,       -- where x is drawn from c,
+  a<-x,       -- a is drawn from x and
+  b<-x]       -- b is drawn from x.
+f n=          -- f on input n is:
+ [x           -- take list of those lists x
+ |x<-c,       -- where x is drawn from c and
+  last x==n]  -- x ends with n,
+ !!0          -- return its first element.
 
-""" Return the factors of n, including 1, n """
-function factors(n::T)::Vector{T} where T <: Integer
-  sort(vec(map(prod, Iterators.product((p.^(0:m) for (p, m) in eachfactor(n))...))))
-end
-
-""" Uses the first definition and recursion to generate the sequences """
-function more_multiples(to_seq, from_seq)
-    onemores = [[to_seq; i] for i in from_seq if i > to_seq[end] && i % to_seq[end] == 0]
-    isempty(onemores) && return Int[]
-    return append!(onemores, mapreduce(seq -> more_multiples(seq, from_seq), append!, onemores))
-end
-
-""" Uses the first definition and recursion to count the sequences with less memory usage """
-function count_multiples(to_seq, from_seq)
-    onemores = [[to_seq; i] for i in from_seq if i > to_seq[end] && i % to_seq[end] == 0]
-    isempty(onemores) && return 0
-    return length(onemores) + sum(count_multiples(seq, from_seq) for seq in onemores)
-end
-
-""" count all the factorization sequences of n """
-factorization_counts(n) = count_multiples([1], factors(n)[begin+1:end-1]) + 1 # + 1 for [1, n]
-
-listing = sort!(push!(map(a -> push!(a, 48), more_multiples([1], factors(48)[begin+1:end-1])), [1, 48]))
-println("48 sequences using first definition:")
-for (i, seq) in enumerate(listing)
-    print(rpad(seq, 22), i % 4 == 0 ? "\n" : "")
-end
-
-println("\n48 sequences using second definition:")
-for (i, seq) in enumerate(listing)
-    seq2 = [seq[j] ÷ seq[j - 1] for j in 2:length(seq)]
-    print(rpad(seq2, 20), i % 4 == 0 ? "\n" : "")
-end
-
-println("\nOEIS A163272: ")
-for n in 0:2_400_000
-    if n == 0 || factorization_counts(n) == n
-        print(n, ",  ")
-    end
-end
