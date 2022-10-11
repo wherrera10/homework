@@ -12,6 +12,14 @@ function get_addition_lists(maxlength = 11)
         end
         allsums = sort!(newallsums, key = a -> a[end])
     end
-    
+    return allsums
+end
+
+for (i, arr) in enumerate(get_addition_lists())
+    print(rpad("$(arr[end]) : $(length(arr))", 10))
+    i % 5 == 0 && println()
+end
+
+
     
 
