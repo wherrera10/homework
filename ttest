@@ -23,5 +23,20 @@ nextlist(arr, apos, pos1, pos2) = [arr[apos]; arr[apos][pos1] + arr[apos][pos2]]
 function get_addition_lists(maxlength = 11)
     allsums = [[1]]
     apos, pos1, pos2 = 1, 1, 1
+    while all(a -> length(a) < maxlength, allsums)
+        for i in 1:length(allsums)
+            alen = length(allsums[i])
+            for j in 1:alen, k in 1:alen
+                push!(allsums, nextlist(allsums, i, j, k))
+            end
+        end
+        endings = unique(map(a -> a[end], allsums))
+        newallsums = empty(allsums)
+        for n in endings
+            push!(newallsums, sort!(filter(a -> a[end] == n, allsums), key = length))[begin])
+        end
+        allsums = newallsums
+    end
+    
     
 
