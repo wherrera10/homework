@@ -8,16 +8,16 @@ function get_addition_lists(maxlength = 11)
         endings = unique(map(a -> a[end], allsums))
         newallsums = empty(allsums)
         for n in endings
-            push!(newallsums, sort!(filter(a -> a[end] == n, allsums), key = length))[begin])
+            push!(newallsums, sort!(filter(a -> a[end] == n, allsums), by = length)[begin])
         end
-        allsums = sort!(newallsums, key = a -> a[end])
+        allsums = sort!(newallsums, by = a -> a[end])
     end
     return allsums
 end
 
-for (i, arr) in enumerate(get_addition_lists())
-    print(rpad("$(arr[end]) : $(length(arr))", 10))
-    i % 5 == 0 && println()
+for (i, arr) in enumerate(get_addition_lists()[1:100])
+    print(rpad(length(arr) - 1, 3))
+    i % 10 == 0 && println()
 end
 
 
