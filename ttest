@@ -1,39 +1,31 @@
 
-struct AdditionChains
-    chains::Vector{Vector{Int}}
-    last_chain::Int
-    last_element::Int
-    AdditionChains() = new([[1]], 1, 1)
-end
+class AdditionChains:
+    def __init__(self):
+        ''' memoization for knuth_path '''
+        self.pat, self.lvl = {1: 0}, [[1]]
 
-function Base.iterate(acs::AdditionChains, state = 0)
-    i, j = acs.last_chain, acs.last_element
-    newchain = [acs.chains[i]; acs.chains[i][end] + acs.chains[j]]
-    if j == length(acs.chains[i])
-        acs.last_chain += 1
-        acs.last_element = 1
-    else
-        acs.last_element += 1
-    end
-    push!(acs.chains. newchain)
-    return newchain, state + 1
-end
+    def knuth_path(self, n):
+        if n < 1:
+            return []
+        while not n in self.pat:
+            q = []
+            for x in self.lvl[0]:
+                for y in self.knuth_path(x):
+                    if not x + y in self.pat:
+                        self.pat[x + y] = x
+                        q.append(x + y)
 
-function first_ending!(acs::AdditionChains, n)
-    idx = findfirst(a -> a[end] == n, acs.chains)
-    if idx == nothing
-        for chain in acs()
-            chain[end] == n && return chain
-        end
-    end
-    return acs.chains[idx]
-end
+            self.lvl[0] = q
 
-for (i, arr) in enumerate(get_addition_lists()[1:100])
-    print(rpad(length(arr) - 1, 3))
-    i % 10 == 0 && println()
-end
+        returnpath = self.knuth_path(self.pat[n])
+        returnpath.append(n)
+        return returnpath
 
 
+def pow(x, chain):
+    p, products = 0, {0: 1, 1: x}
+    for i in chain:
+        products[i] = products[p] * products[i - p]
+        p = i
+    return products[chain[-1]]
     
-
