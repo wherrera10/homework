@@ -1,31 +1,11 @@
 
-class AdditionChains:
-    def __init__(self):
-        ''' memoization for knuth_path '''
-        self.pat, self.lvl = {1: 0}, [[1]]
+For example for 1942-01-01, how to find all values (amounts) that occur in this day (from time 0 to 24) and then sum them together?
 
-    def knuth_path(self, n):
-        if n < 1:
-            return []
-        while not n in self.pat:
-            q = []
-            for x in self.lvl[0]:
-                for y in self.knuth_path(x):
-                    if not x + y in self.pat:
-                        self.pat[x + y] = x
-                        q.append(x + y)
-
-            self.lvl[0] = q
-
-        returnpath = self.knuth_path(self.pat[n])
-        returnpath.append(n)
-        return returnpath
-
-
-def pow(x, chain):
-    p, products = 0, {0: 1, 1: x}
-    for i in chain:
-        products[i] = products[p] * products[i - p]
-        p = i
-    return products[chain[-1]]
+    time, amount
+    1942-01-01T00:00:00,     7.0
+    1942-01-02T00:00:00,     0.2
+    1942-01-03T00:00:00,     2.1
+    1942-01-04T00:00:00,     3.0
+    2012-12-31T23:00:00,     4.0
+    2012-12-31T24:00:00,     0.0
     
