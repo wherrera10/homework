@@ -1,3 +1,34 @@
+
+           julia> fpow(f, n::UInt16) = x -> f(x)^n
+           fpow (generic function with 1 method)
+
+           julia> sinpow(x, n) = fpow(sin, n)(x)
+           sinpow (generic function with 1 method)
+
+           julia> sinpow(pi, 5)
+           ERROR: MethodError: no method matching fpow(::typeof(sin), ::Int64)
+           Closest candidates are:
+             fpow(::Any, ::UInt16) at REPL[13]:1
+           Stacktrace:
+            [1] sinpow(x::Irrational{:π}, n::Int64)
+              @ Main .\REPL[14]:1
+            [2] top-level scope
+              @ REPL[15]:1
+
+           julia> sinpow(pi, 0x5)
+           ERROR: MethodError: no method matching fpow(::typeof(sin), ::UInt8)
+           Closest candidates are:
+             fpow(::Any, ::UInt16) at REPL[13]:1
+           Stacktrace:
+            [1] sinpow(x::Irrational{:π}, n::UInt8)
+              @ Main .\REPL[14]:1
+            [2] top-level scope
+              @ REPL[16]:1
+
+           julia> sinpow(pi, 0x005)
+           0.0
+
+
 julia> using LinearAlgebra
 
 julia> function testsvd()
