@@ -44,17 +44,17 @@ testsvd (generic function with 1 method)
 julia> testsvd()
 2 2
 3 0
-4.5
+4 5
 SVD{Float64, Float64, Matrix{Float64}, Vector{Float64}}
 U factor:
 2×2 Matrix{Float64}:
- -0.346946  -0.937885
- -0.937885   0.346946
+ -0.316228  -0.948683
+ -0.948683   0.316228
 singular values:
 2-element Vector{Float64}:
- 6.74492216626026
- 2.0015056760076915
+ 6.70820393249937
+ 2.2360679774997894
 Vt factor:
 2×2 Matrix{Float64}:
- -0.780042  -0.625727
- -0.625727   0.780042
+ -0.707107  -0.707107
+ -0.707107   0.707107
