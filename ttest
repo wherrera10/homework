@@ -1,60 +1,131 @@
 
-           julia> fpow(f, n::UInt16) = x -> f(x)^n
-           fpow (generic function with 1 method)
+""" Blueprints from data file, each line has recipes for building robots """
+struct Blueprint
+    num::Int
+    orecost::Int # in ore
+    claycost::Int # in ore
+    obsidian_orecost::Int
+    obsidian_claycost::Int
+    geode_orecost::Int
+    geode_obsidiancost::Int
+    Blueprint(arr::Vector{Int}) = new(arr...)
+end
+Blueprint(txtline) = Blueprint([parse(Int, s.match) for s in eachmatch(r"\d+", txtline)])
 
-           julia> sinpow(x, n) = fpow(sin, n)(x)
-           sinpow (generic function with 1 method)
+const blueprints = map(Blueprint, readlines("day19.txt"))
 
-           julia> sinpow(pi, 5)
-           ERROR: MethodError: no method matching fpow(::typeof(sin), ::Int64)
-           Closest candidates are:
-             fpow(::Any, ::UInt16) at REPL[13]:1
-           Stacktrace:
-            [1] sinpow(x::Irrational{:π}, n::Int64)
-              @ Main .\REPL[14]:1
-            [2] top-level scope
-              @ REPL[15]:1
+""" GeodeState, data for states for time series of building robots, collecting products """
+mutable struct GeodeState
+    minute::Int
+    ore_robots::Int
+    clay_robots::Int
+    obsidian_robots::Int
+    geode_robots::Int
+    ore::Int
+    clay::Int
+    obsidian::Int
+    geode::Int
+    GeodeState() = new(0, 1, 0, 0, 0, 0, 0, 0, 0)
+end
 
-           julia> sinpow(pi, 0x5)
-           ERROR: MethodError: no method matching fpow(::typeof(sin), ::UInt8)
-           Closest candidates are:
-             fpow(::Any, ::UInt16) at REPL[13]:1
-           Stacktrace:
-            [1] sinpow(x::Irrational{:π}, n::UInt8)
-              @ Main .\REPL[14]:1
-            [2] top-level scope
-              @ REPL[16]:1
+""" 
+    forkstate(b::Blueprint, gvec::Vector{GeodeState})::Vector{Vector{GeodeState}}
 
-           julia> sinpow(pi, 0x005)
-           0.0
+    Given a set of states, return a vector of possible successor states,
+    so that there are different variants of options taken for each item in list
+"""
+function forkstate(b::Blueprint, states)
+    newstates = empty(states)
+    for state in states
+        g = deepcopy(state)
+        g.minute += 1
+        cangeoderobot = g.ore >= b.geode_orecost && g.obsidian >= b.geode_obsidiancost
+        canobsidianrobot = g.ore >= b.obsidian_orecost && g.clay >= b.obsidian_claycost
+        canclayrobot = g.ore >= b.claycost
+        canorerobot = g.ore >= b.orecost
+        g.ore += g.ore_robots
+        g.clay += g.clay_robots
+        g.obsidian += g.obsidian_robots
+        g.geode += g.geode_robots
+        if cangeoderobot
+            g.ore -= b.geode_orecost
+            g.obsidian -= b.geode_obsidiancost
+            g.geode_robots += 1  # always add geode robot if can
+            push!(newstates, g)
+        elseif canobsidianrobot  # optional build obsidian robot case
+            g = deepcopy(g)
+            g.ore -= b.obsidian_orecost
+            g.clay -= b.obsidian_claycost
+            g.obsidian_robots += 1  
+            push!(newstates, g)
+        else
+            push!(newstates, g)  # this case is for no robots built
+            if canclayrobot # optional build clay robot case
+                g2 = deepcopy(g)
+                g2.ore -= b.claycost
+                g2.clay_robots += 1
+                push!(newstates, g2)
+            end
+            if canorerobot # optional build ore robot case
+                g2 = deepcopy(g)
+                g2.ore -= b.orecost
+                g2.ore_robots += 1
+                push!(newstates, g2)
+            end
+        end
+    end
+    return newstates
+end
+
+""" breadth-first simulation of the geode processing outcomes under each blueprint """
+function simulate(blueprints = blueprints, minutes = 24, verbose = true)
+    blen = length(blueprints)
+    qualities = zeros(Int, blen)
+    geodes = zeros(Int, blen)
+    statelists = [[GeodeState()] for _ in 1:blen]
+    obdeadline = fill(minutes, blen)
+    for (i, b) in enumerate(blueprints)
+        obdeadline[i] = minutes - b.geode_obsidiancost + 1
+        for m in minutes
+            statelists[i] = unique(forkstate(b, statelists[i]))
+            verbose && @show b, m, length(statelists[i])
+            m == obdeadline[i] && filter!(s -> s.obsidian_robots > 0, statelists[i])
+        end
+        geodes[i] = maximum(s.geode for s in statelists[i])
+        qualities[i] = geodes[i] * i
+    end
+    verbose && @show qualities
+    return sum(qualities)
+end
+
+const part = [0, 0]
+part[1] = simulate()
+@show part # > 1809
 
 
-julia> using LinearAlgebra
+#=
+""" depth first search for maximum geode production for a given blueprint """
+function depthfirst(state, blueprint, stepminute, maxminutes)
+    newstates = forkstate(blueprint, [state])
+    return stepminute >= maxminutes ? maximum(s -> s.geode, newstates) :
+       maximum(s -> depthfirst(s, blueprint, stepminute + 1, maxminutes), newstates)
+end
 
-julia> function testsvd()
-           rows, cols = [parse(Int, s) for s in split(readline())]
-           arr = zeros(rows, cols)
-           for row in 1:rows
-               arr[row, :] .= [tryparse(Float64, s) for s in split(readline())]
-           end
-           display(svd(arr))
-       end
-testsvd (generic function with 1 method)
+""" Part 1 search for the best geode production path for all blueprints and their sum """
+function part1(blueprints = blueprints, maxminutes = 24, verbose = true)
+    maxgeodes = zeros(Int, length(blueprints))
+    for (i, b) in enumerate(blueprints)
+        bestgeodecount = depthfirst(GeodeState(), b, 1, maxminutes)
+        verbose && @show b, bestgeodecount
+        maxgeodes[i] = bestgeodecount
+    end
+    part[1] = sum(maxgeodes)
+    verbose && @show part
+    return part[1]
+end
 
-julia> testsvd()
-2 2
-3 0
-4 5
-SVD{Float64, Float64, Matrix{Float64}, Vector{Float64}}
-U factor:
-2×2 Matrix{Float64}:
- -0.316228  -0.948683
- -0.948683   0.316228
-singular values:
-2-element Vector{Float64}:
- 6.70820393249937
- 2.2360679774997894
-Vt factor:
-2×2 Matrix{Float64}:
- -0.707107  -0.707107
- -0.707107   0.707107
+part1()
+
+=#
+
+@show part
