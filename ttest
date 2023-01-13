@@ -1,7 +1,141 @@
-Dict1 = 
-Any[Dict{String, Any}("crtTmstmp" => "2023-01-12T08:17:49.000+00:00", "attribName" => "buckets", "subAttribDefId" => 1, "attrFormat" => "^[\\d]*\$", "updtTmstmp" => "2023-01-12T08:17:49.000+00:00", "displayLabel" => "buckets", "crtUserid" => "23456", "FieldName" => nothing, "attribDesc" => "buckets", "category" => "Seat Attributes", 
-"updtUserid" => nothing, "attribDataType" => "number", "subcategory" => nothing), Dict{String, Any}("crtTmstmp" => "2023-01-12T08:17:49.000+00:00", "attribName" => "fCabin", "subAttribDefId" => 2, "attrFormat" => "^[\\d]*\$", "updtTmstmp" => "2023-01-12T08:17:49.000+00:00", "displayLabel" => "F Cabin", "crtUserid" => "23456", "FieldName" => nothing, "attribDesc" => "First class Cabin", "category" => "Seat Attributes", "updtUserid" => nothing, "attribDataType" => "number", "subcategory" => nothing), Dict{String, Any}("crtTmstmp" => "2023-01-12T08:17:49.000+00:00", "attribName" => "jCabin", "subAttribDefId" => 3, "attrFormat" => "^[\\d]*\$", "updtTmstmp" => "2023-01-12T08:17:49.000+00:00", "displayLabel" => "J Cabin", "crtUserid" => "23456", "FieldName" => nothing, "attribDesc" => "J Cabin", "category" => "Seat Attributes", "updtUserid" => nothing, "attribDataType" => "number", "subcategory" => nothing), Dict{String, Any}("crtTmstmp" => "2023-01-12T08:17:49.000+00:00", "attribName" => "oCabin", "subAttribDefId" => 4, "attrFormat" => "^[\\d]*\$", "updtTmstmp" => "2023-01-12T08:17:49.000+00:00", "displayLabel" => "O Cabin", "crtUserid" => "23456", "FieldName" => nothing, "attribDesc" => "O Cabin", "category" => "Seat Attributes", "updtUserid" => nothing, "attribDataType" => "number", "subcategory" => nothing), Dict{String, Any}("crtTmstmp" => "2023-01-12T08:17:49.000+00:00", "attribName" => "yPlusCabin", "subAttribDefId" 
-=> 5, "attrFormat" => "^[\\d]*\$", "updtTmstmp" => "2023-01-12T08:17:49.000+00:00", "displayLabel" => "Y+ Cabin", "crtUserid" => "23456", "FieldName" => nothing, "attribDesc" => "Y Plus Cabin", "category" => "Seat Attributes", "updtUserid" => nothing, "attribDataType" => "number", "subcategory" => nothing)]
+""" advent of code 2022 day 19 """
 
-Dict2 = 
-Any[Dict{String, Any}("proxyCode" => "000", "crtTmstmp" => nothing, "equipCode" => "ABC", "proxyequipCode" => "ABC", "reportequipcode" => "ABC", "userTypeCode" => "ABC", "code" => "AB", "isUserDefined" => 0, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "ftype" => "000", "crtUserid" => "123456", "attrValues" => Any[Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "276", "subAttribValId" => 4328, "crtUserid" => "123456", "subAttribDefId" => 3888, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "52", "subAttribValId" => 4329, "crtUserid" => "123456", "subAttribDefId" => 3889, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "50", "subAttribValId" => 4330, "crtUserid" => "123456", "subAttribDefId" => 3890, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "24", "subAttribValId" => 4331, "crtUserid" => "123456", "subAttribDefId" => 3891, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "46", "subAttribValId" => 4332, "crtUserid" => "123456", "subAttribDefId" => 3892, "subFletDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "202", "subAttribValId" => 4333, "crtUserid" => "123456", "subAttribDefId" => 3893, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "2", "subAttribValId" => 4334, "crtUserid" => "123456", "subAttribDefId" => 3894, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "Normal", "subAttribValId" => 4335, "crtUserid" => "123456", "subAttribDefId" => 3895, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "8", "subAttribValId" => 4336, "crtUserid" => "123456", "subAttribDefId" => 3896, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "180", "subAttribValId" => 4337, "crtUserid" => "123456", "subAttribDefId" => 3897, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "218", "subAttribValId" => 4338, "crtUserid" => "123456", "subAttribDefId" => 3898, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "9", "subAttribValId" => 4339, "crtUserid" => "123456", "subAttribDefId" => 3899, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "181", "subAttribValId" => 4340, "crtUserid" => "123456", "subAttribDefId" => 3900, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "-", "subAttribValId" => 4341, "crtUserid" => "123456", "subAttribDefId" => 3901, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "40000", "subAttribValId" => 4342, "crtUserid" => "123456", "subAttribDefId" => 3902, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "2.71", "subAttribValId" => 4343, "crtUserid" => "123456", "subAttribDefId" => 3903, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "2.96", "subAttribValId" => 4344, "crtUserid" => "123456", "subAttribDefId" => 3904, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "2%", "subAttribValId" => 4345, "crtUserid" => "123456", "subAttribDefId" => 3905, "subDefId" => 4327), Dict{String, Any}("crtTmstmp" => nothing, "updtUserid" => nothing, "updtTmstmp" => "2023-01-10T14:08:36.000+00:00", "attrVal" => "-3%", "subAttribValId" => 4346, "crtUserid" => "123456", "subAttribDefId" => 3906, "subDefId" => 4327)], "bodyType" => "W", "DefVersionId" => 4326, "subDefId" => 4327, "updtUserid" => "456789")]
+
+""" Blueprints from data file, each line has recipes for building robots """
+struct Blueprint
+    num::Int
+    orecost::Int # in ore
+    claycost::Int # in ore
+    obsidian_orecost::Int
+    obsidian_claycost::Int
+    geode_orecost::Int
+    geode_obsidiancost::Int
+    maxore_required::Int
+    function Blueprint(arr::Vector{Int})
+        @assert length(arr) == 7
+        maxore = max(arr[3], arr[4], arr[6])
+        return new(arr..., maxore)
+    end       
+end
+Blueprint(txtline) = Blueprint([parse(Int, s.match) for s in eachmatch(r"\d+", txtline)])
+
+const blueprints = map(Blueprint, readlines("aoc_2022/day19.txt"))
+
+""" GeodeState, data for states for time series of building robots, collecting products """
+mutable struct GeodeState
+    minute::Int
+    ore_robots::Int
+    clay_robots::Int
+    obsidian_robots::Int
+    geode_robots::Int
+    ore::Int
+    clay::Int
+    obsidian::Int
+    geode::Int
+    or_ignore::Bool # if could have built ore robot but instead did no building this time
+    cl_ignore::Bool # if could have built clay robot but did no building this time
+    ob_ignore::Bool # if could have built obsidian robot but did no building this time
+    GeodeState() = new(1, 1, 0, 0, 0, 0, 0, 0, 0, false, false, false)
+end
+
+""" 
+    forkstate(b::Blueprint, state::GeodeState, maxtime:Int)
+
+    Given a blueprint and a state, return a vector of possible successor states,
+    since there may be more than one option possible to take given maxtime 
+    This is a depth-first search (DFS) for a maximum of geodes at time maxtime.
+"""
+function forkstate(b::Blueprint, s::GeodeState, maxtime::Int, verbose = false)
+    mremaining = maxtime - s.minute
+    mremaining < 0 && return s
+    cangeoderobot = s.ore >= b.geode_orecost && s.obsidian >= b.geode_obsidiancost
+    enough_or = s.ore_robots >= b.maxore_required
+    enough_cr = s.clay_robots >= b.obsidian_claycost
+    enough_ob = s.obsidian_robots >= b.geode_obsidiancost
+    if enough_or && enough_cr && enough_ob && cangeoderobot
+        # if we are here, we can shortcut since production is steady state output.
+        for m in 1:mremaining
+            s.ore -= b.geode_orecost
+            s.obsidian -= b.geode_obsidiancost
+            s.geode_robots += 1
+            s.ore += s.ore_robots
+            s.clay += s.clay_robots
+            s.obsidian += s.obsidian_robots
+            s.geode += s.geode_robots - 1 # -1 for the robot just added not making geode yet
+        end
+        return s
+    end
+    newstates = GeodeState[]
+    # get the possible to build cases before adding the generated materials
+    # if skipped a build last time do it once more
+    canobsidianrobot = s.ore >= b.obsidian_orecost && s.clay >= b.obsidian_claycost &&
+       !enough_ob && !s.ob_ignore
+    canclayrobot = s.ore >= b.claycost && !enough_cr && !s.cl_ignore
+    canorerobot = s.ore >= b.orecost && !enough_or && !s.or_ignore
+    # generate new materials and update for next state
+    s.minute += 1
+    s.ob_ignore = s.cl_ignore = s.or_ignore = false
+    s.ore += s.ore_robots
+    s.clay += s.clay_robots
+    s.obsidian += s.obsidian_robots
+    s.geode += s.geode_robots
+    if cangeoderobot  # always build the geode robots if can
+        s.ore -= b.geode_orecost
+        s.obsidian -= b.geode_obsidiancost
+        s.geode_robots += 1
+        push!(newstates, s)
+    else
+        # first case: do not build any robots
+        s2 = deepcopy(s)
+        canorerobot && (s2.or_ignore = true)
+        canclayrobot && (s2.cl_ignore = true)
+        canobsidianrobot && (s2.ob_ignore = true)       
+        push!(newstates, s2)  # this case is for no robots built   
+        if canobsidianrobot
+            s2 = deepcopy(s)
+            s2.ore -= b.obsidian_orecost
+            s2.clay -= b.obsidian_claycost
+            s2.obsidian_robots += 1  
+            push!(newstates, s2)
+        end
+        if canclayrobot
+            s2 = deepcopy(s)
+            s2.ore -= b.claycost
+            s2.clay_robots += 1 
+            push!(newstates, s2)
+        end
+        if canorerobot
+            s2 = deepcopy(s)
+            s2.ore -= b.orecost
+            s2.ore_robots += 1
+            push!(newstates, s2)
+        end
+    end
+    # recurse, return max state
+    verbose && @show newstates
+    return sort!([forkstate(b, state, maxtime, verbose) for state in newstates], by = s -> s.geode)[end]
+end
+
+""" part 1 sum the best geode processing outcomes time blueprint number for all blueprints """
+function part1(blueprints = blueprints, minutes = 24, verbose = true)
+    qualitysum = 0
+    for b in blueprints
+        best = forkstate(b, GeodeState(), minutes)
+        qualitysum += best.geode * b.num
+        verbose && @show qualitysum, b, best
+    end
+    return qualitysum # 1834 [geode bests: 1 1 0 0 1 5 9 2 1 4 0 4 1 12 8 0 0 5 5 0 1 5 5 0 15 0 7 3 0 8]
+end
+
+""" part 2 multiply the best geode processing outcomes for all blueprints 1, 2, 3"""
+function part2(blueprints2 = blueprints[1:3], minutes = 32, verbose = true)
+    geodeprod = 1
+    for b in blueprints2
+        best = forkstate(b, GeodeState(), minutes)
+        geodeprod *= best.geode
+        verbose && @show geodeprod, b, best
+    end
+    return geodeprod
+end
+
+@show part1() part2() # 1834
