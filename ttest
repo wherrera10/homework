@@ -1,5 +1,3 @@
-""" advent of code 2022 day 19 """
-
 
 """ Blueprints from data file, each line has recipes for building robots """
 struct Blueprint
