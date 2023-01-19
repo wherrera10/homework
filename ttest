@@ -1,12 +1,12 @@
 from numpy import zeros
 from sympy import factorint
 
-BITSETSIZE = 1_000_000
+BITSET_SIZE = 1_000_000
 
-sphenic_bits = zeros((BITSETSIZE), dtype=bool)
-sphenic_3_bits = zeros((BITSETSIZE), dtype=bool)
+sphenic_bits = zeros((BITSET_SIZE), dtype=bool)
+sphenic_3_bits = zeros((BITSET_SIZE), dtype=bool)
 
-for i in range(3, BITSETSIZE):
+for i in range(3, BITSET_SIZE):
     d = factorint(i)
     if len(d) == 3 and sum(d.values()) == 3:
         sphenic_bits[i] = 1
@@ -17,14 +17,17 @@ def is_sphenic(n): sphenic_bits[n]
 
 def sphenic_count_to(n): sum(sphenic_bits[:n])
 
-def sphenic_to(n): [i for i in sphenic_bits if sphenic_bits[i]]
+def sphenic_to(n): [i for i in range(BITSET_SIZE) if sphenic_bits[i]]
 
 def is_sphenic_triplet(n): sphenic_3_bits[n]
 
 def sphenic_triplet_count_to(n): sum(sphenic_3_bits[:n])
 
-def sphenic_triplets_to(n): [(i-2, i - 1, i) for i in sphenic_3_bits if sphenic_3_bits[i]]
+def sphenic_triplets_to(n): [(i-2, i - 1, i) for i in range(3, BITSET_SIZE) if sphenic_3_bits[i]]
 
-print(sphenic_3_bits[28:32])
-
-
+for i, n in enumerate(sphenic_to(1000)):
+    print(f'{n : 5}', '\n' if (i + 1) % 15 == 0  else '')
+    
+for i, n in enumerate(sphenic_triplets_to(10000)):
+    print(f'{n : 20}', '\n' if (i + 1) % 5 == 0 else '')
+    
