@@ -1,24 +1,40 @@
 gc.collect(false)
 
-setzeros(s) = (fill!(0x0, s.chars); return s)
+const secret_length = 128
 
 struct Secret
     chars::Vector{UInt8}
-    function Secret(chars::Vector)
-        arr = zeros(UInt8, 128)
-        for i in 1:min(128, length(chars))
-            arr[i] = chars[i]
-        end
-        return finalizer(f, new(arr))
-    end
+    Secret() = new(zeros(UInt8, secret_length))
 end
 
+setzeros(s::Secret) = (fill!(0x0, s.chars); return s)
 
 getch() = ccall(:getch, Cint, ())::UInt8
 putch(ch) = (ccall(:putch, Cint, (UInt8,), ch); return)
 
 println("Enter secret (up to 128 ascii chars): ")
 
-ch = 0x0
-while ch != '\n'
+s = Secret()
+slen = [0]
+
+for _ in 1:secret_length
+    ch = getch()
+    ch == '\n' && break
+    slen[1] += 1
+    push!(s.chars, ch)
+end
+
+print("\nDisplaying secret: ")
+for i in 1:slen[1]
+    putch(s.chars[i])
+end
+
+print("\nDestroying secret... ")
+setzeros(s)
+println("Secret is now: $s.")
+
+
+
+
+
     
