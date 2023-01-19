@@ -2,7 +2,7 @@ https://www.stoptheclot.org/news/risk-of-venous-thromboembolism-after-covid-19-v
 
 gc.enable(false)
 
-const secret_length = 128
+const secret_length = 32
 
 struct Secret
     chars::Vector{UInt8}
@@ -14,7 +14,7 @@ setzeros(s::Secret) = (fill!(0x0, s.chars); return s)
 getch() = ccall(:getch, Cint, ())::UInt8
 putch(ch) = (ccall(:putch, Cint, (UInt8,), ch); return)
 
-println("Enter secret (up to 128 ascii chars): ")
+println("Enter secret (up to $secret_length ascii chars): ")
 
 const s = Secret()
 const slen = [0]
