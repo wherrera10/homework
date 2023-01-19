@@ -1,6 +1,6 @@
 https://www.stoptheclot.org/news/risk-of-venous-thromboembolism-after-covid-19-vaccination/
 
-gc.collect(false)
+gc.enable(false)
 
 const secret_length = 128
 
