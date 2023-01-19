@@ -1,26 +1,30 @@
+from numpy import zeros
+from sympy import factorint
 
-using Primes
+BITSETSIZE = 1_000_000
 
-is_sphenic(n) = (f = factor(n).pe; f = length(f) == 3 && f[1][2] + f[2][2] + f[3][2] == 3)
+sphenic_bits = zeros((BITSETSIZE), dtype=bool)
+sphenic_3_bits = zeros((BITSETSIZE), dtype=bool)
 
-sphenic1k = filter(is_sphenic, 1:1000)
+for i in range(3, BITSETSIZE):
+    d = factorint(i)
+    if len(d) == 3 and sum(d.values()) == 3:
+        sphenic_bits[i] = 1
+        if sphenic_bits[i - 1] and sphenic_bits[i - 2]:
+            sphenic_3_bits[i] = 1
 
-println("Sphenic numbers less than 1000:")
-foreach(p -> print(lpad(p[2], 4), p[1] % 25 == 0 ? "\n" : ""), enumerate(sphenic1k))
+def is_sphenic(n): sphenic_bits[n]
 
-ends_sphenic_triplet(n) = sum(is_sphenic.(n-2:n)) == 3
+def sphenic_count_to(n): sum(sphenic_bits[:n])
 
-ends10k = [(n - 2, n - 1, n) for n in 1:10_000 if ends_sphenic_triplet(n)]
-println("\n\nSphenic triplets less than 10_000:")
-foreach(p -> print(lpad(p[2], 20), p[1] % 7 == 0 ? "\n" : ""), enumerate(ends10k))
+def sphenic_to(n): [i for i in sphenic_bits if sphenic_bits[i]]
 
-sphenic1m = filter(is_sphenic, 1:1_000_000)
-ends1m = [(n - 2, n - 1, n) for n in 1:1_000_000 if ends_sphenic_triplet(n)]
-s200k, e5k = sphenic1m[200_000], ends1m[5000]
+def is_sphenic_triplet(n): sphenic_3_bits[n]
 
-println("\nThere are ", length(sphenic1m), " sphenic numbers and ", length(ends1m),
-   " sphenic triplets less than 1 million.")
+def sphenic_triplet_count_to(n): sum(sphenic_3_bits[:n])
 
-println("The 200_000th sphenic number is $s200k, which has prime factors ", [p[1] for p in factor(s200k)])
-println("The 5000th sphenic triplet is $e5k.")
+def sphenic_triplets_to(n): [(i-2, i - 1, i) for i in sphenic_3_bits if sphenic_3_bits[i]]
+
+print(sphenic_3_bits[28:32])
+
 
