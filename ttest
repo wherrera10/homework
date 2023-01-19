@@ -1,7 +1,8 @@
-
 gc.collect(false)
 
-mutable struct Secret
+setzeros(s) = (fill!(0x0, s.chars); return s)
+
+struct Secret
     chars::Vector{UInt8}
     function Secret(chars::Vector)
         arr = zeros(UInt8, 128)
@@ -10,8 +11,8 @@ mutable struct Secret
         end
         return finalizer(f, new(arr))
     end
-    
-    
+end
+
 
 getch() = ccall(:getch, Cint, ())::UInt8
 putch(ch) = (ccall(:putch, Cint, (UInt8,), ch); return)
