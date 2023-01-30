@@ -10,7 +10,7 @@ ORMISTONS = [(p[i - 1], p[i]) for i in range(1, len(p1m)) if is_anagram(p[i - 1]
 print('First 30 Ormiston pairs:')
 for (i, o) in enumerate(ORMISTONS)
     if i < 30:
-        print(f'{o : 20}', end='\n' if (i + 1) % 3 == 0 else '')
+        print(f'{o : 16}', end='\n' if (i + 1) % 5 == 0 else '')
     else
         break
 
