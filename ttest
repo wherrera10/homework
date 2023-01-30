@@ -1,10 +1,9 @@
-from sympy import primes
+from sympy import primerange
 
 def is_anagram(first, second):
     return len(first) == len(second) and sorted(list(first)) == sorted(list(second))
 
-PRIMES1M = primes(1_000_000)
-
+PRIMES1M = primerange(1, 1_000_000)
 ORMISTONS = [(p[i - 1], p[i]) for i in range(1, len(p1m)) if is_anagram(p[i - 1], p[i])]
 
 print('First 30 Ormiston pairs:')
