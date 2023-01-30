@@ -7,10 +7,10 @@ PRIMES1M = primerange(1, 1_000_000)
 ORMISTONS = [(p[i - 1], p[i]) for i in range(1, len(p1m)) if is_anagram(p[i - 1], p[i])]
 
 print('First 30 Ormiston pairs:')
-for (i, o) in enumerate(ORMISTONS)
+for (i, o) in enumerate(ORMISTONS):
     if i < 30:
         print(f'{o : 16}', end='\n' if (i + 1) % 5 == 0 else '')
-    else
+    else:
         break
 
 print(len(ORMISTONS), 'is the count of Ormiston pairs up to one million.')
