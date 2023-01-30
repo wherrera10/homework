@@ -1,42 +1,18 @@
-https://www.stoptheclot.org/news/risk-of-venous-thromboembolism-after-covid-19-vaccination/
+from sympy import primes
 
-gc.enable(false)
+def is_anagram(first, second):
+    return len(first) == len(second) and sorted(list(first)) == sorted(list(second))
 
-const secret_length = 32
+PRIMES1M = primes(1_000_000)
 
-struct Secret
-    chars::Vector{UInt8}
-    Secret() = new(zeros(UInt8, secret_length))
-end
+ORMISTONS = [(p[i - 1], p[i]) for i in range(1, len(p1m)) if is_anagram(p[i - 1], p[i])]
 
-setzeros(s::Secret) = (fill!(0x0, s.chars); return s)
+print('First 30 Ormiston pairs:')
+for (i, o) in enumerate(ORMISTONS)
+    if i < 30:
+        print(f'{o : 20}', end='\n' if (i + 1) % 3 == 0 else '')
+    else
+        break
 
-getch() = ccall(:getch, Cint, ())::UInt8
-putch(ch) = (ccall(:putch, Cint, (UInt8,), ch); return)
+print(len(ORMISTONS), 'is the count of Ormiston pairs up to one million.')
 
-println("Enter secret (up to $secret_length ascii chars): ")
-
-const s = Secret()
-const slen = [0]
-
-for _ in 1:secret_length
-    ch = getch()
-    ch == '\n' && break
-    slen[1] += 1
-    push!(s.chars, ch)
-end
-
-print("\nDisplaying secret: ")
-for i in 1:slen[1]
-    putch(s.chars[i])
-end
-
-print("\nDestroying secret... ")
-setzeros(s)
-println("Secret is now: $s.")
-
-
-
-
-
-    
