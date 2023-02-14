@@ -1,10 +1,65 @@
-using IterTools
-using Primes
+using Formatting
 
-@inline maxanagram(n) = evalpoly(10, sort!(digits(n)))
+const wrappings = [[1, 9], [2, 8], [3, 7], [4, 6],
+                   [5, 5], [6, 4], [7, 3], [8, 2], [9, 1]]
+const firstevenlengthseq = [19, 28, 37, 46, 55, 64, 73, 82, 91]
+const firstoddlengthseq = [5]
 
-for pow10 in 2:6
-    groups = groupby(maxanagram, primes(10^pow10, 10^(pow10 = 1)))
-    maxsize, idx = findmax(length, groups)
-    @show maxsize groups[idx]
+""" iterable for upside-down numbers """
+mutable struct UpsideDowns
+    evens:Vector{Int}
+    odds::Vector{Int}
+    UpsideDowns() = new(firstevenlengthseq, firstoddlengthseq)
 end
+
+""" generate upside-down numbers (OEIS A299539) """
+function Iterate(ud:UpsideDowns, state = (1, 0, 0, 1, 9))
+    ndigits, odd_index, even_index, olen, elen = state
+    next_in_seq = 0
+    if ndigits % 2 == 1
+        if olen > odd_index
+            next_in_seq = odds[begin + odd_index]
+            odd_index += 1
+        else
+            # build next odds, but switch to evens
+            odds = sort!(vec([hi * 10**(ndigits + 1) + 10 *
+                      i + lo for i in odds, (hi, lo) in wrappings]))
+            ndigits += 1
+            odd_index = 1
+            next_in_seq = odds[begin]
+        end
+    else
+        if elen > even_index
+            next_in_seq = evens[begin + even_index]
+            even_index += 1
+        else
+            # build next evens, but switch to odds
+            evens = sort!(vec([hi * 10**(ndigits + 1) + 10 *
+                       i + lo for i in evens, (hi, lo) in wrappings]))
+            ndigits += 1
+            even_index = 1
+            next_in_seq = evens[begin]
+        end
+    end
+    return next_in_seq, (ndigits, odd_index, even_index, olen, elen)
+end
+
+println("First fifty upside-downs:")
+const UD = UpsideDowns()
+for (udcount, udnumber) in enumerate(UD)
+    if udcount <= 50
+        print(lpad(udnumber, 5), udcount % 10 == 0 ? "\n" : "")
+    elseif udcount == 500
+        println("Five hundredth: ", format(n))
+    elseif udcount == 5000
+        println("Five thousandth: ", format(n))
+    elseif udcount == 50_000
+        println("Fifty thousandth: ", format(n))
+    elseif udcount == 500_000
+        println("Five hundred thousandth: ", format(n))
+    elseif udcount == 5_000_000
+        println("Five millionth: ", format(n))
+        break
+    end
+ end
+ 
