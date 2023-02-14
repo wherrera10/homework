@@ -13,7 +13,7 @@ mutable struct UpsideDowns
 end
 
 """ generate upside-down numbers (OEIS A299539) """
-function Iterate(ud::UpsideDowns, state = (1, 0, 0, 1, 9))
+function Base.iterate(ud::UpsideDowns, state = (1, 0, 0, 1, 9))
     ndigits, odd_index, even_index, olen, elen = state
     next_in_seq = 0
     if isodd(ndigits)
@@ -23,11 +23,11 @@ function Iterate(ud::UpsideDowns, state = (1, 0, 0, 1, 9))
         else
             # build next odds, but switch to evens
             ud.odds = sort!(vec([hi * 10^(ndigits + 1) + 10 *
-                      i + lo for i in odds, (hi, lo) in wrappings]))
+                      i + lo for i in ud.odds, (hi, lo) in wrappings]))
             ndigits += 1
             odd_index = 1
             olen = length(ud.odds)
-            next_in_seq = ud.odds[begin]
+            next_in_seq = ud.evens[begin]
         end
     else
         if elen > even_index
@@ -36,11 +36,11 @@ function Iterate(ud::UpsideDowns, state = (1, 0, 0, 1, 9))
         else
             # build next evens, but switch to odds
             ud.evens = sort!(vec([hi * 10^(ndigits + 1) + 10 *
-                       i + lo for i in evens, (hi, lo) in wrappings]))
+                       i + lo for i in ud.evens, (hi, lo) in wrappings]))
             ndigits += 1
             even_index = 1
             elen = length(ud.evens)
-            next_in_seq = ud.evens[begin]
+            next_in_seq = ud.odds[begin]
         end
     end
     return next_in_seq, (ndigits, odd_index, even_index, olen, elen)
@@ -52,15 +52,15 @@ for (udcount, udnumber) in enumerate(UD)
     if udcount <= 50
         print(lpad(udnumber, 5), udcount % 10 == 0 ? "\n" : "")
     elseif udcount == 500
-        println("Five hundredth: ", format(n))
+        println("Five hundredth: ", format(udnumber, commas = true))
     elseif udcount == 5000
-        println("Five thousandth: ", format(n))
+        println("Five thousandth: ", format(udnumber, commas = true))
     elseif udcount == 50_000
-        println("Fifty thousandth: ", format(n))
+        println("Fifty thousandth: ", format(udnumber, commas = true))
     elseif udcount == 500_000
-        println("Five hundred thousandth: ", format(n))
+        println("Five hundred thousandth: ", format(udnumber, commas = true))
     elseif udcount == 5_000_000
-        println("Five millionth: ", format(n))
+        println("Five millionth: ", format(udnumber, commas = true))
         break
     end
  end
