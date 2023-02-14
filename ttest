@@ -16,17 +16,18 @@ end
 function Iterate(ud:UpsideDowns, state = (1, 0, 0, 1, 9))
     ndigits, odd_index, even_index, olen, elen = state
     next_in_seq = 0
-    if ndigits % 2 == 1
+    if isodd(ndigits)
         if olen > odd_index
             next_in_seq = odds[begin + odd_index]
             odd_index += 1
         else
             # build next odds, but switch to evens
-            odds = sort!(vec([hi * 10**(ndigits + 1) + 10 *
+            ud.odds = sort!(vec([hi * 10**(ndigits + 1) + 10 *
                       i + lo for i in odds, (hi, lo) in wrappings]))
             ndigits += 1
             odd_index = 1
-            next_in_seq = odds[begin]
+            olen = length(ud.odds)
+            next_in_seq = ud.odds[begin]
         end
     else
         if elen > even_index
@@ -34,11 +35,12 @@ function Iterate(ud:UpsideDowns, state = (1, 0, 0, 1, 9))
             even_index += 1
         else
             # build next evens, but switch to odds
-            evens = sort!(vec([hi * 10**(ndigits + 1) + 10 *
+            ud.evens = sort!(vec([hi * 10**(ndigits + 1) + 10 *
                        i + lo for i in evens, (hi, lo) in wrappings]))
             ndigits += 1
             even_index = 1
-            next_in_seq = evens[begin]
+            elen = length(ud.evens)
+            next_in_seq = ud.evens[begin]
         end
     end
     return next_in_seq, (ndigits, odd_index, even_index, olen, elen)
