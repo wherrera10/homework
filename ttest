@@ -7,7 +7,7 @@ const firstoddlengthseq = [5]
 
 """ iterable for upside-down numbers """
 mutable struct UpsideDowns
-    evens:Vector{Int}
+    evens::Vector{Int}
     odds::Vector{Int}
     UpsideDowns() = new(firstevenlengthseq, firstoddlengthseq)
 end
@@ -18,11 +18,11 @@ function Iterate(ud:UpsideDowns, state = (1, 0, 0, 1, 9))
     next_in_seq = 0
     if isodd(ndigits)
         if olen > odd_index
-            next_in_seq = odds[begin + odd_index]
+            next_in_seq = ud.odds[begin + odd_index]
             odd_index += 1
         else
             # build next odds, but switch to evens
-            ud.odds = sort!(vec([hi * 10**(ndigits + 1) + 10 *
+            ud.odds = sort!(vec([hi * 10^(ndigits + 1) + 10 *
                       i + lo for i in odds, (hi, lo) in wrappings]))
             ndigits += 1
             odd_index = 1
@@ -31,11 +31,11 @@ function Iterate(ud:UpsideDowns, state = (1, 0, 0, 1, 9))
         end
     else
         if elen > even_index
-            next_in_seq = evens[begin + even_index]
+            next_in_seq = ud.evens[begin + even_index]
             even_index += 1
         else
             # build next evens, but switch to odds
-            ud.evens = sort!(vec([hi * 10**(ndigits + 1) + 10 *
+            ud.evens = sort!(vec([hi * 10^(ndigits + 1) + 10 *
                        i + lo for i in evens, (hi, lo) in wrappings]))
             ndigits += 1
             even_index = 1
