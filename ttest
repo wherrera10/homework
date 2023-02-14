@@ -13,7 +13,7 @@ mutable struct UpsideDowns
 end
 
 """ generate upside-down numbers (OEIS A299539) """
-function Iterate(ud:UpsideDowns, state = (1, 0, 0, 1, 9))
+function Iterate(ud::UpsideDowns, state = (1, 0, 0, 1, 9))
     ndigits, odd_index, even_index, olen, elen = state
     next_in_seq = 0
     if isodd(ndigits)
