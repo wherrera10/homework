@@ -7,16 +7,15 @@ using ResumableFunctions
                    [5, 5], [6, 4], [7, 3], [8, 2], [9, 1]]
     evens = [19, 28, 37, 46, 55, 64, 73, 82, 91]
     odds = [5]
-
     ndigits, odd_index, even_index, olen, elen = 1, 0, 0, 1, 9
     while true
         if isodd(ndigits)
             if olen > odd_index
-                @yield  odds[begin + odd_index]
+                @yield odds[begin + odd_index]
                 odd_index += 1
             else
                 # build next odds, but switch to evens
-                odds = vec([hi * 10^(ndigits + 1) + 10 * i + lo for i in odds, (hi, lo) in wrappings])
+                odds = [hi * 10^(ndigits + 1) + 10 * i + lo for i in odds, (hi, lo) in wrappings]
                 ndigits += 1
                 odd_index = 0
                 olen = length(odds)
@@ -27,7 +26,7 @@ using ResumableFunctions
                 even_index += 1
             else
                 # build next evens, but switch to odds
-                evens = vec([hi * 10^(ndigits + 1) + 10 * i + lo for i in evens, (hi, lo) in wrappings])
+                evens = [hi * 10^(ndigits + 1) + 10 * i + lo for i in evens, (hi, lo) in wrappings]
                 ndigits += 1
                 even_index = 0
                 elen = length(evens)
@@ -50,12 +49,14 @@ for (udcount, udnumber) in enumerate(gen_upsidedowns())
         println("Five hundred thousandth: ", format(udnumber, commas = true))
     elseif udcount == 5_000_000
         println("Five millionth: ", format(udnumber, commas = true))
+    elseif udcount == 50_000_000
+        println("Fifty millionth: ", format(udnumber, commas = true))
         break
     end
  end
  
  #=
-First fifty upside-downs:
+ First fifty upside-downs:
     5   19   28   37   46   55   64   73   82   91
   159  258  357  456  555  654  753  852  951 1199
  1289 1379 1469 1559 1649 1739 1829 1919 2198 2288
@@ -67,6 +68,7 @@ Five thousandth: 56,546,545
 Fifty thousandth: 6,441,469,664
 Five hundred thousandth: 729,664,644,183
 Five millionth: 82,485,246,852,682
+Fifty millionth: 9,285,587,463,255,281
 =#
 
  
