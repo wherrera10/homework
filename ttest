@@ -1,74 +1,82 @@
-using Formatting
-using ResumableFunctions
+class Node:
+    def __init__(self, sub="", children=None):
+        self.sub = sub
+        self.ch = children or []
 
-@resumable function gen_upsidedowns()
-    """ generate upside-down numbers (OEIS A299539) """
-    wrappings = [[1, 9], [2, 8], [3, 7], [4, 6],
-                   [5, 5], [6, 4], [7, 3], [8, 2], [9, 1]]
-    evens = [19, 28, 37, 46, 55, 64, 73, 82, 91]
-    odds = [5]
-    ndigits, odd_index, even_index, olen, elen = 1, 0, 0, 1, 9
-    while true
-        if isodd(ndigits)
-            if olen > odd_index
-                @yield odds[begin + odd_index]
-                odd_index += 1
-            else
-                # build next odds, but switch to evens
-                odds = [hi * 10^(ndigits + 1) + 10 * i + lo for i in odds, (hi, lo) in wrappings]
-                ndigits += 1
-                odd_index = 0
-                olen = length(odds)
-            end
-        else
-            if elen > even_index
-                @yield evens[begin + even_index]
-                even_index += 1
-            else
-                # build next evens, but switch to odds
-                evens = [hi * 10^(ndigits + 1) + 10 * i + lo for i in evens, (hi, lo) in wrappings]
-                ndigits += 1
-                even_index = 0
-                elen = length(evens)
-            end
-        end
-    end
-end
+class SuffixTree:
+    def __init__(self, str):
+        self.nodes = [Node()]
+        for i in range(len(str)):
+            self.addSuffix(str[i:])
 
-println("First fifty upside-downs:")
-for (udcount, udnumber) in enumerate(gen_upsidedowns())
-    if udcount <= 50
-        print(lpad(udnumber, 5), udcount % 10 == 0 ? "\n" : "")
-    elseif udcount == 500
-        println("\nFive hundredth: ", format(udnumber, commas = true))
-    elseif udcount == 5000
-        println("Five thousandth: ", format(udnumber, commas = true))
-    elseif udcount == 50_000
-        println("Fifty thousandth: ", format(udnumber, commas = true))
-    elseif udcount == 500_000
-        println("Five hundred thousandth: ", format(udnumber, commas = true))
-    elseif udcount == 5_000_000
-        println("Five millionth: ", format(udnumber, commas = true))
-    elseif udcount == 50_000_000
-        println("Fifty millionth: ", format(udnumber, commas = true))
-        break
-    end
- end
+    def addSuffix(self, suf):
+        n = 0
+        i = 0
+        while i < len(suf):
+            b = suf[i]
+            x2 = 0
+            while True:
+                children = self.nodes[n].ch
+                if x2 == len(children):
+                    # no matching child, remainder of suf becomes new node
+                    n2 = len(self.nodes)
+                    self.nodes.append(Node(suf[i:], []))
+                    self.nodes[n].ch.append(n2)
+                    return
+                n2 = children[x2]
+                if self.nodes[n2].sub[0] == b:
+                    break
+                x2 = x2 + 1
+
+            # find prefix of remaining suffix in common with child
+            sub2 = self.nodes[n2].sub
+            j = 0
+            while j < len(sub2):
+                if suf[i + j] != sub2[j]:
+                    # split n2
+                    n3 = n2
+                    # new node for the part in common
+                    n2 = len(self.nodes)
+                    self.nodes.append(Node(sub2[:j], [n3]))
+                    self.nodes[n3].sub = sub2[j:] # old node loses the part in common
+                    self.nodes[n].ch[x2] = n2
+                    break # continue down the tree
+                j = j + 1
+            i = i + j   # advance past part in common
+            n = n2      # continue down the tree
+
+    def visualize(self):
+        if len(self.nodes) == 0:
+            print ""
+            return
+
+        def f(n, pre):
+            children = self.nodes[n].ch
+            if len(children) == 0:
+                print "--", self.nodes[n].sub
+                return
+            print "+-", self.nodes[n].sub
+            for c in children[:-1]:
+                print pre, "+-",
+                f(c, pre + " | ")
+            print pre, "+-",
+            f(children[-1], pre + "  ")
+
+        f(0, "")
+
+SuffixTree("banana$").visualize()
  
- #=
- First fifty upside-downs:
-    5   19   28   37   46   55   64   73   82   91
-  159  258  357  456  555  654  753  852  951 1199
- 1289 1379 1469 1559 1649 1739 1829 1919 2198 2288
- 2378 2468 2558 2648 2738 2828 2918 3197 3287 3377
- 3467 3557 3647 3737 3827 3917 4196 4286 4376 4466
+Output:
 
-Five hundredth: 494,616
-Five thousandth: 56,546,545
-Fifty thousandth: 6,441,469,664
-Five hundred thousandth: 729,664,644,183
-Five millionth: 82,485,246,852,682
-Fifty millionth: 9,285,587,463,255,281
-=#
-
++-
+ +- -- banana$
+ +- +- a
+ |  +- +- na
+ |  |  +- -- na$
+ |  |  +- -- $
+ |  +- -- $
+ +- +- na
+ |  +- -- na$
+ |  +- -- $
+ +- -- $
  
