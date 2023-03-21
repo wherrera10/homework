@@ -7,10 +7,11 @@ end
 function isCalmo(n)
     d = divisors(n)[begin+1:end-1]
     ndiv = length(d)
-    ndiv % 3 != 0 && return false
-    return all(isprime, sum(reshape(d, (:, 3), dims = 1))
+    (ndiv == 0 || ndiv % 3 != 0) && return false
+    return all(isprime, sum(reshape(d, (3, :)), dims = 1))
 end
 
-println(filter(isCalmo, 1:1000)
 
- 
+println(filter(isCalmo, 1:1000))
+
+
