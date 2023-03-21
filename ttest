@@ -1,12 +1,16 @@
 using Primes
 
+function divisors(n::Integer)::Vector{Int}
+    sort(vec(map(prod,Iterators.product((p.^(0:m) for (p,m) in eachfactor(n))...))))
+end
+
 function isCalmo(n)
-    d = divisors(n)
+    d = divisors(n)[begin+1:end-1]
     ndiv = length(d)
     ndiv % 3 != 0 && return false
     return all(isprime, sum(reshape(d, (:, 3), dims = 1))
 end
 
-
+println(filter(isCalmo, 1:1000)
 
  
