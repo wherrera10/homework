@@ -1,7 +1,12 @@
-# seven0-sided dice
+using Primes
 
-dice5() = rand(1:5)
-dice7() = (x = dice5() * 5 + dice5() - 6; x > 20 ? dice7() : mod1(x, 7))
+function isCalmo(n)
+    d = divisors(n)
+    ndiv = length(d)
+    ndiv % 3 != 0 && return false
+    return all(isprime, sum(reshape(d, (,3), axis = ))
+end
+
 
 
  
