@@ -4,7 +4,7 @@ function isCalmo(n)
     d = divisors(n)
     ndiv = length(d)
     ndiv % 3 != 0 && return false
-    return all(isprime, sum(reshape(d, (,3), axis = ))
+    return all(isprime, sum(reshape(d, (: ,3), axis = ))
 end
 
 
