@@ -1,13 +1,15 @@
-using Primes
+#{{trans|C}}
 
-function dtprimes(N)
-    si = primesieve(N)
-    for i in 1:N
-        if si[i] && si[i+2 && si[i + 6] && si[i + 8]
-            println("($i $(i + 2))($(i + 6) $(i + 8))")
+using Primes
+using Printf
+
+function printdt(N)
+    @printf("Double twin primes under 1,000:\n")
+    for i in 3:2:N-8
+        if isprime(i) && isprime(i+2) && isprime(i+6) && isprime(i+8))
+            @printf("%4d %4d %4d %4d\n", i, i+2, i+6, i+8)
         end
     end
 end
 
-dtprimes(1000)
-
+printdt(1000)
