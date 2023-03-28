@@ -3,6 +3,38 @@ using Printf
 
 ord(n) = n == 1 ? "st" : n == 2 ? "nd" : "th"
 
+primes = primes(12000)
+sw, pcount, i = "", 1, 0
+@printf("The known Smarandache-Wellin primes are:")
+while pcount <= 8
+    sw *= string(primes[i])
+    n = BigInt(sw)
+    if isprime(n)
+        count += 1
+        @printf("$r: index $4d  digits $4d  last prime $5d -> $20a", count, i+1, sw.count, primes[i], n)
+    end
+    i += 1
+end
+
+@printf("\nThe first 20 Derived Smarandache-Wellin primes are:")
+freqs = zeros(Int, 10)
+pcount = 1
+i = 0
+while pcount <= 20
+    p = string(primes[i])
+    for d in p
+        n = parse(Int, string(d))
+        freqs[n] += 1
+    end
+    var dsw = freqs.join("").trimStart("0")
+    n.setStr(dsw)
+    if (n.probPrime(15) > 0) {
+        count = count + 1
+        Fmt.print("$4r: index $4d  prime $i", count, i+1, n)
+    }
+    i = i + 1
+}
+
 function  SmarandacheWellin()
     pri = primes(12000)
     sw = ""
