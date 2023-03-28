@@ -1,15 +1,49 @@
-#{{trans|C}}
-
 using Primes
 using Printf
 
-function printdt(N)
-    @printf("Double twin primes under 1,000:\n")
-    for i in 3:2:N-8
-        if isprime(i) && isprime(i+2) && isprime(i+6) && isprime(i+8))
-            @printf("%4d %4d %4d %4d\n", i, i+2, i+6, i+8)
+ord(n) = n == 1 ? "st" : n == 2 ? "nd" : "th"
+
+function  SmarandacheWellin()
+    pri = primes(12000)
+    sw = ""
+    pcount = 0
+    i = 1
+    println("The known Smarandache-Wellin primes are:")
+    while pcount < 8
+        sw += string(pri[i])       
+        n = BigInt(sw)
+        if isprime(n)
+            count += 1
+            sws = sw
+            le = length(sws)
+            if le > 4
+                sws = sws[1:20] * "..." * sws[le-19:le]
+            end
+            printf("%d%s: index %4d  digits %4d  last prime %5d -> %s\n", pcount, ord(pcount), i + 1, len(sw), primes[i], sws)
         end
+        i += 1
+    end
+
+    println("\nThe first 20 Derived Smarandache-Wellin primes are:")
+    freqs = zeros(Int, 10)
+    pcount = 0
+    i = 1
+    while count < 20
+        p = string(primes[i])
+        for d in 1:p 
+            n = ndigits(d)
+            freqs[n] += 1
+        end
+        dsw := ""
+        for _, freq := range freqs {
+            dsw += strconv.Itoa(freq)
+        end
+        dsw = strings.TrimLeft(dsw, "0")
+        n = BigInt(dsw)
+        if isprime(n)
+            pcount += 1
+            printf("%2d%s: index %4d  prime %v\n", pcount, ord(pcount), i + 1, n)
+        end
+        i += 1
     end
 end
-
-printdt(1000)
