@@ -41,8 +41,8 @@ function  SmarandacheWellin()
     pcount = 0
     i = 1
     println("The known Smarandache-Wellin primes are:")
-    while pcount < 8
-        sw += string(pri[i])       
+    while pcount <- 8
+        sw *= string(pri[i])       
         n = BigInt(sw)
         if isprime(n)
             count += 1
@@ -62,8 +62,8 @@ function  SmarandacheWellin()
     i = 1
     while count < 20
         p = string(primes[i])
-        for d in 1:p 
-            n = ndigits(d)
+        for d in p 
+            n = parse(int, string(d))
             freqs[n] += 1
         end
         dsw := ""
