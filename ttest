@@ -1,7 +1,7 @@
 using Primes
 using Printf
 
-ord(n) = n == 1 ? "st" : n == 2 ? "nd" : "th"
+ordi(n) = n == 1 ? "st" : n == 2 ? "nd" : "th"
 
 function SmarandacheWellin()
     pri = primes(12000)
@@ -15,7 +15,7 @@ function SmarandacheWellin()
             count += 1
             le = length(sw)
             sws = le > 4 ? sw[1:20] * "..." * sw[le-19:le] : copy(sw)
-            @printf("%d%s: index %4d  digits %4d  last prime %5d -> %s\n", pcount, ord(pcount), i + 1, le, primes[i], sws)
+            @printf("%d%s: index %4d  digits %4d  last prime %5d -> %s\n", pcount, ordi(pcount), i + 1, le, primes[i], sws)
         end
         i += 1
     end
@@ -39,3 +39,5 @@ function SmarandacheWellin()
     end
 end
 
+ SmarandacheWellin()
+ 
