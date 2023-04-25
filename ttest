@@ -1,43 +1,15 @@
-using Primes
-using Printf
+""" rosettacode.org/wiki/Extreme_primes """
 
-ordi(n) = n == 1 ? "st" : n == 2 ? "nd" : "th"
+from sympy import isprime, nextprime
 
-function SmarandacheWellin()
-    pri = primes(12000)
-    sw = ""
-    pcount = 0
-    i = 1
-    println("The known Smarandache-Wellin primes are:")
-    while pcount <- 8
-        sw *= string(pri[i])       
-        if isprime(BigInt(sw))
-            count += 1
-            le = length(sw)
-            sws = le > 4 ? sw[1:20] * "..." * sw[le-19:le] : copy(sw)
-            @printf("%d%s: index %4d  digits %4d  last prime %5d -> %s\n", pcount, ordi(pcount), i + 1, le, primes[i], sws)
-        end
-        i += 1
-    end
+ecount, p, n = 0, 0, 0
 
-    println("\nThe first 20 Derived Smarandache-Wellin primes are:")
-    freqs = zeros(Int, 10)
-    pcount = 0
-    i = 1
-    while pcount <= 20
-        p = string(primes[i])
-        for d in p 
-            n = parse(int, string(d))
-            freqs[n] += 1
-        end
-        dsw = string(BigInt(prod(map(string, freqs))))
-        if isprime(BigInt(dsw))
-            pcount += 1
-            @printf("$4r: index $4d  prime $i", pcount, i + 1, dsw)
-        end
-        i += 1
-    end
-end
-
- SmarandacheWellin()
- 
+while ecount < 50_000:
+    p = nextprime(p)
+    n += p
+    if isprime(n):
+        ecount += 1
+        if ecount < 31:
+            print(f'Sum of prime series up to {p}: prime {n}')
+        if ecount in [30_000, 40_000, 50_000]:
+            print(f'Sum of {ecount :,} in prime series up to {p :,}: prime {n :,}')
