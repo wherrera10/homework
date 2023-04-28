@@ -13,7 +13,8 @@ function iccanobifs(wanted)
             fcount += 1
             dlen = ndigits(candidate)
             if dlen < 90
-                println(candidate, " ($dlen digits)")
+                println(candidate, " ($dlen digit$(dlen == 1 ? "" : "s")")
+
             else
                 s = string(candidate)
                 println(s[1:30], " ... ", s[end-29:end], " ($dlen digits)")
