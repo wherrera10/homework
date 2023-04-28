@@ -1,3 +1,5 @@
+using Primes
+
 function iccanobifs(wanted)
     prev, curr, fcount = big"0", big"1", 0
     println("First 30 Iccanobif primes:")
