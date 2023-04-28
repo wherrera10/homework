@@ -1,20 +1,21 @@
-using Primes
-
-let
-
-    ecount, p, n = 0, 0, 0
-
-    while ecount < 50_000
-        p = nextprime(p + 1)
-        n += p
-        if isprime(n)
-            ecount += 1
-            if ecount < 31
-                println("Sum of prime series up to $p: prime $n")
-            elseif ecount in [1000, 2000, 3000, 4000, 5000, 30_000, 40_000, 50_000]
-                println("Sum of $ecount in prime series up to $p: prime $n")
+function iccanobifs(wanted)
+    fib, p, prev, curr, fcount = big"0", big"0", big"0", big"1", 0
+    println("First 30 Iccanobif primes:")
+    while fcount < 30
+        fib = curr + prev
+        dig = reverse(digits(fib)
+        candidate = evalpoly(big"10", dig)
+        if isprime(candidate)
+            if length(dig) < 90
+                println(candidate, " ($(length(dig)) digits)")
+            else
+                s = string(candidate)
+                println(s[1:30], " ... ", s[end-29:end], " ($(length(dig)) digits)")
             end
         end
     end
-
 end
+
+iccanobifs(30)
+
+
