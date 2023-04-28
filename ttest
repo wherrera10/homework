@@ -4,9 +4,9 @@ function iccanobifs(wanted)
     while fcount < 30
         fib = curr + prev
         dig = reverse(digits(fib))
-        dlen = length(dig)
         candidate = evalpoly(big"10", dig)
         if isprime(candidate)
+            dlen = ndigits(candidate)
             if dlen < 90
                 println(candidate, " ($dlen digits)")
             else
