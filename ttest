@@ -1,10 +1,10 @@
 using Primes
 
 function iccanobifs(wanted)
-    prev, curr, fcount = big"0", big"1", 0
+    fib, fcount = big"1", 0
     println("First 30 Iccanobif primes:")
     while fcount < 30
-        fib = curr + prev
+        fib += fib
         dig = reverse(digits(fib))
         candidate = evalpoly(big"10", dig)
         if isprime(candidate)
