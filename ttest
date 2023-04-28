@@ -8,6 +8,7 @@ function iccanobifs(wanted)
         dig = reverse(digits(fib))
         candidate = evalpoly(big"10", dig)
         if isprime(candidate)
+        fcount += 1
             dlen = ndigits(candidate)
             if dlen < 90
                 println(candidate, " ($dlen digits)")
