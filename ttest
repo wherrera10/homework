@@ -1,16 +1,17 @@
 function iccanobifs(wanted)
-    fib, p, prev, curr, fcount = big"0", big"0", big"0", big"1", 0
+    prev, curr, fcount = big"0", big"1", 0
     println("First 30 Iccanobif primes:")
     while fcount < 30
         fib = curr + prev
-        dig = reverse(digits(fib)
+        dig = reverse(digits(fib))
+        dlen = length(dig)
         candidate = evalpoly(big"10", dig)
         if isprime(candidate)
-            if length(dig) < 90
-                println(candidate, " ($(length(dig)) digits)")
+            if dlen < 90
+                println(candidate, " ($dlen digits)")
             else
                 s = string(candidate)
-                println(s[1:30], " ... ", s[end-29:end], " ($(length(dig)) digits)")
+                println(s[1:30], " ... ", s[end-29:end], " ($dlen digits)")
             end
         end
     end
