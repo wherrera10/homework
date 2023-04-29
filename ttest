@@ -1,20 +1,20 @@
 using Primes
 
 function iccanobifs(wanted)
+    digbuf = zeros(Int, 11000)
     fib, prev, prevprev, fcount = big"0", big"1", big"0", 0
     println("First 30 Iccanobif primes:")
     while fcount < 30
         fib = prev + prevprev
         prevprev = prev
         prev = fib
-        dig = reverse(digits(fib))
-        candidate = evalpoly(big"10", dig)
+        digits!(digbuf, fib)
+        candidate = evalpoly(big"10", reverse(digbuf[begin:findlast(!iszero, digbuf)]))
         if isprime(candidate)
             fcount += 1
             dlen = ndigits(candidate)
             if dlen < 90
-                println(candidate, " ($dlen digit$(dlen == 1 ? "" : "s")")
-
+                println(candidate, " ($dlen digit$(dlen == 1 ? "" : "s"))")
             else
                 s = string(candidate)
                 println(s[1:30], " ... ", s[end-29:end], " ($dlen digits)")
