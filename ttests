@@ -17,8 +17,8 @@ function process_english_range(maxrange, showfirst30)
     numstrings = map(num2string, 1:maxrange)
     numreps = map(anarep, numstrings)
     anadict = AnagramRepresentations()
-    for (i, s) in enumerate(numstrings)
-        addrep!(anadict, s, numreps[i])
+    for i in eachindex(numstrings)
+        addrep!(anadict, numstrings[i], numreps[i])
     end
     counts = [length(anadict[numreps[i]]) for i in 1:maxrange]
     if showfirst30
