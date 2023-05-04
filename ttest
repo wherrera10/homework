@@ -1,4 +1,20 @@
-from num2words import num2words
+struct AnagramRepresentations
+    char_counts::Vector{Int}
+    representations::Set{String}
+    AnagramRepresentations() = new(zeros(Int, 26), Set{String}())
+end
+
+function AnagramRepresentations(str::String)
+    s = lowercase(str)
+    arr = zeros(Int, 26)
+    for (i, ch) in 'a':'z'
+        arr[i] = count(ch, s)
+    end
+    return AnagramRepresentations(arr, Set(str))
+end
+    
+
+
 def alst(ALLBELOW=1000):
   out, ana = set(), dict()
   for i in range(ALLBELOW):
