@@ -1,3 +1,5 @@
+import SpelledOut: spelled_out
+
 const AnagramRepresentations = Dict{Vector{Int}}, Set{String}}
 
 function anarep(str)
@@ -14,7 +16,7 @@ function addrep!(anadict, str, rep)
 end
 
 function process_english_range(maxrange, showfirst30)
-    numstrings = map(num2string, 1:maxrange)
+    numstrings = map(n -> spelled_out(n, lang=:en), 1:maxrange)
     numreps = map(anarep, numstrings)
     anadict = AnagramRepresentations()
     for i in eachindex(numstrings)
