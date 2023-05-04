@@ -1,20 +1,24 @@
 const AnagramRepresentations = Dict{Vector{Int}}, Set{String}}
 
-function addrep!(anadict, str)
+function anarep(str)
     s = lowercase(str)
-    arr = [count(ch, s) for (i, ch) in enumerate('a':'z')]
-    if haskey(anadict, arr)
-        push!(anadict[arr], str)
+    return [count(ch, s) for (i, ch) in enumerate('a':'z')]
+end
+
+function addrep!(anadict, str, rep)
+    if haskey(anadict, rep)
+        push!(anadict[rep], str)
     else
-        anadict[arr] = Set{String}([arr])
+        anadict[rep] = Set{String}([str])
     end
 end
 
 function process_english_range(maxrange, showfirst30)
     numstrings = map(num2string, 1:maxrange)
+    numreps = map(anarep, numstrings)
     anadict = AnagramRepresentations()
-    for s in numstrings
-        addrep!(anadict, s)
+    for (i, s) in enumerate(numstrings)
+        addrep!(anadict, s, numreps[i])
     end
     counts = [length(anadict[s]) for s in numstrings]
     if showfirst30
