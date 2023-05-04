@@ -2,11 +2,13 @@ import SpelledOut: spelled_out
 
 const AnagramRepresentations = Dict{Vector{Int}}, Set{String}}
 
+""" get the letter frequencies as an anagram representation of string str """
 function anarep(str)
     s = lowercase(str)
     return [count(ch, s) for (i, ch) in enumerate('a':'z')]
 end
 
+""" add anagram summary representation of str to anadict """
 function addrep!(anadict, str, rep)
     if haskey(anadict, rep)
         push!(anadict[rep], str)
@@ -15,8 +17,9 @@ function addrep!(anadict, str, rep)
     end
 end
 
-function process_english_range(maxrange, showfirst30)
-    numstrings = map(n -> spelled_out(n, lang=:en), 1:maxrange)
+""" task at rosettacode.org/wiki/English_cardinal_anagrams """
+function process_task(maxrange, showfirst30, lang=:en)
+    numstrings = map(n -> spelled_out(n, lang=lang), 1:maxrange)
     numreps = map(anarep, numstrings)
     anadict = AnagramRepresentations()
     for i in eachindex(numstrings)
@@ -35,5 +38,5 @@ function process_english_range(maxrange, showfirst30)
     println([i for i in 1:maxrange if counts[i] == maxcount], "\n")
 end
 
-process_english_range(1000, true)
-process_english_range(10000, false)
+process_task(1000, true)
+process_task(10000, false)
