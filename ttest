@@ -13,7 +13,6 @@ end
 function process_english_range(maxrange, showfirst30)
     numstrings = map(num2string, 1:maxrange)
     anadict = AnagramRepresentations()
-    counts = zeros(Int, maxrange)
     for s in numstrings
         addrep!(anadict, s)
     end
