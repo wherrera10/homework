@@ -1,5 +1,7 @@
 import SpelledOut: spelled_out
 
+languages = Dict("English" => :en, "Spanish" => :es, "Portuguese" => :pt_BR)
+
 const AnagramRepresentations = Dict{Vector{Int}}, Set{String}}
 
 """ get the letter frequencies as an anagram representation of string str """
@@ -18,8 +20,8 @@ function addrep!(anadict, str, rep)
 end
 
 """ task at rosettacode.org/wiki/English_cardinal_anagrams """
-function process_task(maxrange, showfirst30, lang=:en)
-    numstrings = map(n -> spelled_out(n, lang=lang), 1:maxrange)
+function process_task(maxrange, showfirst30, lang = "English")
+    numstrings = map(n -> spelled_out(n, lang=languages[lang]), 1:maxrange)
     numreps = map(anarep, numstrings)
     anadict = AnagramRepresentations()
     for i in eachindex(numstrings)
@@ -27,16 +29,19 @@ function process_task(maxrange, showfirst30, lang=:en)
     end
     counts = [length(anadict[numreps[i]]) for i in 1:maxrange]
     if showfirst30
-        println("First 30 English cardinal anagrams:")
+        println("First 30 $lang cardinal anagrams:")
         for (i, n) in filter(>(1), counts)[1:30]
             print(rpad(n, 4), i % 10 == 0 ? "\n" :"")
         end
     end
-    println("Count of English cardinal anagrams up to $maxrange: $(count(>(1), counts)")
-    println("\nLargest group(s) of English cardinal anagrams up to $maxrange:")
+    println("Count of $lang cardinal anagrams up to $maxrange: $(count(>(1), counts)")
+    println("\nLargest group(s) of $lang cardinal anagrams up to $maxrange:")
     maxcount = maximum(counts)
     println([i for i in 1:maxrange if counts[i] == maxcount], "\n")
 end
 
 process_task(1000, true)
 process_task(10000, false)
+process_task(10000, false, "Spanish")
+process_task(10000, false, "Portuguese")
+
