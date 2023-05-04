@@ -10,7 +10,7 @@ function addrep!(anadict, str)
     end
 end
 
-function processrange(maxrange)
+function process_english_range(maxrange, first30 = true)
     numstrings = map(num2string, 1:maxrange)
     anadict = AnagramRepresentations()
     counts = zeros(Int, maxrange)
@@ -18,5 +18,8 @@ function processrange(maxrange)
         addrep!(anadict, s)
     end
     counts = [length(anadict[s]) for s in numstrings]
+    if first30
+        println("First 30
 end
+
 
