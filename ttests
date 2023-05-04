@@ -20,7 +20,7 @@ function process_english_range(maxrange, showfirst30)
     for (i, s) in enumerate(numstrings)
         addrep!(anadict, s, numreps[i])
     end
-    counts = [length(anadict[s]) for s in numstrings]
+    counts = [length(anadict[numreps[i]]) for i in 1:maxrange]
     if showfirst30
         println("First 30 English cardinal anagrams:")
         for (i, n) in filter(>(1), counts)[1:30]
