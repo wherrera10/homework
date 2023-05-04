@@ -2,17 +2,17 @@ struct AnagramRepresentations
     char_counts::Vector{Int}
     representations::Set{String}
     AnagramRepresentations() = new(zeros(Int, 26), Set{String}())
+    function AnagramRepresentations(str::String)
+        s = lowercase(str)
+        arr = [count(ch, s) for (i, ch) in enumerate('a':'z')]
+        return new(arr, Set(str))
+    end
 end
 
-function AnagramRepresentations(str::String)
+function validrep(a, str)
     s = lowercase(str)
-    arr = zeros(Int, 26)
-    for (i, ch) in 'a':'z'
-        arr[i] = count(ch, s)
-    end
-    return AnagramRepresentations(arr, Set(str))
+    return a.char_counts == [count(ch, s) for (i, ch) in enumerate('a':'z')]
 end
-    
 
 
 def alst(ALLBELOW=1000):
