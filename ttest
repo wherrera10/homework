@@ -10,7 +10,7 @@ function addrep!(anadict, str)
     end
 end
 
-function process_english_range(maxrange, first30 = true)
+function process_english_range(maxrange, showfirst30)
     numstrings = map(num2string, 1:maxrange)
     anadict = AnagramRepresentations()
     counts = zeros(Int, maxrange)
@@ -18,8 +18,17 @@ function process_english_range(maxrange, first30 = true)
         addrep!(anadict, s)
     end
     counts = [length(anadict[s]) for s in numstrings]
-    if first30
-        println("First 30
+    if showfirst30
+        println("First 30 English cardinal anagrams:")
+        for (i, n) in filter(>(1), counts)[1:30]
+            print(rpad(n, 4), i % 10 == 0 ? "\n" :"")
+        end
+    end
+    println("Count of English cardinal anagrams up to $maxrange: $(count(>(1), counts)")
+    println("\nLargest group(s) of English cardinal anagrams up to $maxrange:")
+    maxcount = maximum(counts)
+    println([i for i in 1:maxrange if counts[i] == maxcount], "\n")
 end
 
-
+process_english_range(1000, true)
+process_english_range(10000, false)
