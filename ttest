@@ -1,25 +1,22 @@
-struct AnagramRepresentations
-    char_counts::Vector{Int}
-    representations::Set{String}
-    AnagramRepresentations() = new(zeros(Int, 26), Set{String}())
-    function AnagramRepresentations(str::String)
-        s = lowercase(str)
-        arr = [count(ch, s) for (i, ch) in enumerate('a':'z')]
-        return new(arr, Set(str))
+const AnagramRepresentations = Dict{Vector{Int}}, Set{String}}
+
+function addrep!(anadict, str)
+    s = lowercase(str)
+    arr = [count(ch, s) for (i, ch) in enumerate('a':'z')]
+    if haskey(anadict, arr)
+        push!(anadict[arr], str)
+    else
+        anadict[arr] = Set{String}([arr])
     end
 end
 
-function validrep(a, str)
-    s = lowercase(str)
-    return a.char_counts == [count(ch, s) for (i, ch) in enumerate('a':'z')]
+function processrange(maxrange)
+    numstrings = map(num2string, 1:maxrange)
+    anadict = AnagramRepresentations()
+    counts = zeros(Int, maxrange)
+    for s in numstrings
+        addrep!(anadict, s)
+    end
+    counts = [length(anadict[s]) for s in numstrings]
 end
 
-
-def alst(ALLBELOW=1000):
-  out, ana = set(), dict()
-  for i in range(ALLBELOW):
-    key = "".join(sorted(num2words(i)))
-    if key in ana: out.update([ana[key], i])
-    else: ana[key] = i
-  return sorted(out)
-print(alst()
