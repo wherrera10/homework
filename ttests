@@ -4,7 +4,7 @@ languages = Dict("English" => :en, "Spanish" => :es, "Portuguese" => :pt_BR)
 alphabetize(s) = replace(replace(s, r"[éêé]" => "e"), "ã" => "a"), r"[óõ]" => "o")
 
 """ get the letter frequencies as an anagram representation of string str """
-function anarep(str, lang)
+function anarep(str)
     s = alphabetize(lowercase(str))
     return [count(c, s) for c in 'a':'z'] # ignores spaces, hyphens, capitalization
 end
@@ -12,7 +12,7 @@ end
 """ task at rosettacode.org/wiki/English_cardinal_anagrams """
 function process_task(maxrange, showfirst30, lang = "English")
     numstrings = map(n -> spelled_out(n, lang=languages[lang]), 1:maxrange)
-    numreps = map(s -> anarep(s, lang), numstrings)
+    numreps = map(anarep, numstrings)
     anadict = Dict{Vector{Int}, Set{String}}()
     for i in eachindex(numstrings)
         if haskey(anadict, numreps[i])
