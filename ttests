@@ -5,7 +5,7 @@ languages = Dict("English" => :en, "Spanish" => :es, "Portuguese" => :pt_BR)
 """ get the letter frequencies as an anagram representation of string str """
 function anarep(str)
     s = lowercase(str)
-    return [count(ch, s) for (i, ch) in enumerate('a':'z')]
+    return [count(c, s) for c in 'a':'z']
 end
 
 """ task at rosettacode.org/wiki/English_cardinal_anagrams """
@@ -32,7 +32,8 @@ function process_task(maxrange, showfirst30, lang = "English")
             i += 1
         end
     end
-    println("\nCount of $lang cardinal anagrams up to $maxrange: $(count(>(1), counts))")
+    print("\nCount of $lang cardinal anagrams up to $maxrange: ")
+    println(count(p -> length(p[2]) > 1, anadict))
     println("\nLargest group(s) of $lang cardinal anagrams up to $maxrange:")
     maxcount = maximum(counts)
     reps = unique([numreps[i] for i in 1:maxrange if counts[i] == maxcount])
@@ -45,3 +46,5 @@ process_task(1000, true)
 process_task(10000, false)
 process_task(10000, false, "Spanish")
 process_task(10000, false, "Portuguese")
+
+
