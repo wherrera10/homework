@@ -12,29 +12,36 @@ end
 function process_task(maxrange, showfirst30, lang = "English")
     numstrings = map(n -> spelled_out(n, lang=languages[lang]), 1:maxrange)
     numreps = map(anarep, numstrings)
-    anadict = Dict{Vector{Int}}, Set{String}}()
-    for i in eachindex(numstrings) # add anagram summary representation and string to anadict
+    anadict = Dict{Vector{Int}, Set{String}}()
+    for i in eachindex(numstrings)
         if haskey(anadict, numreps[i])
             push!(anadict[numreps[i]], numstrings[i])
         else
-            anadict[numreps[i]] = Set{String}([numstribngs[i]])
+            anadict[numreps[i]] = Set{String}([numstrings[i]])
         end
     end
     counts = [length(anadict[numreps[i]]) for i in 1:maxrange]
     if showfirst30
         println("First 30 $lang cardinal anagrams:")
-        for (i, n) in filter(>(1), counts)[1:30]
-            print(rpad(n, 4), i % 10 == 0 ? "\n" :"")
+        i, printed = 1, 0
+        while i < maxrange && printed < 30
+            if counts[i] > 1
+                printed += 1
+                print(rpad(i, 4), printed % 10 == 0 ? "\n" : "")
+            end
+            i += 1
         end
     end
-    println("Count of $lang cardinal anagrams up to $maxrange: $(count(>(1), counts)")
+    println("\nCount of $lang cardinal anagrams up to $maxrange: $(count(>(1), counts))")
     println("\nLargest group(s) of $lang cardinal anagrams up to $maxrange:")
     maxcount = maximum(counts)
-    println([i for i in 1:maxrange if counts[i] == maxcount], "\n")
+    reps = unique([numreps[i] for i in 1:maxrange if counts[i] == maxcount])
+    for r in reps
+        println(findall(==(r), numreps))
+    end
 end
 
 process_task(1000, true)
 process_task(10000, false)
 process_task(10000, false, "Spanish")
 process_task(10000, false, "Portuguese")
-
