@@ -1,18 +1,20 @@
 import SpelledOut: spelled_out
 
 languages = Dict("English" => :en, "Spanish" => :es, "Portuguese" => :pt_BR)
-letters = Dict("English" => 'a':'z', "Spanish" => ['a':'z'; ['']], "Portuguese" => :pt_BR)
+letters = Dict("English" => 'a':'z', 
+               "Spanish" => ['a':'z'; ['é', 'ó']],
+               "Portuguese" => ['a':'z'; ['ê', 'é', 'ó', 'ã', 'õ']])
 
 """ get the letter frequencies as an anagram representation of string str """
-function anarep(str)
+function anarep(str, lang)
     s = lowercase(str)
-    return [count(c, s) for c in 'a':'z'] # ignores spaces, hyphens, capitalization
+    return [count(c, s) for c in letters[lang]] # ignores spaces, hyphens, capitalization
 end
 
 """ task at rosettacode.org/wiki/English_cardinal_anagrams """
 function process_task(maxrange, showfirst30, lang = "English")
     numstrings = map(n -> spelled_out(n, lang=languages[lang]), 1:maxrange)
-    numreps = map(anarep, numstrings)
+    numreps = map(s -> anarep(s, lang), numstrings)
     anadict = Dict{Vector{Int}, Set{String}}()
     for i in eachindex(numstrings)
         if haskey(anadict, numreps[i])
