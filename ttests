@@ -1,6 +1,7 @@
 import SpelledOut: spelled_out
 
 languages = Dict("English" => :en, "Spanish" => :es, "Portuguese" => :pt_BR)
+letters = Dict("English" => 'a':'z', "Spanish" => ['a':'z'; ['']], "Portuguese" => :pt_BR)
 
 """ get the letter frequencies as an anagram representation of string str """
 function anarep(str)
