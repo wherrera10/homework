@@ -1,11 +1,13 @@
 import SpelledOut: spelled_out
 
 languages = Dict("English" => :en, "Spanish" => :es, "Portuguese" => :pt_BR)
-alphabetize(s) = replace(replace(s, r"[éêé]" => "e"), "ã" => "a"), r"[óõ]" => "o")
+
+""" remove diacritical marks, as anagrams use only standard alphabet """
+undiacritical(s) = replace(replace(s, r"[éêé]" => "e"), "ã" => "a"), r"[óõ]" => "o")
 
 """ get the letter frequencies as an anagram representation of string str """
 function anarep(str)
-    s = alphabetize(lowercase(str))
+    s = undiacritical(lowercase(str))
     return [count(c, s) for c in 'a':'z'] # ignores spaces, hyphens, capitalization
 end
 
