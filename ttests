@@ -1,14 +1,12 @@
 import SpelledOut: spelled_out
 
 languages = Dict("English" => :en, "Spanish" => :es, "Portuguese" => :pt_BR)
-letters = Dict("English" => 'a':'z', 
-               "Spanish" => ['a':'z'; ['é', 'ó']],
-               "Portuguese" => ['a':'z'; ['ê', 'é', 'ó', 'ã', 'õ']])
+alphabetize(s) = replace(replace(s, r"[éêé]" => "e"), "ã" => "a"), r"[óõ]" => "o")
 
 """ get the letter frequencies as an anagram representation of string str """
 function anarep(str, lang)
-    s = lowercase(str)
-    return [count(c, s) for c in letters[lang]] # ignores spaces, hyphens, capitalization
+    s = alphabetize(lowercase(str))
+    return [count(c, s) for c in 'a':'z'] # ignores spaces, hyphens, capitalization
 end
 
 """ task at rosettacode.org/wiki/English_cardinal_anagrams """
