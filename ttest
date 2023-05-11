@@ -1,28 +1,32 @@
+""" rosettacode.org/wiki/Inventory_sequence """
 
+using Printf
+using Counters
+using Plots
 
-from sympy import factorint
+struct InventorySequence
+    inventory::Counter{Int}
+    InventorySequence() = new(counter([0]))
+end
 
+function Base.iterate(i::InventorySequence, num = 0)
+    nextval = i.inventory[num]
+    num = nextval == 0 ? 0 : num + 1
+    i.inventory[nextval] += 1
+    return nextval, num
+end
+    
+const thresholds = [1000 * j for j in 1:10]
+const toplot = Int[]
 
-def testmultiplicativelyperfects(thresholds):
-    ''' Find and count multiplicatively perfect integers up to thresholds '''
-    mpcount, semicount = 0, 0
-    print("Multiplicatively perfect numbers under $(thresholds[begin]):")
-    for i in range(1, thresholds[-1]):
-        fdi = factorint(i)
-        pky = list(fdi.keys())
-        if len(pky) == 2 and fdi[pky[0]] == 1 == fdi[pky[1]] or len(pky) == 1 and fdi[pky[0]] == 3:
-            mpcount += 1
-            if fdi[pky[0]] != 3:
-                semicount += 1
-            if i < thresholds[0]:
-                print(f'{i:5d} = {pky[0]:5d} * {i // pky[0]:5d}    ',
-                      end='\n' if (mpcount + 1) % 4 == 0 else '')
-        elif len(pky) == 1 and fdi[pky[0]] == 2:
-            semicount += 1
+for (i, n) in enumerate(InventorySequence())
+    if i <= 100
+        print(rpad(n, 4), i % 20 == 0 ? "\n" : "")
+    elseif n >= thresholds[begin]
+        @printf("First element >= %d5: %d5 in position %d.\n", popfirst!(thresholds), n, i)
+        length(thresholds) == 0 && break
+    end
+    length(toplot) < 10000 && push!(toplot, n)
+end
 
-        if i in thresholds:
-            print(
-                f'\nCounts under {i}: MPNs = {mpcount} Semi-primes = {semicount}')
-
-
-testmultiplicativelyperfects([500, 5000, 50_000, 500_000])
+plot(toplot)
