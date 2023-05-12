@@ -9,7 +9,7 @@ function abbreviate(s; term = "digits", thresh = 42, idx = thresh ÷ 2 - 2)
     return w < thresh ? s : s[begin:begin+idx] * ".." * s[end-idx:end] * " ($w $term)"
 end
 
-@resumable function oeis75442()
+@resumable function generate_oeis75442()
     psum = big"0" // big"1"
     while true
         n = BigInt(ceil(big"1" // (1 - psum)))
@@ -25,6 +25,6 @@ end
 end
 
 
-for (i, n) in enumerate(Iterators.take(oeis75442(), 17))
+for (i, n) in enumerate(Iterators.take(generate_oeis75442(), 17))
     println(lpad(i, 2), ": ", abbreviate(string(n)))
 end
