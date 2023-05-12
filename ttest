@@ -13,14 +13,12 @@ end
     p, psum = big"1", big"0" // 1
     while true
         nextsum = BigInt(ceil(big"1" // (1 - psum))) + 1
-        while true
-            p = nextprime(nextsum)
+        for i in nextsum:nextsum+1000 # always a prime by then
+            p = nextprime(i)
             if psum + 1 // p < 1
                 psum += 1 // p
                 @yield p
                 break
-            else
-                nextsum += 1
             end
         end
     end
