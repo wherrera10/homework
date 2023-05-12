@@ -4,7 +4,7 @@ using Primes
 using ResumableFunctions
 
 """ Abbreviate a large string by showing beginning / end and number of chars """
-function abbreviate(s; ds = "digits", t = 42, x = (t - 3) ÷ 2)
+function abbreviate(s; ds = "digits", t = 40, x = (t - 1) ÷ 2)
     wid = length(s)
     return wid < t ? s : s[begin:begin+x] * ".." * s[end-x:end] * " ($wid $ds)"
 end
