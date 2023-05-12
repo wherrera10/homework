@@ -10,14 +10,14 @@ function abbreviate(s; term = "digits", thresh = 42, idx = thresh ÷ 2 - 2)
 end
 
 @resumable function oeis75442()
-    p, psum = big"1", big"0" // 1
+    psum = big"0" // big"1"
     while true
-        nextsum = BigInt(ceil(big"1" // (1 - psum))) + 1
-        for i in nextsum:nextsum+1000 # always a prime by then
-            p = nextprime(i)
-            if psum + 1 // p < 1
-                psum += 1 // p
-                @yield p
+        n = BigInt(ceil(big"1" // (1 - psum)))
+        while true 
+            n = nextprime(n + 1)
+            if psum + 1 // n < 1
+                psum += 1 // n
+                @yield n
                 break
             end
         end
