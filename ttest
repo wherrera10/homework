@@ -27,6 +27,6 @@ end
 end
 
 
-for (i, n) in enumerate(oeis75442(), 17)
+for (i, n) in enumerate(Iterators.take(oeis75442(), 17))
     println(lpad(i, 2), ": ", abbreviate(string(n)))
 end
