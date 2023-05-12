@@ -1,4 +1,5 @@
 """ rosettacode.org/wiki/Prime_reciprocal_sum """
+
 using Primes
 using ResumableFunctions
 
@@ -8,18 +9,24 @@ function abbreviate(s, term = "digits", thresh = 50, idx = thresh ÷ 2 - 3)
     return w < thresh ? s : s[begin:begin+idx] * ".." * s[end-idx:end] * " ($w $term)"
 end
 
-""" Generate OEIS A075442 """
 @resumable function oeis75442()
-    p, psum = 1, big"0.0"
+    p, psum = big"1", big"0" // 1
     while true
-        p = nextprime(p + 1)
-        nextsum = psum + big"1.0" / p 
-        if nextsum < 1
-            psum = nextsum
-            @yield p
+        nextsum = BigInt(ceil(big"1" // (1 - psum))) + 1
+        while true
+            p = nextprime(nextsum)
+            if psum + 1 // p < 1
+                psum += 1 // p
+                @yield p
+                break
+            else
+                nextsum += 1
+            end
         end
     end
 end
 
-foreach(n -> println(abbreviate(string(n))), Iterators.take(oeis75442(), 17))
 
+for (i, n) in enumerate(oeis75442(), 17)
+    println(lpad(i, 2), ": ", abbreviate(string(n)))
+end
