@@ -1,22 +1,15 @@
-''' rosettacode.org/wiki/Prime_reciprocal_sum '''
+using Formatting, Primes, UnicodePlots
 
-from fractions import Fraction
-from sympy import nextprime
+radical(n) = prod(map(first, factor(n).pe))
+radicallength(n) = length(factor(n).pe)
 
+println("The radicals for the first 50 positive integers are:")
+foreach(p -> print(rpad(p[2], 4), p[1] % 10 == 0 ? "\n" : ""), enumerate(map(radical, 1:50)))
 
-def abbreviated(bigstr, label="digits", maxlen=40, j=19):
-    ''' Abbreviate string by showing beginning / end and number of chars '''
-    wid = len(bigstr)
-    return bigstr if wid <= maxlen else bigstr[:j] + '..' + bigstr[-j:] + f' ({wid} {label})'
+for i in [99999, 499999, 999999]
+    println("\nRadical for ", format(i, commas=true), ": ", format(radical(i), commas=true))
+end
 
+println("\nBreakdown of numbers of distinct prime factors for positive integers from 1 to 1,000,000:")
+histogram(map(radicallength, 1:1_000_000), nbins = 8)
 
-def ceil(rat):
-    ''' ceil function for Fractions '''
-    return rat.numerator if rat.denominator == 1 else rat.numerator // rat.denominator + 1
-
-
-psum = Fraction(0, 1)
-for i in range(1, 17):
-    next_in_seq = nextprime(ceil(Fraction(1, 1 - psum)))
-    psum += Fraction(1, next_in_seq)
-    print(f'{i:2}:', abbreviated(str(next_in_seq)))
