@@ -14,21 +14,24 @@ end
 
 const factorials = map(factorial, 2:18)
 
-function factor_as_factorials(n::T, idx = length(factorials)) where T <: Integer
-    idx < 1 && return Tuple{T, Int, Int}[] 
+function factor_as_factorials(n::T) where T <: Integer
     m = n
-    fac_exp_pairs = Tuple{T, Int, Int}[]
-    for i in idx:-1:1
-        expo = 0
-        while m % factorials[i] == 0
-            expo += 1
-            m ÷= factorials[i]
+    fac_exp = Tuple{Int, Int}[]
+    for idx in length(factorials):-1:1
+        empty!(fac_exp)
+        for i in idx:-1:1
+            expo = 0
+            while m % factorials[i] == 0
+                expo += 1
+                m ÷= factorials[i]
+            end
+            if expo > 0
+                push!(fac_exp, (i + 1, expo))
+            end
         end
-        if expo > 0
-            push!(fac_exp_pairs, (factorials[i], i + 1, expo))
-        end
+        m == 1 && return fac_exp
     end
-    return m > 1 ? factor_as_factorials(n::T, idx - 1) : fac_exp_pairs
+    return fac_exp
 end
 
 const superchars = ["\u2070", "\u2071", "\u00b2", "\u00b3", "\u2074",
@@ -44,6 +47,6 @@ println("\nThe largest Jordan–Pólya number before 100 million: ", arr[findlas
 
 for n in [800, 1800, 2800, 3800]
     println("The $(n)th Jordan-Pólya number is: $(arr[n])")
-    println(join(map(t -> "($(t[2])!)$(super(t[3])))", factor_as_factorials(arr[n])), " x "))
+    println(join(map(t -> "($(t[1])!)$(super(t[2])))", factor_as_factorials(arr[n])), " x "))
 end
 
