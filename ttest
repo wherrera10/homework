@@ -11,25 +11,24 @@ function aupto(lim::T, mx::T = zero(T)) where T <: Integer
     return unique(sort!(v))
 end
 
-factorials = [factorial(i) for i in 2:19]
+const factorials = map(factorial, 2:18)
 
-function decompose(n::T, start = 18) where T <: Integer
-    start < 2 && return T[]
+function factor_into_factorials(n::T)
     m = n
-    f = T[]
-    for i in start:-1:2
-        while m % factorials[i] == 0
-            push!(f, i)
-            m ÷= factorials[i]
-            m == 1 && return f
+    fac_exp_pairs = Pair{T, Int}[]
+    for idx in length(factorials):-1:1
+        q, r = divrem(m, factorials[idx])
+        if q > 0 && r == 0
+            push!(fac_exp_pairs, factorials[idx] => q)
+            m -= factorials[idx] * q
         end
     end
-    return decompose(n, start - 1)
+    m > 0 && error("$n does not decompose into the factorials $factorials")
+    return fac_exp_pairs
 end
-
 
 arr = aupto(2^53)
 
 println(arr[[800, 1800, 2800, 3800]])
 
-println([decompose(n) for n in arr[[800, 1800, 2800, 3800]]])
+println([factor_into_factorials(n) for n in arr[[800, 1800, 2800, 3800]]])
