@@ -34,7 +34,7 @@ function factor_as_factorials(n::T) where T <: Integer
     return fac_exp
 end
 
-const superchars = ["\u2070", "\u2071", "\u00b2", "\u00b3", "\u2074",
+const superchars = ["\u2070", "\u00b9", "\u00b2", "\u00b3", "\u2074",
                     "\u2075", "\u2076", "\u2077", "\u2078", "\u2079"]
 super(n::Integer) = prod([superchars[i + 1] for i in reverse(digits(n))])
 
