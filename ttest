@@ -1,4 +1,5 @@
 
+
 function aupto(lim::T, mx::T = zero(T)) where T <: Integer
     lim < 2 && return [one(T)]
     v, t = [one(T)], one(T)
@@ -13,10 +14,10 @@ end
 
 const factorials = map(factorial, 2:18)
 
-function factor_into_factorials(n::T, idx = length(factorials)) where T <: Integer
-    idx < 1 && return Pair{T, Int}[] 
+function factor_as_factorials(n::T, idx = length(factorials)) where T <: Integer
+    idx < 1 && return Tuple{T, Int, Int}[] 
     m = n
-    fac_exp_pairs = Pair{T, Int}[]
+    fac_exp_pairs = Tuple{T, Int, Int}[]
     for i in idx:-1:1
         expo = 0
         while m % factorials[i] == 0
@@ -24,15 +25,25 @@ function factor_into_factorials(n::T, idx = length(factorials)) where T <: Integ
             m ÷= factorials[i]
         end
         if expo > 0
-            push!(fac_exp_pairs, factorials[i] => expo)
+            push!(fac_exp_pairs, (factorials[i], i + 1, expo))
         end
     end
-    m > 1 && return factor_into_factorials(n::T, idx - 1)
-    return fac_exp_pairs
+    return m > 1 ? factor_as_factorials(n::T, idx - 1) : fac_exp_pairs
 end
+
+const superchars = ["\u2070", "\u2071", "\u00b2", "\u00b3", "\u2074",
+                    "\u2075", "\u2076", "\u2077", "\u2078", "\u2079"]
+super(n::Integer) = prod([superchars[i + 1] for i in reverse(digits(n))])
 
 arr = aupto(2^53)
 
-println(arr[[800, 1800, 2800, 3800]])
+println("First 50 Jordan–Pólya numbers:")
+foreach(p -> print(rpad(p[2], 6), p[1] % 10 == 0 ? "\n" : ""), enumerate(arr[1:50]))
 
-println([factor_into_factorials(n) for n in arr[[800, 1800, 2800, 3800]]])
+println("\nThe largest Jordan–Pólya number before 100 million: ", arr[findlast(<(100_000_000), arr)])
+
+for n in [800, 1800, 2800, 3800]
+    println("The $(n)th Jordan-Pólya number is: $(arr[n])")
+    println(join(map(t -> "($(t[2])!)$(super(t[3])))", factor_as_factorials(arr[n])), " x "))
+end
+
