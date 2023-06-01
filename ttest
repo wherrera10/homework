@@ -1,4 +1,4 @@
-function jp(limit::T) where t <: Integer
+function jp(limit::T) where T <: Integer
     res = map(factorial, T(1):T(18))
     k = 2
     while k < length(res)
@@ -13,9 +13,8 @@ function jp(limit::T) where t <: Integer
         end
         k += 1
     end
-    return sort!((sizeof(t) > sizeof(Int) ? T : Int).(res))
+    return sort!((sizeof(T) > sizeof(Int) ? T : Int).(res))
 end
 
-@show jp(2^53-1)
-@time jp(2^53-1)
-
+@show jp(UInt(2^53))
+@time jp(UInt(2^53))
