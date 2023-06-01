@@ -1,5 +1,4 @@
 
-
 function aupto(lim::T, mx::T = zero(T)) where T <: Integer
     lim < 2 && return [one(T)]
     v, t = [one(T)], one(T)
@@ -15,9 +14,9 @@ end
 const factorials = map(factorial, 2:18)
 
 function factor_as_factorials(n::T) where T <: Integer
-    m = n
     fac_exp = Tuple{Int, Int}[]
     for idx in length(factorials):-1:1
+        m = n
         empty!(fac_exp)
         for i in idx:-1:1
             expo = 0
@@ -29,7 +28,7 @@ function factor_as_factorials(n::T) where T <: Integer
                 push!(fac_exp, (i + 1, expo))
             end
         end
-        m == 1 && return fac_exp
+        m == 1 && break
     end
     return fac_exp
 end
@@ -46,7 +45,8 @@ foreach(p -> print(rpad(p[2], 6), p[1] % 10 == 0 ? "\n" : ""), enumerate(arr[1:5
 println("\nThe largest Jordan–Pólya number before 100 million: ", arr[findlast(<(100_000_000), arr)])
 
 for n in [800, 1800, 2800, 3800]
-    println("The $(n)th Jordan-Pólya number is: $(arr[n])")
-    println(join(map(t -> "($(t[1])!)$(super(t[2])))", factor_as_factorials(arr[n])), " x "))
+    print("\nThe $(n)th Jordan-Pólya number is: $(arr[n])\n= ")
+    println(join(map(t -> "$(t[1])!$(t[2] > 1 ? super(t[2]) : "")",
+       factor_as_factorials(arr[n])), " x "))
 end
 
