@@ -1,3 +1,17 @@
+function iterate_phi(limit = 1 / 10^5)
+    phi, oldphi, iters = one(limit), one(limit), 0
+    while true
+        phi = 1 + 1 / oldphi
+        iters += 1
+        abs(phi - oldphi) <= limit && break
+        oldphi = phi
+    end
+    println("Final value of phi : $phi")
+    println("Number of iterations : $iters")
+    println("Error (approx) : $(phi - (1 + 5.sqrt) / 2)")
+end
+
+
 function jp(limit::T) where T <: Integer
     res = map(factorial, T(1):T(18))
     k = 2
