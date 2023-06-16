@@ -28,15 +28,14 @@ for (i, (n, p)) in eneumerate(Sisyphus())
     end
     if i == 1000000000
         println("These numbers under 250 do not occur in the first 100,000,000 terms:")
-    println("    ", filter(!haskey(coun, n), 1:249), "\n")
-    print("")
+    println("    ", filter(!haskey(coun, n), 1:249), "\n\n")
 
-    most_common = sisyphus_lt_250.most_common(1)[0][1]
-    print("These numbers under 250 occur the most in the first 100,000,000 terms:")
-    print(
-        f"  {[n for n, c in sisyphus_lt_250.items() if c == most_common]} "
-        f"all occur {most_common} times."
-    )
+    sorteds = sort!([p for p in counter], key = x -> x[2])
+    maxtimes = sorteds[end][2]
+    println("These numbers under 250 occur the most ($maxtimes times) in the first 100,000,000 terms:")
+    println("    ", map(last, filter(p[2] == maxtimes, sorteds)))
+end
+
 
 
 using Printf
