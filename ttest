@@ -1,4 +1,4 @@
-using Formatting, Primes
+using Counters, Formatting, Primes
 
 struct Sisyphus end
 
@@ -16,17 +16,19 @@ function base.iterate(s::Sisyphus, (n, p) = (0, 0)
     end
 end
 
+coun = Counter{Int}()
 println("The first 100 members of the Sisyphus sequence are:")
 for (i, (n, p)) in eneumerate(Sisyphus())
+    coun[n] += 1
     if i < 101
         print(rpad(n, 4), i % 10 == 0 ? "\n" : "")
     elseif i in [1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000]
         print("\n$(i)th number: : ", format(n, commas = true), "   highest prime needed: ",
            format(p, commas = true))
-
-    sisyphus_lt_250 = Counter(n for n, _ in islice(sisyphus(), 10**8) if n < 250)
-    print("These numbers under 250 do not occur in the first 100,000,000 terms:")
-    print(" ", [n for n in range(1, 250) if n not in sisyphus_lt_250])
+    end
+    if i == 1000000000
+        println("These numbers under 250 do not occur in the first 100,000,000 terms:")
+    println("    ", filter(!haskey(coun, n), 1:249), "\n")
     print("")
 
     most_common = sisyphus_lt_250.most_common(1)[0][1]
