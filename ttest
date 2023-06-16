@@ -2,48 +2,27 @@ using Formatting, Primes
 
 struct Sisyphus end
 
-function base.iterate(s::Sisyphus, (n, p) = (1, 0)
-    if p == 0
-        return 1, (1, 1)
+function base.iterate(s::Sisyphus, (n, p) = (0, 0)
+    if n == 0
+        return (1, 0), (1, 0)
     else
         if isodd(n)
             p = nextprime(p + 1)
             n = n + p
         else:
-            n = n  \div 2
-        yield n, p
+            n = \div= 2
+        end
+        return (n, p), (n, p)
+    end
+end
 
-
-def consume(it: Iterator[Tuple[int, int]], n) -> Tuple[int, int]:
-    next(islice(it, n - 1, n - 1), None)
-    return next(it)
-
-
-T = TypeVar("T")
-
-
-def batched(it: Iterable[T], n: int) -> Iterable[Tuple[T, ...]]:
-    _it = iter(it)
-    batch = tuple(islice(_it, n))
-    while batch:
-        yield batch
-        batch = tuple(islice(_it, n))
-
-
-if __name__ == "__main__":
-    it = sisyphus()
-    first_100 = list(islice(it, 100))
-    print("The first 100 members of the Sisyphus sequence are:")
-    for row in batched(first_100, 10):
-        print("  ".join(str(n).rjust(3) for n, _ in row))
-
-    print("")
-
-    for interval in [10**x for x in range(3, 9)]:
-        n, prime = consume(it, interval - (interval // 10))
-        print(f"{interval:11,}th number: {n:13,}   highest prime needed: {prime:11,}")
-
-    print("")
+println("The first 100 members of the Sisyphus sequence are:")
+for (i, (n, p)) in eneumerate(Sisyphus())
+    if i < 101
+        print(rpad(n, 4), i % 10 == 0 ? "\n" : "")
+    elseif i in [1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000]
+        print("\n$(i)th number: : ", format(n, commas = true), "   highest prime needed: ",
+           format(p, commas = true))
 
     sisyphus_lt_250 = Counter(n for n, _ in islice(sisyphus(), 10**8) if n < 250)
     print("These numbers under 250 do not occur in the first 100,000,000 terms:")
