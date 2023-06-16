@@ -2,39 +2,61 @@ using Counters, Formatting, Primes
 
 struct Sisyphus end
 
-function base.iterate(s::Sisyphus, (n, p) = (0, 0)
+function Base.iterate(s::Sisyphus, (n, p) = (0, 0))
     if n == 0
         return (1, 0), (1, 0)
     else
         if isodd(n)
             p = nextprime(p + 1)
-            n = n + p
-        else:
-            n = \div= 2
+            n += p
+        else
+            n ÷= 2
         end
         return (n, p), (n, p)
     end
 end
 
-coun = Counter{Int}()
+const coun = Counter{Int}()
 println("The first 100 members of the Sisyphus sequence are:")
-for (i, (n, p)) in eneumerate(Sisyphus())
+for (i, (n, p)) in enumerate(Sisyphus())
     coun[n] += 1
     if i < 101
         print(rpad(n, 4), i % 10 == 0 ? "\n" : "")
     elseif i in [1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000]
-        print("\n$(i)th number: : ", format(n, commas = true), "   highest prime needed: ",
-           format(p, commas = true))
+        print("\n$(format(i, commas = true))th number: ", format(n, width = 11, commas = true),
+           ".  Highest prime needed: ", format(p, commas = true))
     end
     if i == 1000000000
         println("These numbers under 250 do not occur in the first 100,000,000 terms:")
-    println("    ", filter(!haskey(coun, n), 1:249), "\n\n")
-
-    sorteds = sort!([p for p in counter], key = x -> x[2])
-    maxtimes = sorteds[end][2]
-    println("These numbers under 250 occur the most ($maxtimes times) in the first 100,000,000 terms:")
-    println("    ", map(last, filter(p[2] == maxtimes, sorteds)))
+        println("    ", filter(!haskey(coun, n), 1:249), "\n\n")
+        sorteds = sort!([p for p in counter], key = last)
+        maxtimes = sorteds[end][2]
+        println("These numbers under 250 occur the most ($maxtimes times) in the first 100,000,000 terms:")
+        println("    ", map(last, filter(p[2] == maxtimes, sorteds)))
+        break
+    end
 end
+
+function sisyphus36()
+    n, p, i = big"1", big"0", big"1"
+
+    while true
+        i += 1
+        if isodd(n)
+            p = nextprime(p + 1)
+            n = n + p
+        else
+            n = n ÷ 2
+        end
+        if n == 36
+            print(format(i, commas = true), " ", format(n, commas = true), " ",
+                  format(p, commas = true))
+            break
+        end
+    end
+end
+
+#@time sisyphus36()
 
 
 
