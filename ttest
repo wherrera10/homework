@@ -19,7 +19,7 @@ end
 const coun = Counter{Int}()
 println("The first 100 members of the Sisyphus sequence are:")
 for (i, (n, p)) in enumerate(Sisyphus())
-    coun[n] += 1
+    n < 250 && coun[n] += 1
     if i < 101
         print(rpad(n, 4), i % 10 == 0 ? "\n" : "")
     elseif i in [1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000]
