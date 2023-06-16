@@ -23,7 +23,7 @@ for (i, (n, p)) in enumerate(Sisyphus())
     if i < 101
         print(rpad(n, 4), i % 10 == 0 ? "\n" : "")
     elseif i in [1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000]
-        print("\n$(format(i, commas = true))th number: ", format(n, width = 11, commas = true),
+        print("\n$(format(i, commas = true))th number: ", format(n, width = 13, commas = true),
            ".  Highest prime needed: ", format(p, commas = true))
     end
     if i == 1000000000
