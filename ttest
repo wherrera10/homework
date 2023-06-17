@@ -30,7 +30,7 @@ for (i, (n, p)) in enumerate(Sisyphus())
     end
     if i == 1000000000
         println("These numbers under 250 do not occur in the first 100,000,000 terms:")
-        println("    ", filter(!haskey(coun, n), 1:249), "\n\n")
+        println("    ", filter(j -> !haskey(coun, j), 1:249), "\n\n")
         sorteds = sort!([p for p in counter], key = last)
         maxtimes = sorteds[end][2]
         println("These numbers under 250 occur the most ($maxtimes times) in the first 100,000,000 terms:")
