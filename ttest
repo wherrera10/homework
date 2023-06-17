@@ -24,11 +24,11 @@ for (i, (n, p)) in enumerate(Sisyphus())
     end
     if i < 101
         print(rpad(n, 4), i % 10 == 0 ? "\n" : "")
-    elseif i in [1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000]
+    elseif i in [1000, 10000, 100_000, 1_000_000, 10_000_000, 100_000_000]
         print("\n$(format(i, commas = true))th number: ", format(n, width = 13, commas = true),
            ".  Highest prime needed: ", format(p, commas = true))
     end
-    if i == 1000000000
+    if i == 100_000_000
         println("These numbers under 250 do not occur in the first 100,000,000 terms:")
         println("    ", filter(j -> !haskey(coun, j), 1:249), "\n\n")
         sorteds = sort!([p for p in counter], key = last)
