@@ -11,8 +11,11 @@ model = Model(Ipopt.Optimizer)
     z[i]^4 / n! - sum(X[i, j] * z[j]^4 for j in 1:n) / (n! * (n + 1)),
 )
 @NLconstraint(model, sum(y[i] * expr[i] for i in 1:n) == 1)
-The trick is to realize that you can’t construct nonlinear expressions outside the macros, you can’t use linear algebra like X * z, and you can’t use function calls like factorial(n) inside the macro.
 
+#= The trick is to realize that you can’t construct nonlinear expressions outside the macros,
+you can’t use linear algebra like X * z, and you can’t use function calls like factorial(n)
+inside the macro.
+=#
 
 
 using Printf
