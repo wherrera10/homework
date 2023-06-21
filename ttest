@@ -1,64 +1,17 @@
-using Counters, Formatting, Primes
-
-struct Sisyphus end
-
-function Base.iterate(s::Sisyphus, (n, p) = (0, 0))
-    if n == 0
-        return (1, 0), (1, 0)
-    else
-        if isodd(n)
-            p = nextprime(p + 1)
-            n += p
-        else
-            n ÷= 2
-        end
-        return (n, p), (n, p)
-    end
-end
-
-const coun = Counter{Int}()
-println("The first 100 members of the Sisyphus sequence are:")
-for (i, (n, p)) in enumerate(Sisyphus())
-    if n < 250
-        coun[n] += 1
-    end
-    if i < 101
-        print(rpad(n, 4), i % 10 == 0 ? "\n" : "")
-    elseif i in [1000, 10000, 100_000, 1_000_000, 10_000_000, 100_000_000]
-        print("\n$(format(i, commas = true))th number: ", format(n, width = 13, commas = true),
-           ".  Highest prime needed: ", format(p, commas = true))
-    end
-    if i == 100_000_000
-        println("These numbers under 250 do not occur in the first 100,000,000 terms:")
-        println("    ", filter(j -> !haskey(coun, j), 1:249), "\n\n")
-        sorteds = sort!([p for p in counter], key = last)
-        maxtimes = sorteds[end][2]
-        println("These numbers under 250 occur the most ($maxtimes times) in the first 100,000,000 terms:")
-        println("    ", map(last, filter(p[2] == maxtimes, sorteds)))
-        break
-    end
-end
-
-function sisyphus36()
-    n, p, i = big"1", big"0", big"1"
-
-    while true
-        i += 1
-        if isodd(n)
-            p = nextprime(p + 1)
-            n = n + p
-        else
-            n = n ÷ 2
-        end
-        if n == 36
-            print(format(i, commas = true), " ", format(n, commas = true), " ",
-                  format(p, commas = true))
-            break
-        end
-    end
-end
-
-#@time sisyphus36()
+using JuMP, Ipopt
+n = 5
+n! = factorial(n)
+model = Model(Ipopt.Optimizer)
+@variable(model, X[1:n, 1:n])
+@variable(model, y[1:n])
+@expression(model, z[i=1:n], sum(X[i, :]))
+@NLexpression(
+    model,
+    expr[i=1:n],
+    z[i]^4 / n! - sum(X[i, j] * z[j]^4 for j in 1:n) / (n! * (n + 1)),
+)
+@NLconstraint(model, sum(y[i] * expr[i] for i in 1:n) == 1)
+The trick is to realize that you can’t construct nonlinear expressions outside the macros, you can’t use linear algebra like X * z, and you can’t use function calls like factorial(n) inside the macro.
 
 
 
