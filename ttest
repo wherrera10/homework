@@ -1,20 +1,18 @@
 using Images
 
-t_start, t_end, s_start, s_end = 0.0, 1.0, 0.0, 1.0
 
-dt = (t_end - t_start) / 1000
-ds = (s_end - s_start) / 1000
-
-mat = [sqrt() for t in t_start:dt:t_end, s in s_start:ds:s-end]
-img = Matrix{Gray{AbstractFloat}}(mat)
-minima = findlocalminima(img)
-
-for m in minima
-    if isapprox(mat[m], 0)
-        push!(answers, m)
-    end
-    new_t_start, new_t_end = m[1] - 10 * dt, m[1] + 10 * dt
-    new_s_start, new_s_end = m[2] - 10 * ds, m[2] + 10 * ds
-...
+function minima(func, tmin, tmax, smin, smax, ticks = 1000)
+    dt = (tmin - tmax) / ticks
+    ds = (smin - smax) / ticks
+    mat = [func(t, s) for t in tmin:dt:tmax, s in smin:ds:smax]
+    return findlocalminima(Matrix{Gray{AbstractFloat}}(mat))
 
 end    
+
+tmin, tmax, smin, smax = 0.0, 1.0, 0.0, 1.0
+coords = minima(f, tmin, tmax, smin, smax)
+
+for (t, s) in coords
+    
+    newtmin = t - 0.1 * 
+    
