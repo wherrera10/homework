@@ -1,3 +1,5 @@
+choose initial dt to be 1/32 to min ditance among points used for two curves
+
 using Images
 
 function seekminima(func, tmin = 0.0, tmax = 1.0, smin = 0.0, smax = 1.0, ticks = 1000)
