@@ -1,18 +1,16 @@
 using Images
 
+function seekminima(func, tmin = 0.0, tmax = 1.0, smin = 0.0, smax = 1.0, ticks = 1000)
+    newtmin, newtmax, newsmin, newsmax = tmin, tmax, smin, smax
+    while true
+        dt = (tmin - tmax) / ticks
+        ds = (smin - smax) / ticks
+        mat = [func(t, s) for t in tmin:dt:tmax, s in smin:ds:smax]
+        coords = findlocalminima(Matrix{Gray{AbstractFloat}}(mat))
+        for (t, s) in coords
 
-function minima(func, tmin, tmax, smin, smax, ticks = 1000)
-    dt = (tmin - tmax) / ticks
-    ds = (smin - smax) / ticks
-    mat = [func(t, s) for t in tmin:dt:tmax, s in smin:ds:smax]
-    return findlocalminima(Matrix{Gray{AbstractFloat}}(mat))
+        end
+    end
 
 end    
 
-tmin, tmax, smin, smax = 0.0, 1.0, 0.0, 1.0
-coords = minima(f, tmin, tmax, smin, smax)
-
-for (t, s) in coords
-    
-    newtmin = t - 0.1 * 
-    
