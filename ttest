@@ -1,3 +1,26 @@
+a1 = [1, 1, 2, 3, 4, 5]
+a2 = [1, 3, 5, 7, 8, 9]
+a3 = [2, 3, 4, 6]
+
+iters = [Iterators.Stateful(a) for a in [a1, a2, a3]]
+
+const others, sortd = Int[], Int[]
+
+while any(!isempty, iters)
+    for itr in iters
+        append!(others, [peek(it) for it in iters if !isempty(it) && it != itr])
+        while !isempty(itr) && all(>=(peek(itr)), others)
+            push!(sortd, popfirst!(itr))
+        end
+        empty!(others)
+    end
+end
+
+@show sortd
+
+
+
+
 choose initial dt to be 1/32 to min ditance among points used for two curves
 
 using Images
