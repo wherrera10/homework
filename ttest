@@ -8,16 +8,14 @@ const others, sortd = Int[], Int[]
 
 while any(!isempty, iters)
     for itr in iters
-        append!(others, [peek(it) for it in iters if !isempty(it) && it != itr])
-        while !isempty(itr) && all(>=(peek(itr)), others)
-            push!(sortd, popfirst!(itr))
+        others = [peek(it) for it in iters if !isempty(it) && it != itr]
+        while !isempty(itr)
+            j = peek(itr)
+            any(<(j), others) && break
+            print(popfirst!(itr), ", ")
         end
-        empty!(others)
     end
 end
-
-@show sortd
-
 
 
 
