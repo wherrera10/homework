@@ -1,22 +1,19 @@
+using SpelledOut
 
+spelledcache = [spelled_out(n, lang = :en) for n in 0:999]
 
-
-
-choose initial dt to be 1/32 to min ditance among points used for two curves
-
-using Images
-
-function seekminima(func, tmin = 0.0, tmax = 1.0, smin = 0.0, smax = 1.0, ticks = 1000)
-    newtmin, newtmax, newsmin, newsmax = tmin, tmax, smin, smax
-    while true
-        dt = (tmin - tmax) / ticks
-        ds = (smin - smax) / ticks
-        mat = [func(t, s) for t in tmin:dt:tmax, s in smin:ds:smax]
-        coords = findlocalminima(Matrix{Gray{AbstractFloat}}(mat))
-        for (t, s) in coords
-
-        end
+""" return groupings of a thousand if not 0, least significant first """
+function nonzerogroupings(n)
+    groups = Int[]
+    while n > 0
+        n, r = divrem(n, 1000)
+        r > 0 && push!(r)
     end
+    return groups
+end
 
-end    
+firstletter(n) = spelledcache[nonzerogroups(n)[end] + 1][begin]
+lastletter(n) = spelledcache[nonzerogroups(n)[begin] + 1][end]
+
+
 
