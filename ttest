@@ -1,19 +1,31 @@
 """ The word representation of integers is via nonzero groups of three consecutive digits """
 
+from num2words import num2words
+
+spelledcache = [num2words(n) for n in 0:999]
+
+def nonzerogroupings(n):
+    """ return groupings of a thousand if not 0, least significant first """
+    groups = []
+    while n > 0:
+        n, r = divmod(n, 1000)
+        if r > 0:
+            groups.append(r)
+
+    return groups
+
+def firstletter(n):
+    return spelledcache[nonzerogroupings(n)[-1]][0]
+
+def lastletter(n):
+    return spelledcache[nonzerogroupings(n)[0]][-1]
+
+
+""" The word representation of integers is via nonzero groups of three consecutive digits """
+
 using SpelledOut
 
-spelledcache = [spelled_out(n, lang = :en) for n in 0:999]
-spell(n) = spelledcache[n + 1]
 
-""" return groupings of a thousand if not 0, least significant first """
-function nonzerogroupings(n)
-    groups = Int[]
-    while n > 0
-        n, r = divrem(n, 1000)
-        r > 0 && push!(groups, r)
-    end
-    return groups
-end
 
 firstletter(n) = spell(nonzerogroupings(n)[end])[begin]
 lastletter(n) = spell(nonzerogroupings(n)[begin])[end]
