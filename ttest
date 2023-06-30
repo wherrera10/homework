@@ -1,3 +1,5 @@
+""" The word representation of integers is via groups of three consecutive digits """
+
 using SpelledOut
 
 spelledcache = [spelled_out(n, lang = :en) for n in 0:999]
