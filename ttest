@@ -1,4 +1,4 @@
-""" The word representation of integers is via groups of three consecutive digits """
+""" The word representation of integers is via nonzero groups of three consecutive digits """
 
 using SpelledOut
 
