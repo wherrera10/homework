@@ -1,19 +1,23 @@
 using SpelledOut
 
 spelledcache = [spelled_out(n, lang = :en) for n in 0:999]
+spell(n) = spelledcache[n + 1]
 
 """ return groupings of a thousand if not 0, least significant first """
 function nonzerogroupings(n)
     groups = Int[]
     while n > 0
         n, r = divrem(n, 1000)
-        r > 0 && push!(r)
+        r > 0 && push!(groups, r)
     end
     return groups
 end
 
-firstletter(n) = spelledcache[nonzerogroups(n)[end] + 1][begin]
-lastletter(n) = spelledcache[nonzerogroups(n)[begin] + 1][end]
+firstletter(n) = spelledcache[nonzerogroupings(n)[end] + 1][begin]
+lastletter(n) = spelledcache[nonzerogroupings(n)[begin] + 1][end]
+
+@show firstletter(12876900)
+@show lastletter(23567)
 
 
 
