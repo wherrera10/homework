@@ -13,8 +13,8 @@ function nonzerogroupings(n)
     return groups
 end
 
-firstletter(n) = spelledcache[nonzerogroupings(n)[end] + 1][begin]
-lastletter(n) = spelledcache[nonzerogroupings(n)[begin] + 1][end]
+firstletter(n) = spell(nonzerogroupings(n)[end])[begin]
+lastletter(n) = spell(nonzerogroupings(n)[begin])[end]
 
 @show firstletter(12876900)
 @show lastletter(23567)
