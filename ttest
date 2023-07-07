@@ -1,37 +1,20 @@
-""" The word representation of integers is via nonzero groups of three consecutive digits """
+$ julia --threads=1
+f(i) = (sleep(0.001); i);
 
-from num2words import num2words
-
-spelledcache = [num2words(n) for n in 0:999]
-
-def nonzerogroupings(n):
-    """ return groupings of a thousand if not 0, least significant first """
-    groups = []
-    while n > 0:
-        n, r = divmod(n, 1000)
-        if r > 0:
-            groups.append(r)
-
-    return groups
-
-def firstletter(n):
-    return spelledcache[nonzerogroupings(n)[-1]][0]
-
-def lastletter(n):
-    return spelledcache[nonzerogroupings(n)[0]][-1]
-
-
-""" The word representation of integers is via nonzero groups of three consecutive digits """
-
-using SpelledOut
-
-
-
-firstletter(n) = spell(nonzerogroupings(n)[end])[begin]
-lastletter(n) = spell(nonzerogroupings(n)[begin])[end]
-
-@show firstletter(12876900)
-@show lastletter(23567)
-
+let state = [0], N=Threads.nthreads()
+    @sync for i ∈ 1:N
+        Threads.@spawn begin
+            tid = Threads.threadid()  # Each task gets `tid = 1`.
+            old_var = state[tid]      # Each task reads the current value, which for
+                                      # all is 0 (!) because...
+            new_var = old_var + f(i)  # ...the `sleep` in `f` causes all tasks to pause
+                                      # *simultaneously* here (all loop iterations start,
+                                      # but do not yet finish).
+            state[tid] = new_var      # After being released from the `sleep`, each task
+                                      # sets `state[1]` to `i`.
+        end
+    end
+    @show sum(state), sum(1:N)
+end
 
 
