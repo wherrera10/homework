@@ -6,7 +6,7 @@ fn iscolorful(n: u64) {
     if &n > 10 {
         let mut dig = c.to_string().collect();
         let products = dig.unique();
-        if dig.contains(1) || dig.contains(0) || dig.len() > products.len() {
+        if dig.len() > products.len() || dig.contains(1) || dig.contains(0) {
             return false;
         }
         for i in 0..dig.len() {
