@@ -1,23 +1,25 @@
-from math import prod
-
 largest = [0]
 
-def iscolorful(n):
-    if 0 <= n < 10:
-        return True
-    dig = [int(c) for c in str(n)]
-    if 1 in dig or 0 in dig or len(dig) > len(set(dig)):
-        return False
-    products = list(set(dig))
-    for i in range(len(dig)):
-        for j in range(i+2, len(dig)+1):
-            p = prod(dig[i:j])
-            if p in products:
-                return False
-            products.append(p)
-
-    largest[0] = max(n, largest[0])
-    return True
+fn iscolorful(n: u64) {
+    if &n > 10 {
+        dig = c.to_string().collect();
+        products = dig.unique();
+        if 1 in dig or 0 in dig or dig.len() > products.len() {
+            return false;
+        }
+        for i in 0..dig.len() {
+            for j in i+2..=dig.len() {
+                p = prod(dig[i..j]);
+                if p in products {
+                    return false
+                }
+                products.push(p);
+            }
+        }
+        largest[0] = max(n, largest[0]);
+    }
+    return true;
+}
 
 print('Colorful numbers for 1:25, 26:50, 51:75, and 76:100:')
 for i in range(1, 101, 25):
