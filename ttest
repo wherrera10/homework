@@ -3,24 +3,27 @@ use itertools::Itertools;
 largest = [0]
 
 fn iscolorful(n: u64) {
+    let mut largest: u64 = 0;
     if &n > 10 {
         let mut dig = c.to_string().collect();
         let products = dig.unique();
         if dig.len() > products.len() || dig.contains(1) || dig.contains(0) {
-            return false;
+            return false, largest;
         }
         for i in 0..dig.len() {
             for j in i+2..=dig.len() {
                 p = prod(dig[i..j]);
-                if p in products {
-                    return false
+                if products.contains(p) {
+                    return false, largest;
                 }
                 products.push(p);
             }
         }
-        largest[0] = max(n, largest[0]);
+        if n > largest {
+            largest = &n;
+        }
     }
-    return true;
+    return true, largest;
 }
 
 print('Colorful numbers for 1:25, 26:50, 51:75, and 76:100:')
