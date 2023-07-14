@@ -12,7 +12,7 @@ fn iscolorful(n: u64) {
         }
         for i in 0..dig.len() {
             for j in i+2..=dig.len() {
-                p = prod(dig[i..j]);
+                p = (dig[i..j]).product();
                 if products.contains(p) {
                     return false, largest;
                 }
