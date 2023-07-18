@@ -18,19 +18,27 @@ struct AdfgvxCipher {
 }
 
 /// Set up the encoding and decoding for the ADFGVX cipher.
-fn cipher(alphabet: String, key: String) {
+fn cipher(alphabet: String, encrypt_key: String) {
     pdim = (alphabet.len() as f64).isqrt().floor() as i32;
     assert!(alphabet.len == pdim * pdim);
-    a.keylen = a.key.len() as u32;
-    a.pairs = a.polybius.iter().map(|c1| a.polybius.iter().map(|c2| "{c1}{c2}"));
-    a.encode = HashMap::new();
+    let pchars = alphabet.to_uppercase()
+       .chars().collect::<Vec<_>>();
+    let polybius = pchars.clone();
+    shuffle(&mut polybius);
+    let key = encrypt_key.to_uppercase().chars().collect::<Vec<_>>();
+    let keylen = a.key.len() as u32;
+    let pairs = polybius.iter().map(|c1| a.polybius.iter().map(|c2| "{c1}{c2}"));
+    let encode = HashMap::new();
     for (i, k) in a.polybius.iter().enumerate() {
         a.encode.insert(*k, a.pairs[i]);
     }
-    a.decode = HashMap::new();
+    let decode = HashMap::new();
     for (i, (k, v)) in a.encode.iter().enumerate() {
         a.decode.insert(*v, *k);
     }
+    return AdfgvxCipher { polybius: polybius, alphabet: pchars,
+        key: key, pdim: pdim, keylen: keylen, pairs: pairs, 
+        encode: encode, decode: decode };
 }
 
 fn every_n_space(string: String, sub_len: usize) -> String {
@@ -75,16 +83,7 @@ fn decrypt(a: AdfgvxCipher, cod: String) -> String {
 
 fn main() {
     let msg = "ATTACKAT1200AM";
-    let pchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".to_uppercase()
-       .chars().collect::<Vec<_>>();
-    let polybius = pchars.clone();
-    shuffle(&mut polybius);
-    let key = "volcanism".to_uppercase().chars().collect::<Vec<_>>();
-    let pairs = vec![""; 0].to_vec();
-    let pdim = (polybius.len() as f64).sqrt().floor() as u32;
-    let adf = AdfgvxCipher { polybius: polybius, alphabet: pchars,
-        key: key, pdim: pdim, keylen: 9_i32, pairs: pairs, 
-        encode: HashMap::new(), decode: HashMap::new() };
+    let key = "volcanism";
     setup(adf);
     let encrypted_message = encrypt(adf, msg);
     println!("Message: {original}");
