@@ -1,75 +1,94 @@
-/// This verion spaces the iginal encrypted text was spaced in 5 character blocks, as the historical version apparently did.
+// This version formats the encrypted text in 5 character blocks, as the historical version apparently did.
 
-use random import shuffle, choice
-use itertools:Itertools
+//use std::string;
+use std::collections::HashMap;
+use fastrand::shuffle;
+use itertools::Itertools;
 
 /// The WWI German ADFGVX cipher.
-struct ADFGVX_Cipher {
+struct AdfgvxCipher {
     polybius: Vec<char>,
     alphabet: Vec<char>,
     key: Vec<char>,
     pdim: u32,
     keylen: u32,
+    pairs: Vec<String>,
+    encode: HashMap<char, String>,
+    decode: HashMap<String, char>,
 }
 
-impl new(self: ADFGX_Cipher, polyb:Vec<char>,) {
-
+/// Set up the encoding and decoding for the ADFGVX cipher.
+fn setup(a: AdfgvxCipher) {
+    a.pdim = a.polybius.len().isqrt() as i32;
+    a.keylen = a.key.len() as u32;
+    a.pairs = a.polybius.iter().map(|c1| a.polybius.iter().map(|c2| "{c1}{c2}"));
+    a.encode = HashMap::new();
+    for (i, k) in a.polybius.iter().enumerate() {
+        a.encode.insert(*k, a.pairs[i]);
+    }
+    a.decode = HashMap::new();
+    for (i, (k, v)) in a.encode.iter().enumerate() {
+        a.decode.insert(*v, *k);
+    }
 }
 
+fn every_n_space(string: String, sub_len: usize) -> String {
+    return string.as_str().as_bytes().chunks(sub_len).map(|a| "{a:?}").join(" ");
+}
 
-    def __init__(self, spoly, k, alph='ADFGVX'):
-        self.polybius = list(spoly.upper())
-        self.pdim = int(floor(sqrt(len(self.polybius))))
-        self.key = list(k.upper())
-        self.keylen = len(self.key)
-        self.alphabet = list(alph)
-        pairs = [p[0] + p[1] for p in product(self.alphabet, self.alphabet)]
-        self.encode = dict(zip(self.polybius, pairs))
-        self.decode = dict((v, k) for (k, v) in self.encode.items())
+/// Encrypt with the ADFGVX cipher.
+fn encrypt(a: AdfgvxCipher, msg: String) -> String {   
+    let chars: Vec<char> = msg.to_uppercase().chars().filter_map(|c| a.encode.get(c).ok()).join("").collect();
+    let mut colvecs = a.key.iter().enumerate().map(|i, k| (k, chars[i..chars.len().step_by(a.keylen)]));
+    colvecs.sort();
+    return every_n_space(colvecs.map(|p| p.1).join(""), 5);
+}
 
-    def encrypt(self, msg):
-        """ Encrypt with the ADFGVX cipher. """
-        chars = list(''.join([self.encode[c] for c in msg.upper() if c in self.polybius]))
-        colvecs = [(lett, chars[i:len(chars):self.keylen]) \
-            for (i, lett) in enumerate(self.key)]
-        colvecs.sort(key=lambda x: x[0])
-        return ''.join([''.join(a[1]) for a in colvecs])
+/// Decrypt with the ADFGVX cipher. Does not depend on spacing of encoded text
+fn decrypt(a: AdfgvxCipher, cod: String) -> String {
+    let chars: Vec<char> = cod.chars().filter(|c| a.alphabet.contains(c));
+    let sortedkey = a.key.clone().sorted();
+    let order = sortedkey.map(|c| a.key.index(c));
+    let originalorder = a.key.map(|c| sortedkey.index(c));
+    let base = chars.len() / a.keylen;
+    let extra = chars.len() % a.keylen;
+    let strides = order.map(|i| if extra >= i {base + 1} else {base});  // shuffled column lengths
+    let mut starts = vec![1_u32; 1].to_vec();                 // starting index is 0
+    for i in 1..strides.len()-1 {
+        starts.push(strides[i] + strides[i + 1]);                       // shuffled starts of columns
+    }
+    let ends = (0..a.keylen).iter().map(|i| starts[i] + strides[i]);    // shuffled ends of columns
+    let cols = originalorder.iter().map(|i| chars[starts[i]..ends[i]]); // get reordered columns
+    let pairs = vec![' '; 0].to_vec();                                                
+    let nrows: u32 = chars.len() / a.keylen + 1;                        // recover the rows
+    for i in 0..nrows {
+        for j in 0.keylen {
+            if i * a.keylen + j > chars.len() {
+                break;
+            }
+            pairs.push(cols[j][i])
+        }
+    }
+    return (0..pairs.len().step_by(2)).map(|i| a.decode[pairs[i] + pairs[i + 1]]).join("");
+}
 
-    def decrypt(self, cod):
-        """ Decrypt with the ADFGVX cipher. Does not depend on spacing of encoded text """
-        chars = [c for c in cod if c in self.alphabet]
-        sortedkey = sorted(self.key)
-        order = [self.key.index(ch) for ch in sortedkey]
-        originalorder = [sortedkey.index(ch) for ch in self.key]
-        base, extra = divmod(len(chars), self.keylen)
-        strides = [base + (1 if extra > i else 0) for i in order]    # shuffled column lengths
-        starts = list(accumulate(strides[:-1], lambda x, y: x + y))  # shuffled starts of columns
-        starts = [0] + starts                                        # starting index
-        ends = [starts[i] + strides[i] for i in range(self.keylen)]  # shuffled ends of columns
-        cols = [chars[starts[i]:ends[i]] for i in originalorder]     # get reordered columns
-        pairs = []                                                   # recover the rows
-        for i in range((len(chars) - 1) // self.keylen + 1):
-            for j in range(self.keylen):
-                if i * self.keylen + j < len(chars):
-                    pairs.append(cols[j][i])
-
-        return ''.join([self.decode[pairs[i] + pairs[i + 1]] for i in range(0, len(pairs), 2)])
-
-
-if __name__ == '__main__':
-    PCHARS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
-    shuffle(PCHARS)
-    POLYBIUS = ''.join(PCHARS)
-    with open('unixdict.txt') as fh:
-        WORDS = [w for w in (fh.read()).split() \
-            if len(w) == 9 and len(w) == len(set(list(w)))]
-        KEY = choice(WORDS)
-
-    SECRET, MESSAGE = ADFGVX(POLYBIUS, KEY), 'ATTACKAT1200AM'
-    print(f'Polybius: {POLYBIUS}, key: {KEY}')
-    print('Message: ', MESSAGE)
-    ENCODED = SECRET.encrypt(MESSAGE)
-    DECODED = SECRET.decrypt(ENCODED)
-    print('Encoded: ', ENCODED)
-    print('Decoded: ', DECODED)
-
+fn main() {
+    let msg = "ATTACKAT1200AM";
+    let pchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".to_uppercase()
+       .chars().collect::<Vec<_>>();
+    let polybius = pchars.clone();
+    shuffle(&mut polybius);
+    let key = "volcanism".to_uppercase().chars().collect::<Vec<_>>();
+    let pairs = vec![""; 0].to_vec();
+    let pdim = (polybius.len() as f64).sqrt().floor() as u32;
+    let adf = AdfgvxCipher { polybius: polybius, alphabet: pchars,
+        key: key, pdim: pdim, keylen: 9_i32, pairs: pairs, 
+        encode: HashMap::new(), decode: HashMap::new() };
+    setup(adf);
+    let encrypted_message = encrypt(adf, msg);
+    println!("Message: {original}");
+    println!("Polybius: {polybius:?}, key: {key:?}");
+    println!("Encoded: {encrypted_message}");
+    let decoded = decrypt(adf, encrypted_message);
+    println!("Decoded: {decoded:?}");
+}
