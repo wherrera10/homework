@@ -18,12 +18,11 @@ struct AdfgvxCipher {
 }
 
 /// Set up the encoding and decoding for the ADFGVX cipher.
-fn cipher(alphabet: String, encrypt_key: String) {
+fn cipher(pchars: String, encrypt_key: String) {
     pdim = (alphabet.len() as f64).isqrt().floor() as i32;
     assert!(alphabet.len == pdim * pdim);
-    let pchars = alphabet.to_uppercase()
-       .chars().collect::<Vec<_>>();
-    let polybius = pchars.clone();
+    let alphabet = pchars.to_uppercase().chars().collect::<Vec<_>>();
+    let polybius = alphabet.clone();
     shuffle(&mut polybius);
     let key = encrypt_key.to_uppercase().chars().collect::<Vec<_>>();
     let keylen = a.key.len() as u32;
@@ -36,9 +35,7 @@ fn cipher(alphabet: String, encrypt_key: String) {
     for (i, (k, v)) in a.encode.iter().enumerate() {
         a.decode.insert(*v, *k);
     }
-    return AdfgvxCipher { polybius: polybius, alphabet: pchars,
-        key: key, pdim: pdim, keylen: keylen, pairs: pairs, 
-        encode: encode, decode: decode };
+    return AdfgvxCipher { polybius, alphabet, key, pdim, keylen, pairs, encode, decode };
 }
 
 fn every_n_space(string: String, sub_len: usize) -> String {
@@ -47,8 +44,8 @@ fn every_n_space(string: String, sub_len: usize) -> String {
 
 /// Encrypt with the ADFGVX cipher.
 fn encrypt(a: AdfgvxCipher, msg: String) -> String {   
-    let chars: Vec<char> = msg.to_uppercase().chars().filter_map(|c| a.encode.get(c).ok()).join("").collect();
-    let mut colvecs = a.key.iter().enumerate().map(|i, k| (k, chars[i..chars.len().step_by(a.keylen)]));
+    let msgchars: Vec<char> = msg.to_uppercase().chars().filter_map(|c| a.encode.get(c).ok()).join("").collect();
+    let mut colvecs = a.key.iter().enumerate().map(|i, k| (k, msgchars[i..msgchars.len().step_by(a.keylen)]));
     colvecs.sort();
     return every_n_space(colvecs.map(|p| p.1).join(""), 5);
 }
@@ -62,7 +59,7 @@ fn decrypt(a: AdfgvxCipher, cod: String) -> String {
     let base = chars.len() / a.keylen;
     let extra = chars.len() % a.keylen;
     let strides = order.map(|i| if extra >= i {base + 1} else {base});  // shuffled column lengths
-    let mut starts = vec![1_u32; 1].to_vec();                 // starting index is 0
+    let mut starts = vec![1_u32; 1].to_vec();                           // starting index is 0
     for i in 1..strides.len()-1 {
         starts.push(strides[i] + strides[i + 1]);                       // shuffled starts of columns
     }
@@ -87,7 +84,7 @@ fn main() {
     let adf = cipher("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", msg);
     let encrypted_message = encrypt(adf, msg);
     println!("Message: {msg}");
-    println!("Polybius: {adf.polybius:?}, key: {key:?}");
+    println!("Polybius: {adf.polybius:?}, key: {key}");
     println!("Encoded: {encrypted_message}");
     let decoded = decrypt(adf, encrypted_message);
     println!("Decoded: {decoded:?}");
