@@ -19,7 +19,7 @@ struct AdfgvxCipher {
 
 /// Set up the encoding and decoding for the ADFGVX cipher.
 fn cipher(pchars: String, encrypt_key: String) {
-    pdim = (alphabet.len() as f64).isqrt().floor() as i32;
+    pdim = (alphabet.len() as f64).isqrt() as i32;
     assert!(alphabet.len == pdim * pdim);
     let alphabet = pchars.to_uppercase().chars().collect::<Vec<_>>();
     let polybius = alphabet.clone();
