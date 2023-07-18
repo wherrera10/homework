@@ -84,10 +84,10 @@ fn decrypt(a: AdfgvxCipher, cod: String) -> String {
 fn main() {
     let msg = "ATTACKAT1200AM";
     let key = "volcanism";
-    setup(adf);
+    let adf = cipher("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", msg);
     let encrypted_message = encrypt(adf, msg);
-    println!("Message: {original}");
-    println!("Polybius: {polybius:?}, key: {key:?}");
+    println!("Message: {msg}");
+    println!("Polybius: {adf.polybius:?}, key: {key:?}");
     println!("Encoded: {encrypted_message}");
     let decoded = decrypt(adf, encrypted_message);
     println!("Decoded: {decoded:?}");
