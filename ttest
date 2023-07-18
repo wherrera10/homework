@@ -18,8 +18,9 @@ struct AdfgvxCipher {
 }
 
 /// Set up the encoding and decoding for the ADFGVX cipher.
-fn setup(a: AdfgvxCipher) {
-    a.pdim = a.polybius.len().isqrt() as i32;
+fn cipher(alphabet: String, key: String) {
+    pdim = (alphabet.len() as f64).isqrt().floor() as i32;
+    assert!(alphabet.len == pdim * pdim);
     a.keylen = a.key.len() as u32;
     a.pairs = a.polybius.iter().map(|c1| a.polybius.iter().map(|c2| "{c1}{c2}"));
     a.encode = HashMap::new();
