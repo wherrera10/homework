@@ -97,31 +97,18 @@ fn decrypt(a: AdfgvxCipher, cod: String) -> String {
     for j in 0..ncols {
         let k = a.key.iter().position(|c| c == sortedkey[j]);
         for i in 0..nrows {
-            let c = chars[i * ncols + k]
-
-    let order = sortedkey.iter().map(|c| a.key.iter().position(|x| x == c)).collect();
-    let originalorder = a.key.iter().map(|c| sortedkey.find(c)).collect();
-    let base = chars.len() / a.keylen;
-    let extra = chars.len() % a.keylen;
-    let strides = order.map(|i| if extra >= i {base + 1} else {base});  // shuffled column lengths
-    let mut starts = vec![1_u32; 1].to_vec();                        // starting index is 0
-    for i in 1..strides.len()-1 {
-        starts.push(strides[i] + strides[i + 1]);                              // shuffled starts of columns
-    }
-    let ends = (0..a.keylen).map(|i| starts[i] + strides[i]).collect(); // shuffled ends of columns
-    let cols = originalorder.iter().map(|i| chars[starts[i]..ends[i]]);        // get reordered columns
-    let pairs = vec![' '; 0].to_vec();                                                
-    let nrows: usize = chars.len() / a.keylen + 1;                            // recover the rows
-    for i in 0..nrows {
-        for j in 0..a.keylen {
-            if i * a.keylen + j > chars.len() {
-                break;
+            let c = chars[i * ncols + k];
+            if c != '\{00}' {
+                fractionated.push(c);
             }
-            pairs.push(cols[j][i])
         }
     }
-    return (0..pairs.len()).step_by(2).map(|i| a.decode[&[pairs[i], pairs[i + 1]]
-        .iter().join("")]).collect().join("");
+    let mut decoded = vec![' '; 0].to_vec();
+    for i in 0..fractionated.len().step_by(2) {
+        s = String::from(fractionated[i..i+1]);
+        decoded.push(a.decode.get(s);
+    }
+    return String::from(decoded);
 }
 
 fn main() {
