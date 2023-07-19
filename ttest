@@ -30,22 +30,23 @@ struct AdfgvxCipher {
 }
 
 /// Set up the encoding and decoding for the ADFGVX cipher.
-fn cipher(pchars: String, encrypt_key: String) {
-    pdim = (alphabet.len() as f64).isqrt() as i32;
+fn cipher(pchars: String, encrypt_key: String) ->AdfgvxCipher {
     assert!(alphabet.len == pdim * pdim);
     let alphabet = pchars.to_uppercase().chars().collect::<Vec<_>>();
+    let pdim = (alphabet.len() as f64).isqrt() as i32;
     let polybius = alphabet.clone();
     shuffle(&mut polybius);
     let key = encrypt_key.to_uppercase().chars().collect::<Vec<_>>();
     let keylen = a.key.len() as u32;
-    let pairs = polybius.iter().map(|c1| a.polybius.iter().map(|c2| "{c1}{c2}"));
+    let pairs = polybius.iter()
+        .map(|c1| polybius.iter().map(|c2| "{c1}{c2}")).collect();
     let encode = HashMap::new();
-    for (i, k) in a.polybius.iter().enumerate() {
-        a.encode.insert(*k, a.pairs[i]);
+    for (i, k) in polybius.iter().enumerate() {
+        encode.insert(*k, String::from(pairs[i]));
     }
     let decode = HashMap::new();
     for (i, (k, v)) in a.encode.iter().enumerate() {
-        a.decode.insert(*v, *k);
+        decode.insert(*v, *k);
     }
     return AdfgvxCipher { polybius, alphabet, key, pdim, keylen, pairs, encode, decode };
 }
@@ -64,7 +65,7 @@ fn encrypt(a: AdfgvxCipher, msg: String) -> String {
 
 /// Decrypt with the ADFGVX cipher. Does not depend on spacing of encoded text
 fn decrypt(a: AdfgvxCipher, cod: String) -> String {
-    let chars: Vec<char> = cod.chars().filter(|c| a.alphabet.contains(c));
+    let chars: Vec<char> = cod.chars().filter(|c| a.alphabet.contains(c)).unwrap();
     let sortedkey = a.key.clone().sorted();
     let order = sortedkey.map(|c| a.key.index(c));
     let originalorder = a.key.map(|c| sortedkey.index(c));
@@ -93,10 +94,11 @@ fn decrypt(a: AdfgvxCipher, cod: String) -> String {
 fn main() {
     let msg = "ATTACKAT1200AM";
     let key = "volcanism";
-    let adf = cipher("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", msg);
+    let alph: String = String::from("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+    let adf = cipher(alph, msg);
     let encrypted_message = encrypt(adf, msg);
     println!("Message: {msg}");
-    println!("Polybius: {adf.polybius:?}, key: {key}");
+    println!("Polybius: {adf.polybius}, key: {key}");
     println!("Encoded: {encrypted_message}");
     let decoded = decrypt(adf, encrypted_message);
     println!("Decoded: {decoded:?}");
