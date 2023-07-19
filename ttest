@@ -14,10 +14,13 @@ fn digits(n: u64) -> Vec<u8> {
 // This version formats the encrypted text in 5 character blocks, as the historical version apparently did.
 
 //use std::string;
-use std::ops::{Index, Add};
+// This version formats the encrypted text in 5 character blocks, as the historical version apparently did.
+
+//use std::string;
+
 use std::collections::HashMap;
 use fastrand::shuffle;
-use itertools::Itertools;
+//use itertools::Itertools;
 
 /// The WWI German ADFGVX cipher.
 struct AdfgvxCipher {
@@ -47,8 +50,8 @@ fn cipher(allowed_chars: String, encrypt_key: String) ->AdfgvxCipher {
         encode.insert(*k, String::from(pairs[i]));
     }
     let mut decode = HashMap::new();
-    for (i, (k, v)) in encode.iter().enumerate() {
-        decode.insert(*v, *k);
+    for (k, v) in encode {
+        decode.insert(*v, k);
     }
     return AdfgvxCipher { polybius, alphabet, key, pdim, keylen, pairs, encode, decode };
 }
@@ -63,27 +66,29 @@ fn encrypt(a: AdfgvxCipher, msg: String) -> String {
     let ncols = a.keylen;
     let extra = fractionated.len() % ncols;
     if extra > 0 {
-        fractionated.append('\u{00}'.repeat(flen - extra);
+        fractionated.append(&mut vec!['\u{00}'; flen - extra]);
         flen = fractionated.len();
     }
     let nrows = fractionated.len() / ncols;
-    let mut sortkey = a.key.clone().chars().collect();
+    let mut sortkey = a.key.clone();
     sortkey.sort();
-    let mut ciphertext = vec![' '; 0].to_vec();
+    let mut ciphertext = String::from("");
     let mut textlen = 0;
     for j in 0..ncols {
-        let k = sortkey.iter().position(|c| c == a.key[j]);
+        let k = sortkey.iter().position(|c| *c == a.key[j]).unwrap();
         for i in 0..nrows {
-            ch = fractionated[k * ncols + j];
+            let ch = fractionated[k * ncols + j];
             if ch != '\u{00}' {
                 ciphertext.push(ch);
                 textlen += 1;
                 if textlen % 5 == 0 {
                     ciphertext.push(' ');
                 }
+            }
+
         }
     }
-    return String::from(ciphertext);
+    return ciphertext;
 }
 
 /// Decrypt with the ADFGVX cipher. Does not depend on spacing of encoded text
@@ -91,24 +96,27 @@ fn decrypt(a: AdfgvxCipher, cod: String) -> String {
     let chars: Vec<char> = cod.chars().filter(|c| a.alphabet.contains(c)).collect();
     let ncols = a.keylen;
     let nrows = chars.len() / ncols;
-    let mut sortedkey = a.key.clone().chars().collect();
+    let mut sortedkey = a.key.clone();
     sortedkey.sort();
     let mut fractionated = vec![' '; 0].to_vec();
     for j in 0..ncols {
-        let k = a.key.iter().position(|c| c == sortedkey[j]);
+        let k = a.key.iter().position(|c| *c == sortedkey[j]).unwrap();
         for i in 0..nrows {
             let c = chars[i * ncols + k];
-            if c != '\{00}' {
+            if c != '\u{00}' {
                 fractionated.push(c);
             }
         }
     }
-    let mut decoded = vec![' '; 0].to_vec();
-    for i in 0..fractionated.len().step_by(2) {
-        s = String::from(fractionated[i..i+1]);
-        decoded.push(a.decode.get(s).unwrap());
+    let mut decoded = String::from("");
+    for i in 0..fractionated.len() {
+        if i % 2 == 0 { 
+            let mut s = String::from(fractionated[i]);
+            s.push(fractionated[i+1]);
+            decoded.push(*a.decode.get(&s).unwrap());
+        }
     }
-    return String::from(decoded);
+    return decoded;
 }
 
 fn main() {
@@ -123,3 +131,4 @@ fn main() {
     let decoded = decrypt(adf, encrypted_message);
     println!("Decoded: {decoded:?}");
 }
+
