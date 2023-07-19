@@ -106,7 +106,7 @@ fn decrypt(a: AdfgvxCipher, cod: String) -> String {
     let mut decoded = vec![' '; 0].to_vec();
     for i in 0..fractionated.len().step_by(2) {
         s = String::from(fractionated[i..i+1]);
-        decoded.push(a.decode.get(s);
+        decoded.push(a.decode.get(s).unwrap());
     }
     return String::from(decoded);
 }
