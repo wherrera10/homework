@@ -1,3 +1,15 @@
+fn digits(n: u64) -> Vec<u8> {
+    fn dig_inner(n: u64, xs: &mut Vec<u8>) {
+        if n >= 10 {
+            dig_inner(n / 10, xs);
+        }
+        xs.push(n % 10 as u8);
+    }
+    let mut xs = Vec<u8>::new();
+    x_inner(n, &mut xs);
+    xs
+}
+
 // This version formats the encrypted text in 5 character blocks, as the historical version apparently did.
 
 //use std::string;
