@@ -76,7 +76,7 @@ fn encrypt(a: AdfgvxCipher, msg: String) -> String {
         for i in 0..nrows {
             ch = fractionated[k * ncols + j];
             if ch != '\u{00}' {
-                ciphertext.push(rows[k][j]);
+                ciphertext.push(ch);
                 textlen += 1;
                 if textlen % 5 == 0 {
                     ciphertext.push(' ');
@@ -89,8 +89,16 @@ fn encrypt(a: AdfgvxCipher, msg: String) -> String {
 /// Decrypt with the ADFGVX cipher. Does not depend on spacing of encoded text
 fn decrypt(a: AdfgvxCipher, cod: String) -> String {
     let chars: Vec<char> = cod.chars().filter(|c| a.alphabet.contains(c)).collect();
-    let sortedkey = a.key.clone();
+    let ncols = a.keylen;
+    let nrows = chars.len() / ncols;
+    let mut sortedkey = a.key.clone().chars().collect();
     sortedkey.sort();
+    let mut fractionated = vec![' '; 0].to_vec();
+    for j in 0..ncols {
+        let k = a.key.iter().position(|c| c == sortedkey[j]);
+        for i in 0..nrows {
+            let c = chars[i * ncols + k]
+
     let order = sortedkey.iter().map(|c| a.key.iter().position(|x| x == c)).collect();
     let originalorder = a.key.iter().map(|c| sortedkey.find(c)).collect();
     let base = chars.len() / a.keylen;
