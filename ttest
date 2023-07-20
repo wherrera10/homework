@@ -11,73 +11,82 @@ fn digits(n: u64) -> Vec<u8> {
 }
 
 
-// This version formats the encrypted text in 5 character blocks, as the historical version apparently did.
+                    ciphertext.push(' ');
+                }
+            }
 
-//use std::string;
-// This version formats the encrypted text in 5 character blocks, as the historical version apparently did.
+        }
+    }
+    return ciphertext;
+}
 
-//use std::string;
+// This version formats the encrypted text in 5 character blocks, as the historical version apparently did.
 
 use std::collections::HashMap;
 use fastrand::shuffle;
-//use itertools::Itertools;
+
+static ADFGVX: &str = "ADFGVX";
+
+#[derive(Clone, Eq, Hash, PartialEq)]
+struct CPair(char, char);
 
 /// The WWI German ADFGVX cipher.
 struct AdfgvxCipher {
     polybius: Vec<char>,
-    alphabet: Vec<char>,
     key: Vec<char>,
-    pdim: usize,
-    keylen: usize,
-    pairs: Vec<String>,
-    encode: HashMap<char, String>,
-    decode: HashMap<String, char>,
+    encode: HashMap<char, CPair>,
+    decode: HashMap<CPair, char>,
 }
 
 /// Set up the encoding and decoding for the ADFGVX cipher.
-fn cipher(allowed_chars: String, encrypt_key: String) ->AdfgvxCipher {
+fn cipher(allowed_chars: String, encrypt_key: String) -> AdfgvxCipher {
     let alphabet = allowed_chars.to_uppercase().chars().collect::<Vec<_>>();
-    let pdim = (alphabet.len() as f64).sqrt() as usize;
-    assert!(alphabet.len() == pdim * pdim);
+    assert!(alphabet.len() == ADFGVX.len() * ADFGVX.len());
     let mut polybius = alphabet.clone();
     shuffle(&mut polybius);
     let key = encrypt_key.to_uppercase().chars().collect::<Vec<_>>();
-    let keylen = key.len();
-    let pairs: Vec<String> = polybius.iter()
-        .map(|c1| polybius.iter().map(|c2| "{c1}{c2}").collect()).collect();
-    let mut encode = HashMap::new();
-    for (i, k) in polybius.iter().enumerate() {
-        encode.insert(*k, String::from(pairs[i]));
+    let adfgvx: Vec<char> = String::from(ADFGVX).chars().collect();
+    let mut pairs: Vec<CPair> = [CPair(' ', ' '); 0].to_vec();
+    for c1 in &adfgvx {
+        for c2 in &adfgvx {
+            pairs.push(CPair(*c1, *c2));
+        }
+    }
+    let mut encode: HashMap<char, CPair> = HashMap::new();
+    for i in 0..pairs.len() {
+        encode.insert(polybius[i], pairs[i].clone());
     }
     let mut decode = HashMap::new();
-    for (k, v) in encode {
-        decode.insert(*v, k);
+    for (k, v) in &encode {
+        decode.insert(v.clone(), *k);
     }
-    return AdfgvxCipher { polybius, alphabet, key, pdim, keylen, pairs, encode, decode };
+    return AdfgvxCipher { polybius, key, encode, decode };
 }
 
 /// Encrypt with the ADFGVX cipher.
-fn encrypt(a: AdfgvxCipher, msg: String) -> String {
+fn encrypt(a: &AdfgvxCipher, msg: String) -> String {
     let umsg: Vec<char> = msg.clone().to_uppercase().chars()
-        .filter(|c| a.encode.contains_key(c)).collect();
-    let mut fractionated: Vec<char> = umsg.iter().map(|c| *a.encode.get(c).unwrap())
-        .collect::<Vec<String>>().join("").chars().collect();
-    let mut flen = fractionated.len();
-    let ncols = a.keylen;
+        .filter(|c| a.polybius.contains(c)).collect();
+    let mut fractionated = vec![' '; 0].to_vec();
+    for c in umsg {
+        let cp = a.encode.get(&c).unwrap();
+        fractionated.push(cp.0);
+        fractionated.push(cp.1);
+    }
+    let ncols = a.key.len();
     let extra = fractionated.len() % ncols;
     if extra > 0 {
-        fractionated.append(&mut vec!['\u{00}'; flen - extra]);
-        flen = fractionated.len();
+        fractionated.append(&mut vec!['\u{00}'; ncols - extra]);
     }
     let nrows = fractionated.len() / ncols;
-    let mut sortkey = a.key.clone();
-    sortkey.sort();
+    let mut sortedkey = a.key.clone();
+    sortedkey.sort();
     let mut ciphertext = String::from("");
     let mut textlen = 0;
     for j in 0..ncols {
-        let k = sortkey.iter().position(|c| *c == a.key[j]).unwrap();
+        let k = a.key.iter().position(|c| *c == sortedkey[j]).unwrap();
         for i in 0..nrows {
-            let ch = fractionated[k * ncols + j];
+            let ch = fractionated[i * ncols + k];
             if ch != '\u{00}' {
                 ciphertext.push(ch);
                 textlen += 1;
@@ -92,28 +101,41 @@ fn encrypt(a: AdfgvxCipher, msg: String) -> String {
 }
 
 /// Decrypt with the ADFGVX cipher. Does not depend on spacing of encoded text
-fn decrypt(a: AdfgvxCipher, cod: String) -> String {
-    let chars: Vec<char> = cod.chars().filter(|c| a.alphabet.contains(c)).collect();
-    let ncols = a.keylen;
-    let nrows = chars.len() / ncols;
+fn decrypt(a: &AdfgvxCipher, cod: String) -> String {
+    let chars: Vec<char> = cod.chars().filter(|c| *c != ' ').collect();
     let mut sortedkey = a.key.clone();
     sortedkey.sort();
+    let order: Vec<usize> = sortedkey.iter()
+        .map(|c| a.key.iter().position(|kc| kc == c).unwrap()).collect();
+    let originalorder: Vec<usize> = a.key.iter()
+        .map(|c| sortedkey.iter().position(|kc| kc == c).unwrap()).collect();
+    let q = chars.len() / a.key.len();
+    let r = chars.len() % a.key.len();
+    let strides: Vec<usize> = order.iter()
+        .map(|i| (q + {if r > *i {1} else {0}})).collect(); 
+    let mut starts: Vec<usize> = vec![0_usize; 1].to_vec(); 
+    let mut stridesum = 0;
+    for i in 0..strides.len()-1 {
+        stridesum += strides[i];
+        starts.push(stridesum);
+    }
+    let ends: Vec<usize> = (0..a.key.len()).map(|i| (starts[i] + strides[i])).collect(); // shuffled ends of columns
+    let cols:Vec<Vec<char>> = originalorder.iter()
+        .map(|i| (chars[starts[*i]..ends[*i]]).to_vec()).collect(); // get reordered columns
+    let nrows = (chars.len() - 1) / a.key.len() + 1;
     let mut fractionated = vec![' '; 0].to_vec();
-    for j in 0..ncols {
-        let k = a.key.iter().position(|c| *c == sortedkey[j]).unwrap();
-        for i in 0..nrows {
-            let c = chars[i * ncols + k];
-            if c != '\u{00}' {
-                fractionated.push(c);
+    for i in 0..nrows {
+        for j in 0..a.key.len() {
+            if i < cols[j].len() {
+                fractionated.push(cols[j][i]);
             }
         }
     }
     let mut decoded = String::from("");
-    for i in 0..fractionated.len() {
-        if i % 2 == 0 { 
-            let mut s = String::from(fractionated[i]);
-            s.push(fractionated[i+1]);
-            decoded.push(*a.decode.get(&s).unwrap());
+    for i in 0..fractionated.len()-1 {
+        if i % 2 == 0 {
+            let cp = CPair(fractionated[i], fractionated[i + 1]);
+            decoded.push(*a.decode.get(&cp).unwrap());
         }
     }
     return decoded;
@@ -123,12 +145,13 @@ fn main() {
     let msg = String::from("ATTACKAT1200AM");
     let encrypt_key = String::from("volcanism");
     let allowed_chars: String = String::from("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
-    let adf = cipher(allowed_chars, encrypt_key);
-    let encrypted_message = encrypt(adf, msg);
+    let adf = cipher(allowed_chars, encrypt_key.clone());
     println!("Message: {msg}");
-    println!("Polybius: {:?}, key: {encrypt_key}", adf.polybius);
+    println!("Polybius: {:?}", adf.polybius.iter().collect::<String>());
+    println!("Key: {encrypt_key}");
+    let encrypted_message = encrypt(&adf, msg.clone());
     println!("Encoded: {encrypted_message}");
-    let decoded = decrypt(adf, encrypted_message);
+    let decoded = decrypt(&adf, encrypted_message);
     println!("Decoded: {decoded:?}");
 }
 
