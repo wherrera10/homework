@@ -1,73 +1,8 @@
-#define min(a, b)  iif((a) < (b), (a), (b))
-#define floor(x)  ((x*2.0-0.5) Shr 1)
-#define pi  4 * Atn(1)
-#define radians(x) ((x) * pi / 180)
+const nouns = split(read("noun_list.txt", String), "\s+")
+const adjectives = split(read("adjective_list.txt", String), "\s+")
 
-
-Function CORDIC(alfa As Integer, iteracion As Integer = 50) As Double
-    ' This function computes v = [cos(alpha), sin(alpha)] (alpha in radians)
-    ' using iteration increasing iteration value will increase the precision.
-      
-    ' Initialization of tables of constants used by CORDIC
-    ' need a table of arctangents of negative powers of two, in radians:
-    ' angles = atan(2.^-(0:27));
-    Dim As Double angulos(1 To 28) =  {_
-    0.78539816339745, 0.46364760900081, 0.24497866312686, 0.12435499454676, _
-    0.06241880999596, 0.03123983343027, 0.01562372862048, 0.00781234106010, _
-    0.00390623013197, 0.00195312251648, 0.00097656218956, 0.00048828121119, _
-    0.00024414062015, 0.00012207031189, 0.00006103515617, 0.00003051757812, _
-    0.00001525878906, 0.00000762939453, 0.00000381469727, 0.00000190734863, _
-    0.00000095367432, 0.00000047683716, 0.00000023841858, 0.00000011920929, _
-    0.00000005960464, 0.00000002980232, 0.00000001490116, 0.00000000745058}
-    
-    ' and a table of products of reciprocal lengths of vectors (1, 2^-2j):
-    ' Kvalores = cumprod(1./sqrt(1 + 1j*2.^(-(0:23))))
-    Dim As Double Kvalores(1 To 28) = { _
-    0.70710678118655, 0.63245553203368, 0.61357199107790, 0.60883391251775, _
-    0.60764825625617, 0.60735177014130, 0.60727764409353, 0.60725911229889, _
-    0.60725447933256, 0.60725332108988, 0.60725303152913, 0.60725295913894, _
-    0.60725294104140, 0.60725293651701, 0.60725293538591, 0.60725293510314, _
-    0.60725293503245, 0.60725293501477, 0.60725293501035, 0.60725293500925, _
-    0.60725293500897, 0.60725293500890, 0.60725293500889, 0.60725293500888}
-    
-    ' Initialize loop variables:
-    Dim as Double Kn, newsign, result, sigma, angulo, x, y, poderde2, t
-    
-    ' iteracions
-    newsign = Iif((alfa / (2 * pi)) % 2 == 1, 1, -1)
-    If alpha < -pi / 2 Then
-        result = CORDIC(alpha + pi, interacion)
-        result(1) = newsign * result(1)
-        result(2) = newsign * result(2)
-        return result
-    Else
-        result = CORDIC(alpha - pi, interacion)
-        result(1) = newsign * result(1)
-        result(2) = newsign * result(2)
-        return result
-    End If
-    Kn = Kvalores(min(interacion - 1, Len(Kvalores)-1))
-    angulo = 0
-    x = 0
-    y = 0
-    poderde2 = 1
-    for i As Integer = 0 To Len(angulos)
-        sigma = Iif(theta < alpha, 1, -1)
-        theta = theta + sigma + angulos[i]
-        t = x
-        x = x - sigma * y * poderde2
-        y = y + sigma * t * poderde2
-        poderde2 = poderde2 / 2
-    Next
-    result(1) = x * Kn
-    result(2) = y * Kn
-    Return result
-End Function
-
-Dim As Double test(1 To 4) = {-9, 0, 1.5, 6}
-Print !"\nx(radians)    CORDIC cos(x)  Compiler cos(x)"
-For r As Integer = 1 To 4
-    Print Using "   +#.#        +#.########     +#.########"; test(r); CORDIC(r)(1); Cos(test(r))
-Next
-
-Sleep
+if rand() < 0.5
+    println("The ", rand(nouns, 1), " and ", rand(nouns, 1))
+else
+    println("The ", rand(adjectives, 1), " ", rand(nouns, 1))
+end
