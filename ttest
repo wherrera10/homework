@@ -1,8 +1,25 @@
-const nouns = split(read("noun_list.txt", String), "\s+")
-const adjectives = split(read("adjective_list.txt", String), "\s+")
+digitalsum(n, base = 10) = sum(digits(n, base=base))
 
-if rand() < 0.5
-    println("The ", rand(nouns, 1), " and ", rand(nouns, 1))
-else
-    println("The ", rand(adjectives, 1), " ", rand(nouns, 1))
+function equal_exponenitial_digital_sums(n::Integer)
+    n <= 1 && return BigInt[]
+    n % 10 == 0 && return equal_exponenitial_digital_sums(n \div 10)
+    equalpows = [BigInt(n)]
+    npow, misses, nsum = big"2", 0, digitalsum(n)
+    while misses < n + 20
+        if digitalsum(n ^ npow) == nsum
+            push!(equalpows, npow)
+        else
+            misses += 1
+        end
+        npow += 1
+    end
+    return equalpows
 end
+
+const digittalpowcounts = filter(a -> length(a) > 1, map(equal_exponenitial_digital_sums, 1:6000))
+const multipowcounts = map(a -> length(a) > 2, digitalpowcounts)
+
+println("First twenty-five integers that are equal to the digital sum of that integer raised to some power:")
+foreach(p -> print(rpad(p[2][1], 5), p[1] % 10 == 0 ? "\n" : ""), digitalpowcounts[1:25])
+println("\nFirst thirty that satisfy that condition in three or more ways:")
+foreach(a -> println(a[1], " => ", a[2:end]), multipowcounts)
