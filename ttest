@@ -1,21 +1,24 @@
-function equal_exponenitial_digital_sums(n::Integer)
-    equalpows = [(1, BigInt(n))]
+function equal_digitalsum_exponents(n::Integer)
+    equalpows = Int[]
+    n < 2 && return equalpows
+    n % 10 == 0 && return equal_digitalsum_exponents(n ÷ 10)
     npow, misses, nsum = 2, 0, sum(digits(n))
     while misses < n + 20
-        nexp = BigInt(n) ^ npow
-        if sum(digits(nexp)) == nsum
-            push!(equalpows, (npow, nexp))
+        if sum(digits(BigInt(n) ^ npow)) == nsum
+            push!(equalpows, npow)
         else
             misses += 1
         end
         npow += 1
     end
-    length(equalpows) > 1 && println(equalpows)
+    !isempty(equalpows) && println(n, ": ", equalpows)
     return equalpows
 end
 
-const digittalpowcounts = filter(a -> length(a) > 1, map(equal_exponenitial_digital_sums, 1:6000))
-const multipowcounts = map(a -> length(a) > 2, digitalpowcounts)
+exponents = map(equal_digitalsum_exponents, 1:6000)
+const digittalpowcounts = [[(i, map(a -> (a, i^a)) for (i, v) in enumerate(expo)]
+   for expo in map(equal_digitalsum_exponents, 1:6000) if !isempty(expo)]
+const multipowcounts = filter(a -> length(a) > 2, digitalpowcounts)
 
 println("First twenty-five integers that are equal to the digital sum of that integer raised to some power:")
 foreach(p -> print(rpad(p[2][1][2], 6), p[1] % 10 == 0 ? "\n" : ""), digitalpowcounts[1:25])
