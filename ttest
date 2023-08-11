@@ -1,18 +1,15 @@
-digitalsum(n, base = 10) = sum(digits(n, base=base))
-
 function equal_exponenitial_digital_sums(n::Integer)
-    n <= 1 && return BigInt[]
-    n % 10 == 0 && return equal_exponenitial_digital_sums(n \div 10)
     equalpows = [BigInt(n)]
-    npow, misses, nsum = big"2", 0, digitalsum(n)
+    npow, misses, nsum = big"2", 0, sum(digits(n))
     while misses < n + 20
-        if digitalsum(n ^ npow) == nsum
-            push!(equalpows, npow)
+        if sum(digits(n ^ npow)) == nsum
+            push!(equalpows, n ^ npow)
         else
             misses += 1
         end
         npow += 1
     end
+    length(equalpows) > 1 && println(equalpows)
     return equalpows
 end
 
@@ -23,3 +20,4 @@ println("First twenty-five integers that are equal to the digital sum of that in
 foreach(p -> print(rpad(p[2][1], 5), p[1] % 10 == 0 ? "\n" : ""), digitalpowcounts[1:25])
 println("\nFirst thirty that satisfy that condition in three or more ways:")
 foreach(a -> println(a[1], " => ", a[2:end]), multipowcounts)
+
