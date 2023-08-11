@@ -1,10 +1,12 @@
 function equal_digitalsum_exponents(n::Integer)
     equalpows = Int[]
     n < 2 && return equalpows
-    n % 10 == 0 && return equal_digitalsum_exponents(n ÷ 10)
-    npow, misses, nsum = 2, 0, sum(digits(n))
+    npow, misses = 2, 0
     while misses < n + 20
-        if sum(digits(BigInt(n) ^ npow)) == nsum
+        psum = sum(digits(BigInt(n) ^ npow))
+        if npow > 10 && psum > 2 * n
+            break
+        elseif  psum == n
             push!(equalpows, npow)
         else
             misses += 1
