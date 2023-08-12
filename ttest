@@ -1,28 +1,45 @@
 function equal_digitalsum_exponents(n::Integer)
     equalpows = Int[]
-    n < 2 && return equalpows
-    npow, misses = 2, 0
-    while misses < n + 20
-        psum = sum(digits(BigInt(n) ^ npow))
-        if npow > 10 && psum > 2 * n
-            break
-        elseif  psum == n
-            push!(equalpows, npow)
-        else
-            misses += 1
+    if n > 1
+        npow, misses = 2, 0
+        while misses < n + 50
+            dsum = sum(digits(BigInt(n) ^ npow))
+            #npow > 10 && dsum > 2 * n && break # bail for time saver (see Wren example)
+            if dsum == n
+                push!(equalpows, npow)
+            else
+                misses += 1
+            end
+            npow += 1
         end
-        npow += 1
     end
-    !isempty(equalpows) && println(n, ": ", equalpows)
     return equalpows
 end
 
-exponents = map(equal_digitalsum_exponents, 1:6000)
-const digittalpowcounts = [[(i, map(a -> (a, i^a)) for (i, v) in enumerate(expo)]
-   for expo in map(equal_digitalsum_exponents, 1:6000) if !isempty(expo)]
-const multipowcounts = filter(a -> length(a) > 2, digitalpowcounts)
+function testdigitalequals(lim, wanted, multiswanted)
+    found1, found2, multis = 0, 0, Tuple{Int, Vector{Int}}[]
+    println("First $wanted integers that are equal to the digital sum of that integer raised to some power:")
+    for i in 1:lim
+        a = equal_digitalsum_exponents(i)
+        if !isempty(a)
+            found1 += 1
+            if found1 <= wanted
+                print(rpad(i, 6), found1 % 10 == 0 ? "\n" : "")
+            end
+            if length(a) > 2
+                found2 += 1
+                push!(multis, (i, a))
+            end
+            if found2 >= multiswanted && found1 > wanted
+                println("\nFirst $multiswanted that satisfy that condition in three or more ways:")
+                for (n, v) in multis
+                    println("$n: powers $v")
+                end
+                break
+            end
+        end
+    end
+end
 
-println("First twenty-five integers that are equal to the digital sum of that integer raised to some power:")
-foreach(p -> print(rpad(p[2][1][2], 6), p[1] % 10 == 0 ? "\n" : ""), digitalpowcounts[1:25])
-println("\nFirst thirty that satisfy that condition in three or more ways:")
-foreach(a -> println(a[1][2], " => ", a[2:end]), multipowcounts)
+testdigitalequals(6000, 25, 30)
+
