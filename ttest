@@ -1,14 +1,26 @@
-using Plots
+using Polynomials
 
-const w2 = [1 1; 1 -1]
-walsh(k) = k < 2 ? w2 : kron(w2, walsh(k - 1))
-countsignchanges(r) = count(i -> sign(r[i - 1]) != sign(r[i[]]), 2:lastindex(r))
-sequency(m) = sortslices(m, dims=1, by = countsignchanges)
+struct Point x::Rational{Int}; y::Rational{Int} end
 
-display(walsh(2))
-display(walsh(3))
-display(walsh(4))
-display(sequency(walsh(3)))
-display(sequency(walsh(4)))
+function lagrange(pts::Vector{Point))
+    polys = Polynomial([0]) for _ in eachindex(pts)]
+    for i in eachindex(polys)
+        poly = Polynomial([1])
+        for j in eachindex(polys)
+            i == j && continue
+            poly = poly * Polynomial([-pts[j].x, 1])
+        end
+        polys[i] = poly / poly(pts[i].x)
+    end
+    psum = [0.0]
+    for i in eachindex(polys)
+        polys[i] = polys[i] * pts[i].y
+        push!(psum, sum(polys[i].coeffs())
+    end
+    return psum
+end
 
-heatmap(sequency(walsh(5)), ylims=[0, 33], xlims = [0, 33], aspect_ratio = :equal, legend = false, axis = false, colormap=[:red, :forestgreen], yflip=true)
+let pts = [Point(1, 1), Point(2, 4), Point(3, 1), Point(4, 5)]
+    a = lagrange(pts)
+    println("$(a[1])x³ + $(a[2])x² + $(a[3]) + $(a[4]))
+end
