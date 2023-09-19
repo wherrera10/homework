@@ -1,53 +1,28 @@
-struct Posit
-    UInt numbits;
-    UInt bits;
+struct PositType3{T<:Integer}
+    numbits::UInt16
+    es::UInt16
+    bits::T
+    PositType3(nb, ne, i) = new{typeof(i)}(UInt16(nb), UInt16(ne), i)
 end
 
-function Base.sign(p::Posit)
-    return iszero(p.bits) ? 0 : (p.bits > 2^(p.numbits - 1)) ? -1 : +1
+""" From posithub.org/docs/Posits4.pdf """
+function Base.Rational(p::PositType3)
+    s = signbit(p.bits)                      # s for S signbit, is 1 if negative
+    pabs = p.bits << 1                       # shift off signbit (adds a 0 to F at LSB)
+    pabs == 0 && return s ? 1 // 0 : 0 // 1  # if p is 0, return 0 if s = 0, error if s = 1
+    expsign = signbit(pabs)                  # exponent sign from 2nd bit now in MSB location
+    k = expsign == 1 ? leading_ones(pabs) : leading_zeros(pabs) # regime R bit count
+    scaling = 2^p.es * (expsign == 0 ? -1 : 1)
+    pabs <<= (k + 1)                         # shift off unwanted R bits
+    pabs >>= (k + 2)                         # shift back without the extra LSB bit
+    fsize = p.numbits - k - p.es - 2         # check how many F bits are actually explicit
+    f = fsize > 0 ? (pabs & (2^fsize - 1)) // 2^fsize : 0 # Get F value. Can be missing -> 0
+    e =
+        fsize > 0 ? (pabs >> (fsize)) :      # Get E value. Can be up to p.numexpbits bits
+        pabs * 2^(p.es - p.numbits - k - 2)
+    pw = (1 - 2s) * (scaling * k + e + s)
+    return pw >= 0 ? ((1 - 3s) + f) * 2^pw // 1 : ((1 - 3s) + f) // 2^(-pw)
 end
 
-function torational(p::Posit)
-    iszero(p.bits) && return 0
-    mask = 2^(p.numbits - 1)
-    p.bits == mask && return Inf
-    r = sign(p)
-    n = r >= 0 ? p.bits : (2^p.numbits - 1) ⊻ p.bits
-    bcount = 0
-    mask >>= 1
-    firstbit = (n & mask) != 0
-    while n & mask == firstbit && mask != 0
-        bcount +=1
-        mask >>= 1
-    end
-  my $m = $count;
-  my $k = $first-bit ?? $m - 1 !! -$m;
-  $r *= 2**($k*2**$es);
-  return $r unless $mask > 1;
-  $mask +>= 1;
-  $count = 0;
-  my UInt $exponent = 0;
-  while $mask && $count++ < $es {
-    $exponent +<= 1;
-    $exponent +|= 1 if $n +& $mask;
-    $mask +>= 1;
-  }
-  $r *= 2**$exponent;
-  my $fraction = 1.FatRat;
-  while $mask {
-    (state $power-of-two = 1) +<= 1;
-    $fraction += 1/$power-of-two if $n +& $mask;
-    $mask +>= 1;
-  }
-  $r *= $fraction;
+@show Rational(PositType3(16, 3, 0b0000110111011101)) == 477 // 134217728
 
-  return $r;
-}
-
-CHECK {
-  use Test;
-  # example from L<http://www.johngustafson.net/pdfs/BeatingFloatingPoint.pdf>
-  is Posit[16, 3]
-    .new(UInt => 0b0000110111011101)
-    .FatRat, 477.FatRat/134217728;
-}
