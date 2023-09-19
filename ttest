@@ -1,32 +1,29 @@
 struct PositType3{T<:Integer}
-    numbits::UInt16
-    es::UInt16
-    bits::T
-    PositType3(nb, ne, i) = new{typeof(i)}(UInt16(nb), UInt16(ne), i)
+  numbits::UInt16
+  es::UInt16
+  bits::T
+  PositType3(nb, ne, i) = new{typeof(i)}(UInt16(nb), UInt16(ne), i)
 end
 
 """ From posithub.org/docs/Posits4.pdf """
 function Base.Rational(p::PositType3)
-    s = signbit(p.bits)                      # s for S signbit, is 1 if negative
-    pabs = p.bits << 1                       # shift off signbit (adds a 0 to F at LSB)
-    pabs == 0 && return s ? 1 // 0 : 0 // 1  # if p is 0, return 0 if s = 0, error if s = 1
-    expsign = signbit(pabs)                  # exponent sign from 2nd bit now in MSB location
-    k = expsign == 1 ? leading_ones(pabs) : leading_zeros(pabs) # regime R bit count
-    scaling = 2^p.es * (expsign == 0 ? -1 : 1)
-    pabs <<= (k + 1)                         # shift off unwanted R bits
-    pabs >>= (k + 2)                         # shift back without the extra LSB bit
-    fsize = p.numbits - k - p.es - 2         # check how many F bits are actually explicit
-    f = fsize > 0 ? (pabs & (2^fsize - 1)) // 2^fsize : 0 # Get F value. Can be missing -> 0
-    e =
-        fsize > 0 ? (pabs >> (fsize)) :      # Get E value. Can be up to p.numexpbits bits
-        pabs * 2^(p.es - p.numbits - k - 2)
-    pw = (1 - 2s) * (scaling * k + e + s)
-    return pw >= 0 ? ((1 - 3s) + f) * 2^pw // 1 : ((1 - 3s) + f) // 2^(-pw)
+s = signbit(signed(p.bits))                      # s for S signbit, is 1 if negative
+pabs = p.bits << 1                       # shift off signbit (adds a 0 to F at LSB)
+pabs == 0 && return s ? 1 // 0 : 0 // 1  # if p is 0, return 0 if s = 0, error if s = 1
+expsign = signbit(signed(pabs))                  # exponent sign from 2nd bit now in MSB location
+k = expsign == 1 ? leading_ones(pabs) : leading_zeros(pabs) # regime R bit count
+scaling = 2^p.es * (expsign == 0 ? -1 : 1)
+pabs <<= (k + 1)                         # shift off unwanted R bits
+pabs >>= (k + 2)                         # shift back without the extra LSB bit
+fsize = p.numbits - k - p.es - 2         # check how many F bits are actually explicit
+fsize <= 0 && return 0 // 1              # missing F is 0
+f = (pabs & (2^fsize - 1)) // 2^fsize     # Get F value. Can be missing -> 0
+e = pabs >> fsize                        # Get E value. 
+pw = (1 - 2s) * (scaling * k + e + s)
+return pw >= 0 ? ((1 - 3s) + f) * 2^pw // 1 : ((1 - 3s) + f) // 2^(-pw)
 end
 
 @show Rational(PositType3(16, 3, 0b0000110111011101)) == 477 // 134217728
-
-
 
 const tests = [
   (16,3,0b0000110111011101),
