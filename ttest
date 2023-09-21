@@ -10,6 +10,7 @@ function Base.Rational(p::PositType3)
     s = signbit(signed(p.bits))              # s for S signbit, is 1 if negative
     pabs = p.bits << 1                       # shift off signbit (adds a 0 to F at LSB)
     pabs == 0 && return s ? 1 // 0 : 0 // 1  # if p is 0, return 0 or if s 1 error
+    s && (pabs = (-p.bits) << 1)             # if s is 1, change bits to 2's complement
     expsign = signbit(signed(pabs))          # exponent sign from 2nd bit now MSB 
     r = expsign == 1 ? leading_ones(pabs) : leading_zeros(pabs) # r regime R size
     k = expsign ? r - 1 : -r                 # k for the exponent calculation
