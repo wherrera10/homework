@@ -4,49 +4,23 @@ struct PositType3{T<:Integer}
     bits::T
     PositType3(nb, ne, i) = new{typeof(i)}(UInt16(nb), UInt16(ne), i)
 end
-  
-""" From posithub.org/docs/Posits4.pdf """
-function Base.Rational(p::PositType3)
-    s = signbit(signed(p.bits))              # s for S signbit, is 1 if negative
-    pabs = p.bits << 1                       # shift off signbit (adds a 0 to F at LSB)
-    pabs == 0 && return s ? 1 // 0 : 0 // 1  # if p is 0, return 0 or if s 1 error
-    s && (pabs = (-p.bits) << 1)             # if s is 1, change bits to 2's complement
-    expsign = signbit(signed(pabs))          # exponent sign from 2nd bit now MSB 
-    r = expsign == 1 ? leading_ones(pabs) : leading_zeros(pabs) # r regime R size
-    k = expsign ? r - 1 : -r                 # k for the exponent calculation
-    pabs <<= (r + 1)                         # shift off unwanted R bits
-    pabs >>= (r + 2)                         # shift back for E, F
-    fsize = p.numbits - 1 - r - 1 - p.es     # check how many F bits explicit
-    f = fsize < 1 ? 1 // 1 :
-        1 + (pabs & (2^fsize-1)) // 2^fsize  # Get F value. Can be missing -> 1
-    e = fsize < 1 ? pabs : pabs >> fsize     # Get E value.
-    pw = 2^p.es * k + e
-    return pw >= 0 ? (-1)^s * f * big"2"^pw // 1 : (-1)^s * f // big"2"^(-pw)
-end
-  
-@show Rational(PositType3(16, 3, 0b0000110111011101)) == 477 // 134217728
-const tests = [
-(16,3,0b0000110111011101),
-(16,3,0b1000000000000000),
-(16,3,0b0000000000000000),
-(16,1,0b0110110010101000),
-(16,1,0b1001001101011000),
-(16,2,0b0000000000000001),
-(16,0,0b0111111111111111),
-(16,6,0b0111111111111110),
-(8,1,0b01000000),
-(8,1,0b11000000),
-(8,1,0b00110000),
-(8,1,0b00100000),
-(8,2,0b00000001),
-(8,2,0b01111111),
-(8,7,0b01111110),
-(32,2,0b00000000000000000000000000000001),
-(32,2,0b01111111111111111111111111111111),
-(32,5,0b01111111111111111111111111111110),
-]
 
-for t in tests
-    r = Rational(PositType3(t...))
-    println(string(t[3], base=2, pad = t[1]), " => $r = ", float(r))
+function PositType3(x::Real, numbits, es)
+    tindex = [Int(round(log2(numbits / 8))) + 1
+    1 <= tindex <= 5 || error("Cannot create posit of bit size $numbits")
+    typ = [UInt8, UInt16, UInt32, UInt64, UInt128][tindex]
+    x == 0 && return zero(typ)
+    x in [-Inf, Inf, NaN] && return typemax(typ) - typemax((signed(typemax(typ))))
+    s = x < 0
+    xabs = abs(x)
+    useed = 2^es
+    expo = Int(floor(log2(xabs)))     # x can be written as 1.bits.. * 2^expo
+    expneg = expo < 0
+    k = expneg ? -(expo - useed + 1) ÷ useed : expo ÷ useed
+    e = expneg ? k * useed + expo : expo - k * useed
+    r = expneg ? k + 1 : -k
+    fsize = numbits - 1 - r - 1 - es
+    f = UInt(round((x/(2^expo) - 1) * 2^fsize))
+    pabs = typ(f) | typ(e << fsize) | typ((expneg ? 2^(r + 1) - 1 : 0) << (fsize + es))
+    return s ? -pabs : pabs
 end
