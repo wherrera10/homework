@@ -24,3 +24,10 @@ function PositType3(x::Real, numbits, es)
     pabs = typ(f) | typ(e << fsize) | typ((expneg ? 2^(r + 1) - 1 : 0) << (fsize + es))
     return PositType3(numbits, es, s ? -pabs : pabs)
 end
+
+@show pi, PositType3(pi, 8, 2), Float64(Rational(PositType3(pi, 8, 2)))
+
+@show BigFloat(pi), PositType3(BigFloat(pi), 128, 2), Float64(Rational(PositType3(pi, 8, 2)))
+
+
+
