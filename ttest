@@ -6,7 +6,7 @@ struct PositType3{T<:Integer}
 end
 
 function PositType3(x::Real, numbits, es)
-    tindex = [Int(round(log2(numbits / 8))) + 1
+    tindex = Int(round(log2(numbits / 8))) + 1
     1 <= tindex <= 5 || error("Cannot create posit of bit size $numbits")
     typ = [UInt8, UInt16, UInt32, UInt64, UInt128][tindex]
     x == 0 && return zero(typ)
@@ -22,5 +22,5 @@ function PositType3(x::Real, numbits, es)
     fsize = numbits - 1 - r - 1 - es
     f = UInt(round((x/(2^expo) - 1) * 2^fsize))
     pabs = typ(f) | typ(e << fsize) | typ((expneg ? 2^(r + 1) - 1 : 0) << (fsize + es))
-    return s ? -pabs : pabs
+    return PositType3(numbits, es, s ? -pabs : pabs)
 end
