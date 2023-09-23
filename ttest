@@ -22,7 +22,7 @@ function PositType3(x::Real, numbits, es)
     rbits = expneg ? (2^(r + 1) - 1) ⊻ 1 : 01
     fsize = numbits - 1 - r - 1 - es
     f = UInt(round((x/(2^expo) - 1) * 2^fsize))
-    pabs = typ(f) | typ(e << fsize) | typ((expneg ? 2^(r + 1) - 1 : 1) << (fsize + es))
+    pabs = typ(f) | typ(e << fsize) | typ(rbits)
     return PositType3(numbits, es, s ? -pabs : pabs)
 end
 
