@@ -19,11 +19,15 @@ function PositType3(x::Real, numbits, es)
     k = expneg ? -(expo - useed + 1) ÷ useed : expo ÷ useed
     e = expneg ? k * useed + expo : expo - k * useed
     r = expneg ? k + 1 : -k
+    rbits = expneg ? (2^(r + 1) - 1) ⊻ 1 : 01
     fsize = numbits - 1 - r - 1 - es
     f = UInt(round((x/(2^expo) - 1) * 2^fsize))
-    pabs = typ(f) | typ(e << fsize) | typ((expneg ? 2^(r + 1) - 1 : 0) << (fsize + es))
+    pabs = typ(f) | typ(e << fsize) | typ((expneg ? 2^(r + 1) - 1 : 1) << (fsize + es))
     return PositType3(numbits, es, s ? -pabs : pabs)
 end
+
+@show @show pi, PositType3(pi, 8, 2), PositType3(pi, 8, 2).i
+
 
 @show pi, PositType3(pi, 8, 2), Float64(Rational(PositType3(pi, 8, 2)))
 
