@@ -1,64 +1,184 @@
-""" Posit floating point numbers """
-struct PositType3{T<:Integer}
-    numbits::UInt16
-    es::UInt16
-    bits::T
-    PositType3(nb, ne, i) = new{typeof(i)}(UInt16(nb), UInt16(ne), i)
-end
+module COBSR
 
-""" Convert PositType3 to Rational. See also posithub.org/docs/Posits4.pdf """
-function Base.Rational(p::PositType3)
-    s = signbit(signed(p.bits))              # s for S signbit, is 1 if negative
-    pabs = p.bits << 1                       # Shift off signbit (adds a 0 to F at LSB)
-    pabs == 0 && return s ? 1 // 0 : 0 // 1  # If p is 0, return 0 or if s 1 error
-    s && (pabs = (-p.bits) << 1)             # If p is negative, flip to 2's complement
-    expsign = signbit(signed(pabs))          # Exponent sign from 2nd bit now MSB 
-    r = expsign == 1 ? leading_ones(pabs) : leading_zeros(pabs) # r regime R size
-    k = expsign ? r - 1 : -r                 # k for the exponent calculation
-    pabs <<= (r + 1)                         # Shift off unwanted R bits
-    pabs >>= (r + 2)                         # Shift back for E, F
-    fsize = p.numbits - 1 - r - 1 - p.es     # Check how many F bits explicit
-    e = fsize < 1 ? pabs : pabs >> fsize     # Get E value
-    f = fsize < 1 ? 1 // 1 : 1 + (pabs & (2^fsize - 1)) // 2^fsize # Get F value
-    pw = 2^p.es * k + e
-    return pw >= 0 ? (-1)^s * f * big"2"^pw // 1 : (-1)^s * f // big"2"^(-pw)
-end
+export COBSencode, COBSdecode, COBSRencode, COBSRdecode
 
-""" Get bits representation of a posit of size numbits and from a real number """
-function positbits(x::Real, numbits, es)
-    tindex = Int(round(log2(numbits / 8))) + 1 # choice of output type
-    1 <= tindex <= 5 || error("Cannot create posit of bit size $numbits")
-    typ = [UInt8, UInt16, UInt32, UInt64, UInt128][tindex]
-    x == 0 && return zero(typ)                 # return bits for 0 if 0, Inf if Inf, etc
-    x in [-Inf, Inf, NaN] && return typemax(typ) - typemax((signed(typemax(typ))))
-    s = x < 0                                  # sign bit, 1 if negative
-    xabs = abs(x)                              # work with abs(x)
-    useed = 2^es                               # the useed
-    pw = Int(floor(log2(xabs)))                # xabs =  1.bits.. * 2^pw
-    k, e = divrem(pw, useed)                   # from pw = 2^p.es * k + e
-    if e < 0
-        k, e = k - 1, e + useed                # e must be unsigned
+"""
+    COBSencode(data)
+
+    Return result of encoding `inputdata` into COBS packet format.
+    Marker defaults to zero but may be any byte from 0 to 254.
+"""
+function COBSencode(inputdata, marker = 0x00)
+    output = [0xff]
+    codeindex, code = 1, 1
+    addlastcode = true
+    for byte in inputdata
+        if byte != marker
+            push!(output, byte)
+            code += 1
+        end
+        addlastcode = true
+        if byte == marker || code == 255
+            code == 255 && (addlastcode = false)
+            output[codeindex] = code
+            code = 1
+            push!(output, 0xff)
+            codeindex = length(output)
+        end
     end
-    r = k < 0 ? -k : k + 1                     # r is number of R repetitions
-    rbits = pw > 0 ? (2^(r+1) - 1) ⊻ 1 : 01    # bit pattern of R portion
-    fsize = numbits - 1 - r - 1 - es           # size of F portion
-    f = UInt(round((xabs/(2^pw)-1) * 2^fsize)) # f (mantissa - 1 as bits)
-    pabs = typ(f) | typ(e << fsize) | typ(rbits) << (fsize + es) # rbits | e | f
-    return s ? -pabs : pabs                    # S and two's complement if negative
+    if addlastcode
+        output[codeindex] = code
+        push!(output, marker)
+    else
+        output[codeindex] = marker
+    end
+    return output
 end
 
-posit8(x, es) = PositType3(8, 2, positbits(x, 8, es))
-posit16(x, es) = PositType3(16, 2, positbits(x, 16, es))
-posit32(x, es) = PositType3(32, 2, positbits(x, 32, es))
-posit64(x, es) = PositType3(64, 2, positbits(x, 64, es))
+"""
+    COBSRencode(data, marker = 0x00)
 
-for constructor in (posit8, posit16, posit32, posit64)
-    p = constructor(-10π, 2)
-    i = signed(p.bits)
-    endingπ = float(Rational(p))
-    err = Float64(abs(π - endingπ))
-    println("\nπ to $(p.numbits)-bit posit is $p.")
-    println("This posit reinterpreted as integer is $i.")
-    println("This posit as float is $endingπ,\n  with error $err.")
+    Return result of encoding `inputdata` into COBS/R packet format.
+    Marker defaults to zero but may be any byte from 0 to 254.
+    See also: pythonhosted.org/cobs/cobsr-intro.html
+"""
+function COBSRencode(inputdata, marker = 0x00)
+    findfirst(==(marker), inputdata) == nothing && return COBSencode(inputdata, marker)
+    output = [0xff]
+    codeindex, code = 1, 1
+    addlastcode = true
+    for byte in inputdata
+        if byte != marker
+            push!(output, byte)
+            code += 1
+        end
+        addlastcode = true
+        if byte == marker || code == 255
+            code == 255 && (addlastcode = false)
+            output[codeindex] = code
+            code = 1
+            push!(output, 0xff)
+            codeindex = length(output)
+        end
+    end
+    if addlastcode
+        if 4 < length(output) < codeindex + output[end]
+            output[codeindex] = inputdata[end]
+            if output[end] == marker
+                push!(output, marker)
+            else
+                output[end] = marker
+            end
+        else
+            output[codeindex] = code
+            push!(output, marker) 
+        end
+    else
+        output[codeindex] = marker
+    end
+    return output
+end
+
+
+"""
+    COBSdecode(buffer, marker = 0x00)
+
+    Return result of decoding `buffer` from COBS encoded format.
+    The marker must be the same as was used for encode (defaults to zero).
+"""
+function COBSdecode(buffer::AbstractVector, marker = 0x00)
+    decoded = UInt8[]
+    bdx, len = 1, length(buffer)
+    while bdx < len
+        code = buffer[bdx]
+        bdx += 1
+        for _ in 1:code-1
+            push!(decoded, buffer[bdx])
+            bdx += 1
+            bdx > len && break
+        end
+        code < 0xff && bdx < len && push!(decoded, marker)
+    end
+    return decoded
+end
+
+"""
+    COBSRdecode(buffer, marker = 0x00)
+
+    Return result of decoding `buffer` from COBS/R encoded format.
+    The marker must be the same as was used for encode (defaults to zero).
+    See also: pythonhosted.org/cobs/cobsr-intro.html
+"""
+function COBSRdecode(buffer::AbstractVector, marker = 0x00)
+    decoded = UInt8[]
+    bdx, len = 1, length(buffer)
+    while bdx < len
+        code = buffer[bdx]
+        bdx += 1
+        for _ in 1:code-1
+            push!(decoded, buffer[bdx])
+            bdx += 1
+            if bdx > len
+                decoded[end] = code
+                break
+            end
+        end
+        code < 0xff && bdx < len && push!(decoded, marker)
+    end
+    return decoded
+end
+
+end # module
+
+using .COBSR
+using Test
+
+@show COBSRencode([0x2F, 0xA2, 0x00, 0x92, 0x73, 0x26])
+@show COBSRdecode(COBSRencode([0x2F, 0xA2, 0x00, 0x92, 0x73, 0x26]))
+@show COBSRencode([0x00])
+@show COBSRdecode(COBSRencode([0x00]))
+@show COBSRencode([0x00, 0x11, 0x00])
+@show COBSRdecode(COBSRencode([0x00, 0x11, 0x00]))
+@show COBSencode([0x11, 0x22, 0x00, 0x33])
+@show COBSdecode(COBSencode([0x11, 0x22, 0x00, 0x33]))
+@show COBSRencode([0x11, 0x22, 0x00, 0x33])
+@show COBSRdecode(COBSRencode([0x11, 0x22, 0x00, 0x33]))
+@show COBSencode([0x11, 0x22, 0x33, 0x44])
+@show COBSdecode(COBSencode([0x11, 0x22, 0x33, 0x44]))
+@show COBSRencode([0x11, 0x22, 0x33, 0x44])
+@show COBSRdecode(COBSRencode([0x11, 0x22, 0x33, 0x44]))
+@show COBSencode([0x11, 0x00, 0x00, 0x00])
+@show COBSdecode(COBSencode([0x11, 0x00, 0x00, 0x00]))
+@show COBSRencode([0x11, 0x00, 0x00, 0x00])
+@show COBSRdecode(COBSRencode([0x11, 0x00, 0x00, 0x00]))
+
+const tests = [
+    [0x00],
+    [0x00, 0x00],
+    [0x00, 0x11, 0x00],
+    [0x11, 0x22, 0x00, 0x33],
+    [0x11, 0x22, 0x33, 0x44],
+    [0x11, 0x00, 0x00, 0x00],
+    collect(0x01:0xfe),
+    collect(0x00:0xfe),
+    collect(0x01:0xff),
+    [collect(0x02:0xff); 0x00],
+    [collect(0x03:0xff); 0x00; 0x01],
+]
+
+function ab(arr)
+    hx = join(map(c -> string(c, base = 16, pad = 2), arr), " ")
+    return length(hx) < 20 ? hx : hx[begin:begin+10] * " ... " * hx[end-10:end]
+end
+
+for t in tests
+    @test t == COBSdecode(COBSencode(t))
+    @test t == COBSdecode(COBSencode(t, 3), 3)
+    @test t == COBSdecode(COBSencode(t, 0xfe), 0xfe)
+    @test 0 ∉ t || t != COBSdecode(COBSencode(t, 0), 3)
+    @test t == COBSRdecode(COBSRencode(t))
+  #  @test t == COBSRdecode(COBSRencode(t, 3), 3)
+  #  @test t == COBSRdecode(COBSRencode(t, 0xfe), 0xfe)
+    @test 0 ∉ t || t != COBSRdecode(COBSRencode(t, 0), 3)
 end
 
