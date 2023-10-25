@@ -1,23 +1,24 @@
-
-let mut i = 0;
-while i < txt.len()
-    let mut textfound = ""
-    for j in ..4
-        let substr = txt[i:i+j];
-        if decode_map.contains_(substr) {
-            textfound = decode_map[substr];
-            i += j;
-            break;
+fn GSTrans_decode(txt: str) -> str {
+    let mut i = 0;
+    while i < txt.len() {
+        let mut textfound = "";
+        for j in ..4 {
+            let substr = txt[i:i+j];
+            if decode_map.contains_(substr) {
+                textfound = decode_map[substr];
+                i += j;
+                break;
+            }
+        }
+        if textfound != "" {
+            result.append(textfound);
+        else
+            i += 1;
+            warn!();
         }
     }
-    if textfound != "" {
-        result.append(textfound);
-    else
-        i += 1
-        warn!();
-    }
+    return result.join("");
 }
 
-return result.join("");
 
     
