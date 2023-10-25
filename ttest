@@ -1,4 +1,5 @@
 fn GSTrans_decode(txt: str) -> str {
+    let result = Vec<char>;
     let mut i = 0;
     while i < txt.len() {
         let mut textfound = "";
@@ -17,7 +18,7 @@ fn GSTrans_decode(txt: str) -> str {
             warn!();
         }
     }
-    return result.join("");
+    return result.into_iter().collect();
 }
 
 
