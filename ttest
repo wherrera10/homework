@@ -1,184 +1,23 @@
-module COBSR
 
-export COBSencode, COBSdecode, COBSRencode, COBSRdecode
-
-"""
-    COBSencode(data)
-
-    Return result of encoding `inputdata` into COBS packet format.
-    Marker defaults to zero but may be any byte from 0 to 254.
-"""
-function COBSencode(inputdata, marker = 0x00)
-    output = [0xff]
-    codeindex, code = 1, 1
-    addlastcode = true
-    for byte in inputdata
-        if byte != marker
-            push!(output, byte)
-            code += 1
-        end
-        addlastcode = true
-        if byte == marker || code == 255
-            code == 255 && (addlastcode = false)
-            output[codeindex] = code
-            code = 1
-            push!(output, 0xff)
-            codeindex = length(output)
-        end
-    end
-    if addlastcode
-        output[codeindex] = code
-        push!(output, marker)
+let mut i = 0;
+while i < txt.len()
+    let mut textfound = ""
+    for j in ..4
+        let substr = txt[i:i+j];
+        if decode_map.contains_(substr) {
+            textfound = decode_map[substr];
+            i += j;
+            break;
+        }
+    }
+    if textfound != "" {
+        result.append(textfound);
     else
-        output[codeindex] = marker
-    end
-    return output
-end
+        i += 1
+        warn!();
+    }
+}
 
-"""
-    COBSRencode(data, marker = 0x00)
+return join(result, "");
 
-    Return result of encoding `inputdata` into COBS/R packet format.
-    Marker defaults to zero but may be any byte from 0 to 254.
-    See also: pythonhosted.org/cobs/cobsr-intro.html
-"""
-function COBSRencode(inputdata, marker = 0x00)
-    findfirst(==(marker), inputdata) == nothing && return COBSencode(inputdata, marker)
-    output = [0xff]
-    codeindex, code = 1, 1
-    addlastcode = true
-    for byte in inputdata
-        if byte != marker
-            push!(output, byte)
-            code += 1
-        end
-        addlastcode = true
-        if byte == marker || code == 255
-            code == 255 && (addlastcode = false)
-            output[codeindex] = code
-            code = 1
-            push!(output, 0xff)
-            codeindex = length(output)
-        end
-    end
-    if addlastcode
-        if 4 < length(output) < codeindex + output[end]
-            output[codeindex] = inputdata[end]
-            if output[end] == marker
-                push!(output, marker)
-            else
-                output[end] = marker
-            end
-        else
-            output[codeindex] = code
-            push!(output, marker) 
-        end
-    else
-        output[codeindex] = marker
-    end
-    return output
-end
-
-
-"""
-    COBSdecode(buffer, marker = 0x00)
-
-    Return result of decoding `buffer` from COBS encoded format.
-    The marker must be the same as was used for encode (defaults to zero).
-"""
-function COBSdecode(buffer::AbstractVector, marker = 0x00)
-    decoded = UInt8[]
-    bdx, len = 1, length(buffer)
-    while bdx < len
-        code = buffer[bdx]
-        bdx += 1
-        for _ in 1:code-1
-            push!(decoded, buffer[bdx])
-            bdx += 1
-            bdx > len && break
-        end
-        code < 0xff && bdx < len && push!(decoded, marker)
-    end
-    return decoded
-end
-
-"""
-    COBSRdecode(buffer, marker = 0x00)
-
-    Return result of decoding `buffer` from COBS/R encoded format.
-    The marker must be the same as was used for encode (defaults to zero).
-    See also: pythonhosted.org/cobs/cobsr-intro.html
-"""
-function COBSRdecode(buffer::AbstractVector, marker = 0x00)
-    decoded = UInt8[]
-    bdx, len = 1, length(buffer)
-    while bdx < len
-        code = buffer[bdx]
-        bdx += 1
-        for _ in 1:code-1
-            push!(decoded, buffer[bdx])
-            bdx += 1
-            if bdx > len
-                decoded[end] = code
-                break
-            end
-        end
-        code < 0xff && bdx < len && push!(decoded, marker)
-    end
-    return decoded
-end
-
-end # module
-
-using .COBSR
-using Test
-
-@show COBSRencode([0x2F, 0xA2, 0x00, 0x92, 0x73, 0x26])
-@show COBSRdecode(COBSRencode([0x2F, 0xA2, 0x00, 0x92, 0x73, 0x26]))
-@show COBSRencode([0x00])
-@show COBSRdecode(COBSRencode([0x00]))
-@show COBSRencode([0x00, 0x11, 0x00])
-@show COBSRdecode(COBSRencode([0x00, 0x11, 0x00]))
-@show COBSencode([0x11, 0x22, 0x00, 0x33])
-@show COBSdecode(COBSencode([0x11, 0x22, 0x00, 0x33]))
-@show COBSRencode([0x11, 0x22, 0x00, 0x33])
-@show COBSRdecode(COBSRencode([0x11, 0x22, 0x00, 0x33]))
-@show COBSencode([0x11, 0x22, 0x33, 0x44])
-@show COBSdecode(COBSencode([0x11, 0x22, 0x33, 0x44]))
-@show COBSRencode([0x11, 0x22, 0x33, 0x44])
-@show COBSRdecode(COBSRencode([0x11, 0x22, 0x33, 0x44]))
-@show COBSencode([0x11, 0x00, 0x00, 0x00])
-@show COBSdecode(COBSencode([0x11, 0x00, 0x00, 0x00]))
-@show COBSRencode([0x11, 0x00, 0x00, 0x00])
-@show COBSRdecode(COBSRencode([0x11, 0x00, 0x00, 0x00]))
-
-const tests = [
-    [0x00],
-    [0x00, 0x00],
-    [0x00, 0x11, 0x00],
-    [0x11, 0x22, 0x00, 0x33],
-    [0x11, 0x22, 0x33, 0x44],
-    [0x11, 0x00, 0x00, 0x00],
-    collect(0x01:0xfe),
-    collect(0x00:0xfe),
-    collect(0x01:0xff),
-    [collect(0x02:0xff); 0x00],
-    [collect(0x03:0xff); 0x00; 0x01],
-]
-
-function ab(arr)
-    hx = join(map(c -> string(c, base = 16, pad = 2), arr), " ")
-    return length(hx) < 20 ? hx : hx[begin:begin+10] * " ... " * hx[end-10:end]
-end
-
-for t in tests
-    @test t == COBSdecode(COBSencode(t))
-    @test t == COBSdecode(COBSencode(t, 3), 3)
-    @test t == COBSdecode(COBSencode(t, 0xfe), 0xfe)
-    @test 0 ∉ t || t != COBSdecode(COBSencode(t, 0), 3)
-    @test t == COBSRdecode(COBSRencode(t))
-  #  @test t == COBSRdecode(COBSRencode(t, 3), 3)
-  #  @test t == COBSRdecode(COBSRencode(t, 0xfe), 0xfe)
-    @test 0 ∉ t || t != COBSRdecode(COBSRencode(t, 0), 3)
-end
-
+    
