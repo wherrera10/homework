@@ -11,7 +11,7 @@ fn GSTrans_decode(txt: str) -> str {
             }
         }
         if textfound != "" {
-            result.append(textfound);
+            result.append(textfound.clone());
         else
             i += 1;
             warn!();
