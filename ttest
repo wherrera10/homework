@@ -1,14 +1,13 @@
 """Display bytes in a file like hexdump or xxd."""
 
-const READ_SIZE = 2048
-
-"""Base class for hex dump formatters."""
-abstract type Formatter
-
-struct CanonicalFormatter <: Formatter
-    bytes_per_line::Int = 16
-    CanonicalFormatter(bperline = 16) = new(bperline)
+function lineformatter(data, base = 16, read_size = 2048)
+    bytes_per_line = min(16, 64 \div (length(string(255, base=base) + 1))
+    @assert length(data) <= bytes_per_line
+    basestring = 
+    asciistring = 
+    return $(basestring)  |$(asciistring)|"
 end
+
 
 function call(f::CanonicalFormatter, data)
     @assert len(data) <= 16
@@ -17,24 +16,12 @@ function call(f::CanonicalFormatter, data)
     return $(hexstring)  |$(asciistring)|"
 end
 
-struct BinaryFormatter <: Formatter
-    bytes_per_line::Int = 6
-    BinaryFormatter(bperline = 6) = new(bperline)
-end
-
 function call(BinaryFormatter, data)
     @assert len(data) <= 6
     bitstring = " ".join(bin(b)[2:].rjust(8, "0") for b in data).ljust(53)
     asciistring = "".join(chr(b) if b > 31 and b < 127 else "." for b in data)
     return "$(bitstring)  |$(asciistring)|"
 end
-
-
-
-canonicalFormatter = CanonicalFormatter()
-binaryFormatter = BinaryFormatter()
-
-T = TypeVar("T")
 
 iterators.partition()
 
