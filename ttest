@@ -1,12 +1,15 @@
 """Display bytes in a file like hexdump or xxd."""
 
 function lineformatter(data, base = 16, read_size = 2048)
-    bytes_per_line = min(16, 64 \div (length(string(255, base=base) + 1))
-    @assert length(data) <= bytes_per_line
-    basestring = 
-    asciistring = 
+    charsperbyte = length(string(255, base=base)
+    data_bytes_per_line = min(16, 64 \div (charsperbyte + 1))
+    half_data_bytes_per_line = (data_bytes_per_line + 1) \div 2
+    @assert length(data) <= data_bytes_per_line
+    strings = data .|> (string(base=base, pad=charsperbyte) * ' ')
+    basestring = lpad(map(p -> p[2] * (p[1] == half-data_bytes_per_line) ? "  " : ""), N)
     return $(basestring)  |$(asciistring)|"
 end
+
 
 
 function call(f::CanonicalFormatter, data)
