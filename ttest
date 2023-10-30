@@ -36,19 +36,7 @@ binaryFormatter = BinaryFormatter()
 
 T = TypeVar("T")
 
-
-def group(it: Iterable[T], n: int) -> Iterator[Tuple[T, ...]]:
-    """Split iterable _it_ in to groups of size _n_.
-
-    The last group might contain less than _n_ items.
-    """
-    _it = iter(it)
-    while True:
-        g = tuple(islice(_it, n))
-        if not g:
-            break
-        yield g
-
+iterators.partition()
 
 def hex_dump(
     f: BufferedIOBase,
