@@ -11,20 +11,24 @@ struct CanonicalFormatter <: Formatter
 end
 
 function call(f::CanonicalFormatter, data)
-        @assert len(data) <= 16
-        hexstring = "$({bytes(data[:8]).hex(' ')}  {bytes(data[8:]).hex(' ')}".ljust(48)"
-        asciistring = "".join(chr(b) if b > 31 and b < 127 else "." for b in data)
-        return $(hexstring)  |$(asciistring)|"
+    @assert len(data) <= 16
+    hexstring = "$({bytes(data[:8]).hex(' ')}  {bytes(data[8:]).hex(' ')}".ljust(48)"
+    asciistring = "".join(chr(b) if b > 31 and b < 127 else "." for b in data)
+    return $(hexstring)  |$(asciistring)|"
 end
 
-class BinaryFormatter(Formatter):
-    bytes_per_line = 6
+struct BinaryFormatter <: Formatter
+    bytes_per_line::Int = 6
+    BinaryFormatter(bperline = 6) = new(bperline)
+end
 
-    def __call__(self, data: Sequence[int]) -> str:
-        assert len(data) <= 6
-        bits = " ".join(bin(b)[2:].rjust(8, "0") for b in data).ljust(53)
-        ascii_ = "".join(chr(b) if b > 31 and b < 127 else "." for b in data)
-        return f"{bits}  |{ascii_}|"
+function call(BinaryFormatter, data)
+    @assert len(data) <= 6
+    bitstring = " ".join(bin(b)[2:].rjust(8, "0") for b in data).ljust(53)
+    asciistring = "".join(chr(b) if b > 31 and b < 127 else "." for b in data)
+    return "$(bitstring)  |$(asciistring)|"
+end
+
 
 
 canonicalFormatter = CanonicalFormatter()
