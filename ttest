@@ -3,9 +3,10 @@ function to2(integer i) return {and_bits(i,#FF),floor(i/#100)} end function
 const s = flatten(apply(utf16,to2),"")
 const s = get_text(filename) -- (if you have a suitable premade one to hand)
 
-procedure hexdump(string s, integer start=0, finish=-1, bool bHex=true, bFinalSize=true)
-    s = s[start+1..finish]
-    integer ll = iff(bHex?16:6), ls = length(s)
+function hexdump(str, start = 0, finish =-1, ashex = true, finalsize = true)
+    s = str[begin+start:end+1+finish]
+    ll = ashex ? 16 : 6
+    ls = length(s)
     string hbfmt = iff(bHex?"%02x ":"%08b "),
            lnfmt = "%08x %s |%-" & sprintf("%d",ll) & "s|\n"
     sequence lines = split_by(s,ll)
