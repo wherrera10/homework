@@ -1,161 +1,26 @@
-const utf16 = b"Rosetta Code is a programming chrestomathy site \xd8\x3d\xDE\x00."
-function to2(integer i) return {and_bits(i,#FF),floor(i/#100)} end function
-const s = flatten(apply(utf16,to2),"")
-const s = get_text(filename) -- (if you have a suitable premade one to hand)
 
-function hexdump(str, start = 0, finish =-1, ashex = true, finalsize = true)
-    s = str[begin+start:end+1+finish]
-    ll = ashex ? 16 : 6
-    ls = length(s)
-    string hbfmt = iff(bHex?"%02x ":"%08b "),
-           lnfmt = "%08x %s |%-" & sprintf("%d",ll) & "s|\n"
-    sequence lines = split_by(s,ll)
-    for l in lines do
-        string hb = " ", ascii = ""
-        for i,b in l do
-            hb &= sprintf(hbfmt,b)
-            if b<' ' or b>'~' then b = '.' end if
-            ascii &= b
-            if i=8 then hb &= ' ' end if
-        end for
-        hb = pad_tail(hb,iff(bHex?50:55))
-        printf(1,lnfmt,{start,hb,ascii})
-        start += length(l)
-    end for
-    if bFinalSize then
-        printf(1,"%08x\n",{ls})
-    end if
-end procedure
+function baseddump(data, base = 16; offset = 0, len = -1)
+    @assert base in [2, 10, 16] "display base $base not supported"
+    len = *len < 0 ? length(data) : min(len, length(data))
+    bytes = data[begin+offset:len]
+    chunksize = base == 16 ? 16 : base == 10 ? 10 : 6
+    len, pos = length(data), 0
+    for chunk in Iterators.partition(bytes, chunksize)
+        values = map(n -> string(n, base=base, 
+        pad = base == 16 ? 2 : 8) * " ", chunk)
+        chars = map(n -> isprint(Char(n)) ? "$n" : ".", chunk)
+        println(string(pos, base= 16, pad = 8) * join(values) * " |" *
+               join(chars) * "|")
+    end
+end
+hexdump(data; offset = 0, len = -1) = baseddump(data; offset, len)
+xxd(data; offset = 0, len = -1) = baseddump(data, 2; offset, len)
 
-printf(1,"Hexadecimal:\n")
+const test = b"Rosetta Code is a programming chrestomathy site \xd8\x3d\xDE\x00."
+
+println("hexdump of $test:")
 hexdump(s)
-printf(1,"\nBinary:\n")
-hexdump(s,bHex:=false)
+println("\nxxd of $test:")
+xxd(test)
 
 
-
-
-
-"""Display bytes in a file like hexdump or xxd."""
-
-function lineformatter(data, base = 16, read_size = 2048)
-    charsperbyte = length(string(255, base=base)
-    data_bytes_per_line = min(16, 64 \div (charsperbyte + 1))
-    half_data_bytes_per_line = (data_bytes_per_line + 1) \div 2
-    @assert length(data) <= data_bytes_per_line
-    strings = data .|> (string(base=base, pad=charsperbyte) * ' ')
-    basestring = lpad(map(p -> p[2] * (p[1] == half-data_bytes_per_line) ? "  " : ""), N)
-    return $(basestring)  |$(asciistring)|"
-end
-
-
-
-function call(f::CanonicalFormatter, data)
-    @assert len(data) <= 16
-    hexstring = "$({bytes(data[:8]).hex(' ')}  {bytes(data[8:]).hex(' ')}".ljust(48)"
-    asciistring = "".join(chr(b) if b > 31 and b < 127 else "." for b in data)
-    return $(hexstring)  |$(asciistring)|"
-end
-
-function call(BinaryFormatter, data)
-    @assert len(data) <= 6
-    bitstring = " ".join(bin(b)[2:].rjust(8, "0") for b in data).ljust(53)
-    asciistring = "".join(chr(b) if b > 31 and b < 127 else "." for b in data)
-    return "$(bitstring)  |$(asciistring)|"
-end
-
-iterators.partition()
-
-def hex_dump(
-    f: BufferedIOBase,
-    *,
-    skip: int = 0,
-    length: int = math.inf,  # type: ignore
-    format: Formatter = canonicalFormatter,
-) -> Iterator[str]:
-    """Generate a textual representation of bytes in _f_, one line at a time."""
-    f.seek(skip)
-    offset = 0
-    byte_count = 0
-    previous_line = ""
-    identical_chunk = False
-
-    while byte_count < length:
-        # Read at most READ_SIZE bytes at a time.
-        data = f.read(READ_SIZE)
-
-        # Stop if we've run out of data.
-        if not data:
-            break
-
-        # Discard excess bytes if we've overshot length.
-        if byte_count + len(data) > length:
-            data = data[: length - byte_count]
-
-        # One line per chunk
-        for chunk in group(data, format.bytes_per_line):
-            line = format(chunk)
-            if previous_line == line:
-                if identical_chunk is False:
-                    identical_chunk = True
-                    yield "*"
-            else:
-                previous_line = line
-                identical_chunk = False
-                yield f"{offset:0>8x}  {line}"
-
-            offset += format.bytes_per_line
-            byte_count += len(chunk)
-
-    # Final byte count
-    yield f"{byte_count:0>8x}"
-
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        prog="hex_dump.py",
-        description="Display bytes in a file.",
-    )
-
-    parser.add_argument(
-        "file",
-        type=argparse.FileType(mode="rb"),
-        metavar="FILE",
-        help="target file to dump",
-    )
-
-    parser.add_argument(
-        "-b",
-        "--binary",
-        action="store_true",
-        help="display bytes in binary instead of hex",
-    )
-
-    parser.add_argument(
-        "-s",
-        "--skip",
-        type=int,
-        default=0,
-        help="skip SKIP bytes from the beginning",
-    )
-
-    parser.add_argument(
-        "-n",
-        "--length",
-        type=int,
-        default=math.inf,
-        help="read up to LENGTH bytes",
-    )
-
-    args = parser.parse_args()
-    formatter = binaryFormatter if args.binary else canonicalFormatter
-
-    for line in hex_dump(
-        args.file,
-        format=formatter,
-        skip=args.skip,
-        length=args.length,
-    ):
-        print(line)
