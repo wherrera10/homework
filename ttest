@@ -36,10 +36,13 @@ hexdump(data; offset = 0, len = -1) = baseddump(data; offset, len)
 xxd(data; offset = 0, len = -1) = baseddump(data; base = 2, offset, len)
 decdump(data; offset = 0, len = -1) = baseddump(data; base = 10, offset, len)
 
-const tstr = b"Julia has good support for interactive use 😀."
-const utf16 = vcat(0xfffe, transcode(UInt16, tstr))
+const tstr = b"Rosetta Code is a programming chrestomathy site 😀."
+const utf16 = vcat(b"\xff\xfe", reinterpret(UInt8, transcode(UInt16, tstr)))
+print("hexdump of utf-16 string "), display(String(tstr))
 hexdump(utf16)
+print("\nxxd of utf-16 string "), display(String(tstr))
 xxd(utf16)
+print("\ndecdump of utf-16 string "), display(String(tstr))
 decdump(utf16)
 
 fname = tempname()
