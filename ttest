@@ -44,7 +44,8 @@ print("\nxxd of utf-16 string "), display(String(tstr))
 xxd(utf16)
 print("\ndecdump of utf-16 string "), display(String(tstr))
 decdump(utf16)
-
+println("\nbaseddump of utf-16 string bytes 16-56 from file:")
 fname = tempname()
 open(fname, "w") do fd; write(fd, utf16) end
 baseddump(fname, offset = 16, len = 40)
+
