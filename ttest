@@ -55,7 +55,7 @@ the amount of your bombs.
 const Position = NamedTuple{(:x, :y)}
 
 mutable struct Game
-    grid::Vector{Vector{Char}}
+    grid::Matrix{Char}
     scoords::Vector{Position}
     showhelp::Bool
     terminate::Bool
@@ -73,14 +73,14 @@ const gamelock = Threads.SpinLock()
 """ Game constructor for game initialization """
 function Game()
     grid = fill(Way, My, Mx)
-    grid[[begin, end], begin:end] = Wall
-    grid[begin+1:end-1, [begin, end]] = Wall
+    grid[[begin, end], begin:end] .= Wall
+    grid[begin+1:end-1, [begin, end]] .= Wall
     colflags = [isodd(n) for n in 1:Mx]
     rowflags = [isodd(n) for n in 1:My]
 
     while any(colflags) || any(rowflags)
-        direction = Direction(rand(1:4))
-        j = rand(1:(direction <= Right ? My : Mx)) ÷ 2 * 2 + 1 # if even, add one
+        direction = rand([Left, Right, Up,  Down])
+        j = rand(1:(direction in [Left, Right] ? My : Mx)) ÷ 2 * 2 + 1 # if even, add one
         if direction == Left && rowflags[j]
             for r in 1:Mx-1
                 if grid[j, r] != Wall && grid[j, r+1] != Wall
@@ -90,22 +90,22 @@ function Game()
             rowflags[j] = false
         elseif direction == Right && rowflags[j]
             for r in Mx:-1:3
-                if grid[j][r-1] != Wall && grid[j][r-2] != Wall
-                    grid[j][r-1] = Wall
+                if grid[j, r-1] != Wall && grid[j, r-2] != Wall
+                    grid[j, r-1] = Wall
                 end
             end
-            rowFlags[j] = false
+            rowflags[j] = false
         elseif direction == Up && colflags[j]
             for c in My:-1:3
-                if grid[c-1][j] != Wall && grid[c-2][j] != Wall
-                    grid[c-1][j] = Wall
+                if grid[c-1, j] != Wall && grid[c-2, j] != Wall
+                    grid[c-1, j] = Wall
                 end
             end
             colflags[j] = false
         elseif direction == Down && colflags[j]
             for c in 1:My-1
-                if grid[c][j] != Wall && grid[c+1][j] != Wall
-                    grid[c][j] = Wall
+                if grid[c, j] != Wall && grid[c+1, j] != Wall
+                    grid[c, j] = Wall
                 end
             end
             colflags[j] = false
@@ -115,19 +115,19 @@ function Game()
     while doorsplaced < Doors
         x = rand(3:Mx-2)
         y = rand(3:My-2)
-        if grid[y, x] != Way && grid[y-1][x-1] == Way && grid[y-1][x+1] == Way &&
-           grid[y+1][x-1] == Way && grid[y+1][x+1] == Way # corners free?
-            if grid[y-1][x] == Wall && grid[y-2][x] == Wall && grid[y+1][x] == Wall && 
-               grid[y+2][x] == Wall && grid[y][x-1] == Way && grid[y][x+1] == Way
-                grid[y][x] = DoorCenter
-                grid[y-1][x] = DoorWingVertical
-                grid[y+1][x] = DoorWingVertical
+        if grid[y, x] != Way && grid[y-1, x-1] == Way && grid[y-1, x+1] == Way &&
+           grid[y+1, x-1] == Way && grid[y+1, x+1] == Way # corners free?
+            if grid[y-1, x] == Wall && grid[y-2, x] == Wall && grid[y+1, x] == Wall &&
+               grid[y+2, x] == Wall && grid[y, x-1] == Way && grid[y, x+1] == Way
+                grid[y, x] = DoorCenter
+                grid[y-1, x] = DoorWingVertical
+                grid[y+1, x] = DoorWingVertical
                 doorsplaced += 1
-            elseif grid[y][x-1] == Wall && grid[y][x-2] == Wall && grid[y][x+1] == Wall &&
-               grid[y][x+2] == Wall && grid[y+1][x] == Way && grid[y-1][x] == Way
-                grid[y][x] = DoorCenter
-                grid[y][x-1] = DoorWingHorizontal
-                grid[y][x+1] = DoorWingHorizontal
+            elseif grid[y, x-1] == Wall && grid[y, x-2] == Wall && grid[y, x+1] == Wall &&
+               grid[y, x+2] == Wall && grid[y+1, x] == Way && grid[y-1, x] == Way
+                grid[y, x] = DoorCenter
+                grid[y, x-1] = DoorWingHorizontal
+                grid[y, x+1] = DoorWingHorizontal
                 doorsplaced += 1
             end
         end
@@ -137,21 +137,21 @@ function Game()
     stuff = [(TreasureDb, Treasure), (NumberOfBombs, Bomb),(NumberOfMonsters, WeakMonster)]
     for (n, what) in stuff
         iterations = 1
-        cnt = n 
+        cnt = n
         while cnt > 0
             x = rand(1:Mx)
             y = rand(1:My) 
-            if grid[y][x] == Way
-                grid[y][x] = what
+            if grid[y, x] == Way
+                grid[y, x] = what
             end
-            what == WeakMonster && push!(scoords,(x, y))
+            what == WeakMonster && push!(scoords, Position((x, y)))
             cnt -= 1
             iterations += 1
             @assert iterations <= 10_000 # (sanity check)
         end
     end
-    grid[end - 1][begin] = Hero
-    return Game(grid, scoords, false, false, 0, 3, 2, My - 1)  
+    grid[end - 1, begin] = Hero
+    return Game(grid, scoords, false, false, 0, 3, 2, My - 1)
 end
 
 initscr() = ccall(("initscr", libncurses), Cvoid, ())
@@ -356,6 +356,7 @@ function play()
     game = Game()
     @async draw(game)
     @async monstermove!(game)
+    @async keyboard(game)
     while !game.terminate
         sleep(0.2)
     end
@@ -368,3 +369,4 @@ function play()
 end
 
 play()
+
