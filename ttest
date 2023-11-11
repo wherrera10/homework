@@ -1,7 +1,7 @@
-using Distributed
+using Random, Ncurses_jll
 
-const KeyUp, KeyDown, KeyLeft, KetRight = 259, 258, 260, 261
-const  Mx = 69 # No of columns (1..Mx), must be odd.
+const KeyUp, KeyDown, KeyLeft, KeyRight = 259, 258, 260, 261
+const Mx = 69 # No of columns (1..Mx), must be odd.
 const My = 31 # No of rows (1..My), must be odd.
 const Treasure = '$'
 const TreasureDb = 3 # How many $ signs will be placed.
@@ -25,7 +25,7 @@ const MonsterIntensifiesProbability = 5
 const HelpText = """
   Maze game.
 
-The object of the game is to get all the treasures. The symbol of the treasure is the $ sign.
+The object of the game is to get all the treasures. The symbol of the treasure is the \$ sign.
 Help (display this text): press ? or h
 Exit: press Esc or q
 You can detonate a bomb by pressing b, but only as long as your bomb remains.
@@ -50,358 +50,321 @@ There is a possibility of a little cheating in the game: each press of the lette
 the amount of your bombs.
 """
 
-@enum Direction dirLeft dirRight dirUp dirDown
+@enum Direction Left Right Up Down
 
 const Position = NamedTuple{(:x, :y)}
 
 mutable struct Game
     grid::Vector{Vector{Char}}
     scoords::Vector{Position}
-    showHelp::Bool
+    showhelp::Bool
     terminate::Bool
-    treasureCounter::Int
+    treasurecounter::Int
     bombs::Int
     x::Int
     y::Int
 end
 
-const None = Position((0, 0))
+const NoPosition = Position((0, 0))
 const Dy = [-1, 1, 0, 0]
 const Dx = [0, 0, -1, 1]
-const gameLock::SpinLock
+const gamelock = Threads.SpinLock()
 
-function genFlags(n::Int) = for i in 1:2:n result[i] = true; end
-
+""" Game constructor for game initialization """
 function Game()
-    result = Game(Vector{Vector{Char}}(), Vector{Position()},
-       false, false, 0, 0, 0, 0)
+    grid = fill(Way, My, Mx)
+    grid[[begin, end], begin:end] = Wall
+    grid[begin+1:end-1, [begin, end]] = Wall
+    colflags = [isodd(n) for n in 1:Mx]
+    rowflags = [isodd(n) for n in 1:My]
 
-    result.bombs = 3
-    for x in 1:Mx
-        result.grid[1][x] = Wall
-        result.grid[My][x] = Wall
-    end
-    for y in 2:My-1
-         result.grid[y][1] = Wall
-    end
-    for x in 2:Mx-1
-        result.grid[y][x] = Way
-        result.grid[y][Mx] = Wall
-    end
-    colFlags = genFlags(Mx)
-    rowFlags = genFlags(My)
-
-    while colFlags.anyIt(it) or rowFlags.anyIt(it):
-        direction = Direction(rand(3))
-        j = rand(1:(direction <= dirRight ? My : Mx)) ÷ 2 * 2 + 1
-    end
-    if direction == dirLeft
-        if rowFlags[j]
+    while any(colflags) || any(rowflags)
+        direction = Direction(rand(1:4))
+        j = rand(1:(direction <= Right ? My : Mx)) ÷ 2 * 2 + 1 # if even, add one
+        if direction == Left && rowflags[j]
             for r in 1:Mx-1
-                if result.grid[j][r] != Wall && result.grid[j][r+1] != Wall
-                    result.grid[j][r] = Wall
+                if grid[j, r] != Wall && grid[j, r+1] != Wall
+                    grid[j, r] = Wall
+                end
+            end
+            rowflags[j] = false
+        elseif direction == Right && rowflags[j]
+            for r in Mx:-1:3
+                if grid[j][r-1] != Wall && grid[j][r-2] != Wall
+                    grid[j][r-1] = Wall
                 end
             end
             rowFlags[j] = false
-        end
-    elseif direction == dirRight
-        if rowFlags[j]
-             for r in Mx:-1:3
-                if result.grid[j][r-1] != Wall && result.grid[j][r-2] != Wall
-                    result.grid[j][r-1] = Wall
-                end
-            end
-            rowFlags[j] = false
-        end
-    elseif direction == dirUp
-        if colFlags[j]
+        elseif direction == Up && colflags[j]
             for c in My:-1:3
-                if result.grid[c-1][j] != Wall && result.grid[c-2][j] != Wall
-                    result.grid[c-1][j] = Wall
+                if grid[c-1][j] != Wall && grid[c-2][j] != Wall
+                    grid[c-1][j] = Wall
                 end
             end
-            colFlags[j] = false
-        end
-    elseif direction == dirDown
-        if colFlags[j]
+            colflags[j] = false
+        elseif direction == Down && colflags[j]
             for c in 1:My-1
-                if result.grid[c][j] != Wall && result.grid[c+1][j] != Wall
-                    result.grid[c][j] = Wall
+                if grid[c][j] != Wall && grid[c+1][j] != Wall
+                    grid[c][j] = Wall
                 end
             end
-            colFlags[j] = false
+            colflags[j] = false
         end
-
-    doorsPlaced = 0
-    while doorsPlaced < Doors:
+    end
+    doorsplaced = 0
+    while doorsplaced < Doors
         x = rand(3:Mx-2)
         y = rand(3:My-2)
-        if result.grid[y][x] != Way &&
-            result.grid[y-1][x-1] == Way &&         # top left corner free
-            result.grid[y-1][x+1] == Way &&         # top right corner free
-            result.grid[y+1][x-1] == Way &&         # left corner free
-            result.grid[y+1][x+1] == Way            # right corner free
-                # Let's see if we can put a vertical door.
-            if result.grid[y-1][x] == Wall &&         # wall above the current position
-              result.grid[y-2][x] == Wall &&        # wall above the current position
-              result.grid[y+1][x] == Wall &&        # wall below the current position
-              result.grid[y+2][x] == Wall &&        # wall below the current position
-              result.grid[y][x-1] == Way &&         # left neighbor free
-              result.grid[y][x+1] == Way            # right neighbor free
-                result.grid[y][x] = DoorCenter
-                result.grid[y-1][x] = DoorWingVertical
-                result.grid[y+1][x] = DoorWingVertical
-                doorsPlaced += 1
-                # Let's see if we can put a horizontal door.
-            elseif result.grid[y][x-1] == Wall &&       # wall left of the current position
-              result.grid[y][x-2] == Wall &&      # wall left of the current position
-              result.grid[y][x+1] == Wall &&      # wall right of the current position
-              result.grid[y][x+2] == Wall &&      # wall right of the current position
-              result.grid[y+1][x] == Way  &&      # above neighbor free
-              result.grid[y-1][x] == Way          # below neighbor free
-                result.grid[y][x] = DoorCenter
-                result.grid[y][x-1] = DoorWingHorizontal
-                result.grid[y][x+1] = DoorWingHorizontal
-                doorsPlaced += 1
+        if grid[y, x] != Way && grid[y-1][x-1] == Way && grid[y-1][x+1] == Way &&
+           grid[y+1][x-1] == Way && grid[y+1][x+1] == Way # corners free?
+            if grid[y-1][x] == Wall && grid[y-2][x] == Wall && grid[y+1][x] == Wall && 
+               grid[y+2][x] == Wall && grid[y][x-1] == Way && grid[y][x+1] == Way
+                grid[y][x] = DoorCenter
+                grid[y-1][x] = DoorWingVertical
+                grid[y+1][x] = DoorWingVertical
+                doorsplaced += 1
+            elseif grid[y][x-1] == Wall && grid[y][x-2] == Wall && grid[y][x+1] == Wall &&
+               grid[y][x+2] == Wall && grid[y+1][x] == Way && grid[y-1][x] == Way
+                grid[y][x] = DoorCenter
+                grid[y][x-1] = DoorWingHorizontal
+                grid[y][x+1] = DoorWingHorizontal
+                doorsplaced += 1
             end
-        end
-    end  
-    const Stuff = [(TreasureDb, Treasure),
-      (NumberOfBombs, Bomb),
-      (NumberOfMonsters, WeakMonster)]   # At first, all monsters are weak.
-
-    for (n, what) in Stuff
-        iter = 1
-        nn = n
-        while nn > 0
-            x = rand(1:Mx)
-            y = rand(1:My) 
-            if result.grid[y][x] == Way
-              result.grid[y][x] = what
-            end
-            if what == WeakMonster:
-                result.scoords[n] = (x, y)
-            nn -= 1
-            iter += 1
-            @assert iter <= 10_000 # (sanity check)
         end
     end
-    result.x = 1
-    result.y = My - 2
-    result.grid[My - 2][1] = Hero
-    return result
+    # note all monsters start as weak (weak ones count == NumberofMonsters)
+    scoords = Position[]
+    stuff = [(TreasureDb, Treasure), (NumberOfBombs, Bomb),(NumberOfMonsters, WeakMonster)]
+    for (n, what) in stuff
+        iterations = 1
+        cnt = n 
+        while cnt > 0
+            x = rand(1:Mx)
+            y = rand(1:My) 
+            if grid[y][x] == Way
+                grid[y][x] = what
+            end
+            what == WeakMonster && push!(scoords,(x, y))
+            cnt -= 1
+            iterations += 1
+            @assert iterations <= 10_000 # (sanity check)
+        end
+    end
+    grid[end - 1][begin] = Hero
+    return Game(grid, scoords, false, false, 0, 3, 2, My - 1)  
 end
 
+initscr() = ccall(("initscr", libncurses), Cvoid, ())
+noecho() = ccall(("noecho", libncurses), Cvoid, ())
+erase() = ccall(("erase", libncurses), Cvoid, ())
+addstr(s) = ccall(("addstr", libncurses), Cvoid, (Cstring,), s)
+getch() = ccall(("getch", libncurses), Cint, ())
+move(x, y) = ccall(("move", libncurses), Cvoid, (Cint, Cint,), x, y)
+refresh() = ccall(("refresh", libncurses), Cvoid, ())
+cbreak() = ccall(("cbreak", libncurses), Cvoid, ())
+
 function draw!(game)
-    cursSet(0)
+    initscr()
+    noecho()
     while true
-        acquire(gameLock)
-        if game.showHelp
+        lock(gamelock)
+        if game.showhelp
             erase()
-            addStr(HelpText)
-            readline()
+            addstr(HelpText)
+            getch()
             erase()
-            game.showHelp = false
+            game.showhelp = false
         end
         erase()
         move(0, 0)
-        for row in game.grid
-            addstr(join(row)) * '\n'
+        for row in eachrow(game.grid)
+            addstr(join(row) * '\n')
         end
         addstr("\n\nCollected treasures = $(game.treasureCounter)     Bombs = $(game.bombs)\n")
         refresh()
         game.terminate && break
-        release(gameLock)
-        sleep 200
-        release(gameLock)
+        release(gamelock)
+        sleep(0.2)
     end
 end
 
-function monsterStepFinder(game, sx, sy)
-    result = nothing
-    var m = [0, 1, 2, 3]
-    m.shuffle()
-    for i in m
+function monsterstepfinder(game, sx, sy)
+    result = NoPosition
+    for i in shuffle([0, 1, 2, 3])
         nx = sx + Dx[i]
         ny = sy + Dy[i]
-        if ny in 1:My && nx in 1:Mx && game.grid[ny][nx] in [Way, Hero]
-            result = (nx, ny)
+        if ny in 1:My && nx in 1:Mx && game.grid[ny, nx] in [Way, Hero]
+            result = Position(nx, ny)
         end
     end
     return result
 end
 
-function monsterMove(game)
-    while not game.terminate
-        acquire gameLock
-        active = rand(1..NumberOfMonsters)
+function monstermove!(game)
+    while true
+        lock(gamelock)
+        active = rand(1:NumberOfMonsters)
         (sx, sy) = game.scoords[active]
         if sx != 0
-            ch = game.grid[sy][sx]
-        end
-        if ch == Monster
-            if rand(1:MonsterWeaknessProbability) == 1
-                game.grid[sy][sx] = WeakMonster
-            else
-                monster = game.monsterStepFinder(sx, sy)
-                if monster != nothing
-                    if game.grid[monster.y][monster.x] == Hero
-                        game.grid[monster.y][monster.x] = DeadHero
-                        game.terminate = true
+            ch = game.grid[sy, sx]
+            if ch == Monster
+                if rand(1:MonsterWeaknessProbability) == 1
+                    game.grid[sy, sx] = WeakMonster
+                else
+                    monster = game.monsterStepFinder(sx, sy)
+                    if monster != NoPosition
+                        if game.grid[monster.y, monster.x] == Hero
+                            game.grid[monster.y, monster.x] = DeadHero
+                            game.terminate = true
+                            unlock(gamelock)
+                            break
+                        end
+                    end
+                    game.grid[sy, sx] = Way
+                    game.grid[monster.y, monster.x] = Monster
+                    game.scoords[active] = monster
+                end
+            elseif ch == WeakMonster
+                if rand(1:MonsterIntensifiesProbability) == 1
+                    game.grid[sy, sx] = Monster
+                else
+                    monster = monsterstepfinder(game, sx, sy)
+                    if monster != NoPosition
+                        if game.grid[monster.y, monster.x] != Hero
+                            game.grid[monster.y, monster.x] = WeakMonster
+                            game.scoords[active] = monster
+                            unlock(gamelock)
+                            break
+                        else
+                            game.scoords[active] = NoPosition
+                        end
                     end
                 end
-                break
-            end
-            game.grid[sy][sx] = Way
-            game.grid[monster.y][monster.x] = Monster
-            game.scoords[active] = monster
-        elseif ch == WeakMonster
-            if rand(1..MonsterIntensifiesProbability) == 1:
-                game.grid[sy][sx] = Monster
-            else
-                monster = game.monsterStepFinder(sx, sy)
-                if monster != nothing
-                    game.grid[sy][sx] = Way
-                    if game.grid[monster.y][monster.x] != Hero:
-                        game.grid[monster.y][monster.x] = WeakMonster
-                        game.scoords[active] = monster
-                    else
-                        game.scoords[active] = nothing
-                    end
-                end
             end
         end
-    end
-    release gameLock
-    sleep 100
-    release gameLock
+        unlock(gamelock)
+        sleep(0.1)
+   end
 end
 
-function rotateDoor!(game, nx, ny)
+function rotatedoor!(game, nx, ny)
     for i in 1:4
         wy = Dy[i-1]
         wx = Dx[i-1]
         cy = ny + wy
         cx = nx + wx
-        if game.grid[cy][cx] == DoorCenter
-            if game.grid[cy-1][cx-1] == Way &&
-              game.grid[cy-1][cx+1] == Way &&
-              game.grid[cy+1][cx-1] == Way &&
-              game.grid[cy+1][cx+1] == Way  # four corners empty
+        if game.grid[cy, cx] == DoorCenter
+            if game.grid[cy-1, cx-1] == Way &&
+              game.grid[cy-1, cx+1] == Way &&
+              game.grid[cy+1, cx-1] == Way &&
+              game.grid[cy+1, cx+1] == Way  # four corners empty
                 py = Dy[end-i]
                 px = Dx[end-i]
-                if game.grid[cy+py][cx+px] == Way &&
-                  game.grid[cy-py][cx-px] == Way  # swung door empty
-                    door = game.grid[ny][nx]
+                if game.grid[cy+py, cx+px] == Way &&
+                  game.grid[cy-py, cx-px] == Way  # swung door empty
+                    door = game.grid[ny, nx]
                     flip = door == DoorWingVertical ? DoorWingHorizontal : DoorWingVertical
-                    game.grid[cy+py][cx+px] = flip
-                    game.grid[cy-py][cx-px] = flip
-                    game.grid[cy+wy][cx+wx] = Way
-                    game.grid[cy-wy][cx-wx] = Way
+                    game.grid[cy+py, cx+px] = flip
+                    game.grid[cy-py, cx-px] = flip
+                    game.grid[cy+wy, cx+wx] = Way
+                    game.grid[cy-wy, cx-wx] = Way
                 end
             end
+            break
         end
-        break
     end
 end
 
-function keyboard(game, win)
-    while not game.terminate
-        key = -1
-        while key == -1 && !game.terminate
-            sleep(10)
-            key = wgetch(win)
-            acquire(gameLock)
-            if key in ['\e', 'q']
-                game.terminate = true
-            elseif key == 'b'
-                if game.bombs != 0
-                    dec game.bombs -= 1
-                    for i in 0..3:
-                        nx = game.x + Dx[i]
-                        ny = game.y + Dy[i]
-                        if ny in 2:My-1 && nx in 2:Mx-1 && game.grid[ny][nx] == Wall
-                            game.grid[ny][nx] = Way
-                        end
+function keyboard(game)
+    while true
+        key = getch()
+        sleep(10)
+        lock(gamelock)
+        if key in ['\e', 'q']
+            game.terminate = true
+            unlock(gamelock)
+            break
+        elseif key == 'b'
+            if game.bombs != 0
+                game.bombs -= 1
+                for i in 0:3
+                    nx = game.x + Dx[i]
+                    ny = game.y + Dy[i]
+                    if ny in 2:My-1 && nx in 2:Mx-1 && game.grid[ny, nx] == Wall
+                        game.grid[ny, nx] = Way
                     end
                 end
-            elseif key == 'c'
-                  game.bombs += 1
-            elseif key in ['?', 'h']
-                game.showHelp = true
-            else
-                chIndex = findfirst(==(key), [KeyUp, Keydown, KeyLeft, KeyRight])
-                if chIndex != nothing
-                    nx = game.x + Dx[chIndex]
-                    ny = game.y + Dy[chIndex]
-                    if ny in 2:My-1 && nx in 2:Mx-1
-                        ch = game.grid[ny][nx]
-                        if ch in [DoorWingVertical, DoorWingHorizontal]
-                            game.grid[game.y][game.x] = Way   # (temp. "ghost" him)
-                            game.rotateDoor(nx, ny)
-                            game.grid[game.y][game.x] = Hero
-                            ch = game.grid[ny][nx]            # (maybe unaltered)
-                        elseif ch == Monster
-                            game.grid[game.y][game.x] = Way
-                            game.grid[ny][nx] = DeadHero
+            end
+        elseif key == 'c'
+          game.bombs += 1
+        elseif key in ['?', 'h']
+            game.showhelp = true
+        else
+            chindex = findfirst(==(key), [KeyUp, Keydown, KeyLeft, KeyRight])
+            if chindex != nothing
+                nx = game.x + Dx[chindex]
+                ny = game.y + Dy[chindex]
+                if ny in 2:My-1 && nx in 2:Mx-1
+                    ch = game.grid[ny, nx]
+                    if ch in [DoorWingVertical, DoorWingHorizontal]
+                            game.grid[game.y, game.x] = Way   # (temp. "ghost" him)
+                            rotatedoor!(game, nx, ny)
+                            game.grid[game.y, game.x] = Hero
+                            ch = game.grid[ny, nx]            # (maybe unaltered)
+                    elseif ch == Monster
+                        game.grid[game.y, game.x] = Way
+                        game.grid[ny, nx] = DeadHero
+                        game.y = ny
+                        game.x = nx
+                        game.terminate = true
+                        unlock(gamelock)
+                        break
+                    elseif ch == Treasure
+                        game.treasurecounter += 1
+                          ch = Way
+                        if game.treasurecounter == TreasureDb
+                            game.grid[game.y, game.x] = Way
+                            game.grid[ny, nx] = Hero
                             game.y = ny
                             game.x = nx
                             game.terminate = true
-                        elseif ch == Treasure
-                            game.treasureCounter += 1
-                            if game.treasureCounter == TreasureDb
-                                game.terminate = true
-                            end
-                            ch = Way
-                        elseif ch == Bomb:
-                            game.bombs += 1
-                            ch = Way
+                            unlock(gamelock)
+                            break
                         end
-                        if ch in [Way, WeakMonster]
-                            game.grid[game.y][game.x] = Way
-                            game.grid[ny][nx] = Hero
-                            game.y = ny
-                            game.x = nx
-                        end
+                    elseif ch == Bomb
+                        game.bombs += 1
+                        ch = Way
+                    end
+                    if ch in [Way, WeakMonster]
+                        game.grid[game.y, game.x] = Way
+                        game.grid[ny, nx] = Hero
+                        game.y = ny
+                        game.x = nx
                     end
                 end
             end
         end
-        release(gameLock)
-    end
-    while getch() != -1
-        discard()   # (purge kbd buffer)
+        unlock(gamelock)
+        sleep(0.01)
     end
 end
 
-
 function play()
-    randomize()
-    win = initscr()
-    win.nodelay(true)
-    win.keypad(true)
+    initscr()
     noecho()
     cbreak()
-    addExitProc proc() = endwin()
-    addExitProc proc() = cursSet(1)
-    game = initGame()
-
-  var tdraw, tmove: Thread[ptr Game]
-  createThread(tdraw, draw, addr(game))
-  createThread(tmove, monsterMove, addr(game))
-  game.keyboard(win)
-
-  joinThreads(tdraw, tmove)
-  if game.treasureCounter == TreasureDb:
-    addstr "\nYOU WON! Congratulations!\n"
+    game = Game()
+    @async draw(game)
+    @async monstermove!(game)
+    while !game.terminate
+        sleep(0.2)
+    end
+    if game.treasurecounter == TreasureDb
+        addstr("\nYOU WON! Congratulations!\n")
+    elseif game.grid[game.y, game.x] == DeadHero
+        addstr("\nYOU PERISHED!\n")
+    end
     refresh()
-    while getch() == -1: sleep(1)
-  elif game.grid[game.y][game.x] == DeadHero:
-    addstr "\nYOU PERISHED!\n"
-    refresh()
-    while getch() == -1: sleep(1)
-
+end
 
 play()
-
-
