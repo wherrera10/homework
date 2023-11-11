@@ -194,7 +194,7 @@ function monsterstepfinder(game, sx, sy)
         nx = sx + Dx[i]
         ny = sy + Dy[i]
         if ny in 1:My && nx in 1:Mx && game.grid[ny, nx] in [Way, Hero]
-            result = Position(nx, ny)
+            result = Position((nx, ny))
         end
     end
     return result
