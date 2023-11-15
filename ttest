@@ -193,7 +193,6 @@ end
 function monsterstepfinder(game, sx, sy)
     result = NoPosition
     xd, yd = game.x - sx, game.y - sy
-    xmax = abs(xd) > abs(yd)
     dpref = abs(xd) > abs(yd) ? (xd > 0 ? 4 : 3) : (yd > 0 ? 2 : 1)
     for i in [dpref; shuffle(1:4)]
         nx = sx + Dx[i]
