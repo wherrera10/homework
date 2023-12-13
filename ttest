@@ -11,7 +11,8 @@ p = collect(pat)
         elseif c == '#'
              g -= 1
              if g == 0
-                 return matchdefects(p, grp[begin+1:end])
+                 first(p) == '#' && return 0
+                 return matchdefects(p[begin+1:end], grp[begin+1:end])                     
              end
          elseif c == '?'
              return matchdefects(vcat('.',  p[begin+1:end]), vcat(g, grp[begin+1:end])) +
@@ -20,6 +21,6 @@ p = collect(pat)
              error("unknown pattern char $c")
          end
     end
-    return matchdefects(p, vcat(g, grp[begin+1:end])
+    return g == 0 && length(grp) == 1 # p and grp empty are 1, otherwise 0
 end
 
