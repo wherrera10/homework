@@ -6,9 +6,7 @@ p = collect(pat)
     g = first(grp)
     while !isempty(p)
         c = popfirst!(p)
-        if c == '.'
-            continue
-        elseif c == '#'
+        if c == '#'
              g -= 1
              if g == 0
                  first(p) == '#' && return 0
@@ -18,7 +16,7 @@ p = collect(pat)
              return matchdefects(vcat('.',  p[begin+1:end]), vcat(g, grp[begin+1:end])) +
                     matchdefects(vcat('#',  p[begin+1:end]), vcat(g, grp[begin+1:end]))
          else
-             error("unknown pattern char $c")
+             c != '.' && error("unknown pattern char $c")
          end
     end
     return g == 0 && length(grp) == 1 # p and grp empty are 1, otherwise 0
