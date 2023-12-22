@@ -26,7 +26,7 @@ end
 function settle(bricks)
     settled = empty(bricks)
     occupied, moved = Set{CartesianIndex}(), Set{Int}()
-    for (i, brick) in bricks
+    for (i, brick) in enumerate(bricks)
         if brick.zmin == 1 || any(b -> b in occupied, filter(blo -> blo[3] == block.zmin, brick.blocks))
             push!(settled, brick)
             foreach(b -> push!(occupied, b), brick.blocks)
