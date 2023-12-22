@@ -1,24 +1,19 @@
-p = collect(pat)
-
-@memoize function matchdefects(p, grp)
-    isempty(p) && return isempty(grp) ? 1 : 0
-    isempty(grp) && return isnothing(findfirst(==('#'), p)) ? 1 : 0
-    g = first(grp)
-    while !isempty(p)
-        c = popfirst!(p)
-        if c == '#'
-             g -= 1
-             if g == 0
-                 first(p) == '#' && return 0
-                 return matchdefects(p[begin+1:end], grp[begin+1:end])                     
-             end
-         elseif c == '?'
-             return matchdefects(vcat('.',  p[begin+1:end]), vcat(g, grp[begin+1:end])) +
-                    matchdefects(vcat('#',  p[begin+1:end]), vcat(g, grp[begin+1:end]))
-         else
-             c != '.' && error("unknown pattern char $c")
-         end
-    end
-    return g == 0 && length(grp) == 1 # p and grp empty are 1, otherwise 0
+murtable struct Brick
+    zmin::Int
+    blocks::Vector{CartesianIndex}
 end
 
+function settle(bricks)
+    settled = empty(bricks)
+    occupied = Set{CartesianIndex}
+    moved = Set{Int}
+    for (i, brick) in bricks
+        if brick.zmin == 1 || any(b -> b in occupied, filter(blo -> blo[3] == block.zmin, brick.blocks))
+            push!(settled, brick)
+            for b in brick.blocks
+                push!(occupied, b)
+            end
+            break
+         else
+             brick.blocks .-= CartesianIndex(0, 0, 1)
+             
