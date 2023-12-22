@@ -4,9 +4,13 @@ murtable struct Brick
 end
 
 function test()
+    bricks = Brick[]
     for line in eachline(".txt")
         ends = [parse.(Int, x) for x in split.(split(s, "~"), ",")]
-        xs = minimum 
+        xs, ys, zs = [min(a[1][i], a[2][i]):max(a[1][i], a[2][i]) for i in 1:3]
+        blocks = vec([CartesianIndex(x, y, z) for x in xs, y in ys, z in zs])
+        push!(bricks, Brick(zs.start, blocks))
+    end
 
 function settle(bricks)
     settled = empty(bricks)
