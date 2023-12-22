@@ -4,12 +4,24 @@ dsmutable struct Brick
 end
 
 function test()
+    part = [0, 0]
+
     bricks = Brick[]
     for line in eachline(".txt")
         ends = [parse.(Int, x) for x in split.(split(s, "~"), ",")]
         xs, ys, zs = [min(ends[1][i], ends[2][i]):max(ends[1][i], ends[2][i]) for i in 1:3]
         push!(bricks, Brick(zs.start, vec([CartesianIndex(x, y, z) for x in xs, y in ys, z in zs])))
     end
+
+    bricks, moved = settle(bricks)
+    for i in eachindex(bricks)
+        newbricks, moved = settle(vcat(bricks[begin:i-1], bricks[i+1:end])
+        moved == 0 && (part[1] += 1) 
+        part[2] += moved
+    end
+
+    return part
+end
 
 function settle(bricks)
     settled = empty(bricks)
