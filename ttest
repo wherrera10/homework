@@ -15,7 +15,7 @@ function test()
 
     bricks, moved = settle(bricks)
     for i in eachindex(bricks)
-        newbricks, moved = settle(vcat(bricks[begin:i-1], bricks[i+1:end])
+        _, moved = settle(vcat(bricks[begin:i-1], bricks[i+1:end])
         moved == 0 && (part[1] += 1) 
         part[2] += moved
     end
