@@ -1,4 +1,4 @@
-dsmutable struct Brick
+mutable struct Brick
     zmin::Int
     blocks::Vector{CartesianIndex}
 end
@@ -23,8 +23,9 @@ function test()
     return part
 end
 
-function settle(bricks)
-    settled = empty(bricks)
+function settle(brickdrop)
+    bricks = deepcopy(brickdrop)
+    settled = empty(brickdrop)
     occupied, moved = Set{CartesianIndex}(), Set{Int}()
     for (i, brick) in enumerate(bricks)
         if brick.zmin == 1 || any(b -> b in occupied, filter(blo -> blo[3] == block.zmin, brick.blocks))
