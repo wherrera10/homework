@@ -3,6 +3,11 @@ murtable struct Brick
     blocks::Vector{CartesianIndex}
 end
 
+function test()
+    for line in eachline(".txt")
+        ends = [parse(Int, x) for x in split.(split(line, "~"), ",")]
+        xs = minimum 
+
 function settle(bricks)
     settled = empty(bricks)
     occupied = Set{CartesianIndex}
