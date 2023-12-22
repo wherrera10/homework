@@ -24,8 +24,7 @@ function test()
 end
 
 function settle(brickdrop)
-    bricks = deepcopy(brickdrop)
-    settled = empty(brickdrop)
+    bricks, settled = deepcopy(brickdrop), empty(brickdrop)
     occupied, moved = Set{CartesianIndex}(), Set{Int}()
     for (i, brick) in enumerate(bricks)
         if brick.zmin == 1 || any(b -> b in occupied, filter(blo -> blo[3] == block.zmin, brick.blocks))
