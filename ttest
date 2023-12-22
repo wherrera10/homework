@@ -14,8 +14,7 @@ function test()
 
 function settle(bricks)
     settled = empty(bricks)
-    occupied = Set{CartesianIndex}
-    moved = Set{Int}
+    occupied, moved = Set{CartesianIndex}(), Set{Int}()
     for (i, brick) in bricks
         if brick.zmin == 1 || any(b -> b in occupied, filter(blo -> blo[3] == block.zmin, brick.blocks))
             push!(settled, brick)
