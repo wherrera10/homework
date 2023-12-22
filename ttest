@@ -1,4 +1,4 @@
-murtable struct Brick
+mutable struct Brick
     zmin::Int
     blocks::Vector{CartesianIndex}
 end
@@ -19,9 +19,7 @@ function settle(bricks)
     for (i, brick) in bricks
         if brick.zmin == 1 || any(b -> b in occupied, filter(blo -> blo[3] == block.zmin, brick.blocks))
             push!(settled, brick)
-            for b in brick.blocks
-                push!(occupied, b)
-            end
+            foreach(b -> push!(occupied, b), brick.blocks)
             break
         end
         brick.blocks .-= CartesianIndex(0, 0, 1)
