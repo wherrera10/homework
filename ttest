@@ -1,4 +1,4 @@
-function chenFoxLyndonFactorization(s)
+function chenfoxlyndonfactorization(s)
     n = length(s)
     i = 1
     factorization = String[]
@@ -30,7 +30,7 @@ let m = "0"
         m = replace(m, 'a' => '1')
         m = m0 * m
     end
-    println(chenFoxLyndonFactorization(m))
+    println(chenfoxlyndonfactorization(m))
 end
 
 
