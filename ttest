@@ -1,106 +1,37 @@
-
-
-    function neighbors(c)
-        neigh, ch = CartesianIndex[], grid[c]
-        slopes = Dict('>' => 1, 'v' => 2, '<' => 3, '^' => 4)
-        x0, y0 = c[1], c[2]
-        if ch ∈ ['>', 'v', '<', '^']
-            c2 = c + dirs[slopes[ch]]
-            grid[c2] != '#' && push!(neigh, c2)
-        else
-            for d in dirs
-                c2 = c + d
-                if 1 <= c2[1] < nrows && 1 <= c2[2] <= ncols && grid[c2] != '#'
-                    push!(neigh, c2)
-                end
+function chenFoxLyndonFactorization(s)
+    n = length(s)
+    i = 1
+    factorization = String[]
+    while i <= n
+        j = i + 1
+        k = i
+        while j <= n && s[k] <= s[j]
+            if s[k] < s[j]
+                k = i
+            else
+                k += 1
             end
+            j += 1
         end
-        return neigh
-    end
-
-    function dfs(pos, path, prior, bestfound)
-        if pos == goal
-            bestfound[begin] = max(bestfound[begin], length(path))
-        end
-        for n in neighbors(pos)
-            if !haskey(prior, n)
-                push!(path, n)
-                push!(prior, n)
-                dfs(n, path, prior, bestfound)
-                delete!(prior, n)
-                pop!(path)
-            end
+        while i <= k
+            push!(factorization, s[i:i+j-k-1])
+            i += j - k
         end
     end
+    @assert s == prod(factorization)
+    return factorization
+end
 
-    bestfound = [0]
-    prior = Set{CartesianIndex}([start])
-    dfs((start, CartesianIndex[], prior, bestfound)
-    part[1] = bestfound[begin]
-
-    function neighbors2(c)
-        neigh, ch = CartesianIndex[], grid[c]
-        for d in dirs
-            c2 = c + d
-            if 1 <= c2[1] < nrows && 1 <= c2[2] <= ncols && grid[c2] != '#'
-                push!(neigh, c2)
-            end
-        end
-        return neigh
+let m = "0"
+    for i in 1:7
+        m0 = m
+        m = replace(m, '0' => 'a')
+        m = replace(m, '1' => '0')
+        m = replace(m, 'a' => '1')
+        m = m0 * m
     end
+    println(chenFoxLyndonFactorization(m))
+end
 
-    vertices = Set{CartesianIndex}()
-    distances = Dict{CartesianIndex, Vector{Tuple{Int, CartesianIndex}}}()
-    for i in 1:nrows, j in 1:ncols
-        if grid[i, j] != '#'
-            if length(neighbors2) > 2
-                push!()
-
-    ##edges = 0
-    ##vert = 0
-    for i in range(n):
-        for j in range(m):
-            if g[i][j] != "#":
-                n_adj = len(list(adj((i,j))))
-                if n_adj > 2:
-                    v.add((i,j))
-    v.add((0,1))
-    v.add((n-1,m-2))
-
-
-    for x,y in v:
-        q = []
-        q.append((x,y))
-        seen = {(x,y)}
-        dist = 0
-        while len(q) > 0:
-            nq = []
-            dist += 1
-            for c in q:
-                for a in adj(c):
-                    if a not in seen:
-                        if a in v:
-                            gd[x,y].append((dist, a))
-                            seen.add(a)
-                        else:
-                            seen.add(a)
-                            nq.append(a)
-            q = nq
-
-
-    best = 0
-    def dfs(cur, pathset, totaldist):
-        global best
-        if cur == (n-1,m-2):
-            if totaldist > best:
-                best = max(best, totaldist)
-        for da,a in gd[cur]:
-            if a not in pathset:
-                pathset.add(a)
-                dfs(a,pathset, totaldist + da)
-                pathset.remove(a)
-
-    dfs((0,1), set(), 0)
-    print(best)
 
 
