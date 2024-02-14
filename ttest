@@ -1,37 +1,57 @@
-function chenfoxlyndonfactorization(s)
-    n = length(s)
-    i = 1
-    factorization = String[]
-    while i <= n
-        j = i + 1
-        k = i
-        while j <= n && s[k] <= s[j]
-            if s[k] < s[j]
-                k = i
-            else
-                k += 1
-            end
-            j += 1
-        end
-        while i <= k
-            push!(factorization, s[i:i+j-k-1])
-            i += j - k
+
+using Primes
+
+const carmicache = zeros(Int32, typemax(Int32))
+
+""" Carmichael reduced totient function lambda(n) """
+function lambda(n::Integer)
+    @assert n > 0
+    n <= typemax(Int32) && carmicache[n] > 0 && return Int(carmicache[n])
+    lam = 1
+    for (p, e) in factor(n)
+        if p == 2 && e > 2
+            lam = lcm(lam, 2^(e - 2))
+        else
+            lam = lcm(lam, (p - 1) * p^(e - 1))
         end
     end
-    @assert s == prod(factorization)
-    return factorization
+    if n <= typemax(Int32)
+        carmicache[n] = lam
+    end
+    return lam
 end
 
-let m = "0"
-    for i in 1:7
-        m0 = m
-        m = replace(m, '0' => 'a')
-        m = replace(m, '1' => '0')
-        m = replace(m, 'a' => '1')
-        m = m0 * m
+""" return k for the k-fold iterated lambda function where k is the first time iteration reaches 1 """
+function iterated_lambdas_to_one(i)
+    k = 0
+    while i > 1
+        i = lambda(i)
+        k += 1
     end
-    println(chenfoxlyndonfactorization(m))
+    return k
 end
+
+function find_iterated_lambdas(upto = 25, maxtotest = 10_000_000_000_000)
+    println("Listing of (n, lambda(n), k for iteration to 1) for integers from 1 to 25:")
+    for i in 1:25
+        lam = lambda(i)
+        k = iterated_lambdas_to_one(i)
+        print("($i, $lam, $k)", i % 5 == 0 ? "\n" : "  ")
+    end
+    firsts = zeros(Int, upto)
+    println("\nIterations to 1     n      lambda(n)\n=====================================")
+    println("   0                1             1")
+    for i in 31381059600:maxtotest
+        n = iterated_lambdas_to_one(i)
+        if n > 22 && firsts[n] == 0
+            println(lpad(n, 4) * lpad(i, 17) * lpad(lambda(i), 14))
+            firsts[n] = i
+            n >= upto && break
+        end
+    end
+end
+
+find_iterated_lambdas()
 
 
 
