@@ -1,20 +1,66 @@
-""" From the Luxor library: see also https://github.com/JuliaGraphics/Luxor.jl """
-function center3pts(p1::Point, p2::Point, p3::Point)
-    norm2(p::Point) = (p.x)^2 + (p.y)^2
+using Primes
 
-    α1 = norm2(p3 - p2) * (norm2(p2 - p1) + norm2(p1 - p3) - norm2(p3 - p2))
-    α2 = norm2(p1 - p3) * (norm2(p3 - p2) + norm2(p2 - p1) - norm2(p1 - p3))
-    α3 = norm2(p2 - p1) * (norm2(p1 - p3) + norm2(p3 - p2) - norm2(p2 - p1))
+const carmicache = zeros(Int32, typemax(Int32)) # NB: 8 gigabytes memory used for this size cache
 
-    if α1 + α2 + α3 ≠ 0.0
-        c = (α1 * p1 + α2 * p2 + α3 * p3) / (α1 + α2 + α3)
-        r = √(norm2(p1 - c))
-        return c, r
-    else
-        @warn "center3pts(): There are no circles which pass through $p1, $p2 and $p3."
-        return (Point(0, 0), 0)
+""" Carmichael reduced totient function lambda(n) """
+function lambda(n::Integer)
+    @assert n > 0
+    n <= typemax(Int32) && carmicache[n] > 0 && return Int(carmicache[n])
+    lam = 1
+    for (p, e) in factor(n)
+        if p == 2 && e > 2
+            lam = lcm(lam, 2^(e - 2))
+        else
+            lam = lcm(lam, (p - 1) * p^(e - 1))
+        end
+    end
+    if n <= typemax(Int32)
+        carmicache[n] = lam
+    end
+    return lam
+end
+
+""" return k for the k-fold iterated lambda function where k is the first time iteration reaches 1 """
+function iterated_lambdas_to_one(i)
+    k = 0
+    while i > 1
+        i = lambda(i)
+        k += 1
+    end
+    return k
+end
+
+function find_iterated_lambdas(upto = 25, maxtotest = 300_000_000_000)
+    println("Listing of (n, lambda(n), k for iteration to 1) for integers from 1 to 25:")
+    for i in 1:25
+        lam = lambda(i)
+        k = iterated_lambdas_to_one(i)
+        print("($i, $lam, $k)", i % 5 == 0 ? "\n" : "  ")
+    end
+    firsts = zeros(Int, upto)
+    println("\nIterations to 1     n      lambda(n)\n=====================================")
+    println("   0                1             1")
+    for i in 1:maxtotest
+        n = iterated_lambdas_to_one(i)
+        if n > 1 && firsts[n] == 0
+            println(lpad(n, 4) * lpad(i, 17) * lpad(lambda(i), 14))
+            firsts[n] = i
+            n >= 21 && break
+        end
+    end
+    println("Preliminary:")
+    @Threads.threads for i in firsts[21]+1:maxtotest
+        n = iterated_lambdas_to_one(i)
+        if n > 21 && (firsts[n] == 0 || firsts[n] > i)
+            #println(lpad(n, 4) * lpad(i, 17) * lpad(lambda(i), 14))
+            firsts[n] = i
+            #n >= upto && break
+        end
+    end
+    println("\nFinal:")
+    for n in 19:upto
+        println(lpad(n, 4) * lpad(firsts[n], 17) * lpad(lambda(firsts[n]), 14))
     end
 end
 
-
-
+find_iterated_lambdas()
