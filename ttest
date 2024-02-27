@@ -1,11 +1,13 @@
 using Primes
+using ProgressMeter
 
-const carmicache = zeros(Int32, typemax(Int32)) # NB: 8 gigabytes memory used for this size cache
+const maxcached = typemax(Int32)
+const carmicache = zeros(Int32, maxcached) # NB: 8 gigabytes memory used for this size cache
 
 """ Carmichael reduced totient function lambda(n) """
 function lambda(n::Integer)
     @assert n > 0
-    n <= typemax(Int32) && carmicache[n] > 0 && return Int(carmicache[n])
+    n <= maxcached && carmicache[n] > 0 && return Int(carmicache[n])
     lam = 1
     for (p, e) in factor(n)
         if p == 2 && e > 2
@@ -14,7 +16,7 @@ function lambda(n::Integer)
             lam = lcm(lam, (p - 1) * p^(e - 1))
         end
     end
-    if n <= typemax(Int32)
+    if n <= maxcached
         carmicache[n] = lam
     end
     return lam
@@ -30,7 +32,9 @@ function iterated_lambdas_to_one(i)
     return k
 end
 
-function find_iterated_lambdas(upto = 25, maxtotest = 300_000_000_000)
+#@show iterated_lambdas_to_one(188286357654)
+
+function find_iterated_lambdas(upto = 25, maxtotest = 188_286_358_000) #300_000_000_000)
     println("Listing of (n, lambda(n), k for iteration to 1) for integers from 1 to 25:")
     for i in 1:25
         lam = lambda(i)
@@ -40,26 +44,25 @@ function find_iterated_lambdas(upto = 25, maxtotest = 300_000_000_000)
     firsts = zeros(Int, upto)
     println("\nIterations to 1     n      lambda(n)\n=====================================")
     println("   0                1             1")
-    for i in 1:maxtotest
+    for i in 1:min(maxtotest, maxcached)
         n = iterated_lambdas_to_one(i)
-        if n > 1 && firsts[n] == 0
+        if 1 < n <= upto && firsts[n] == 0
             println(lpad(n, 4) * lpad(i, 17) * lpad(lambda(i), 14))
             firsts[n] = i
-            n >= 21 && break
         end
     end
-    println("Preliminary:")
-    @Threads.threads for i in firsts[21]+1:maxtotest
+    stage2start = findfirst(iszero, firsts)
+    # above the max memoized, use multiple threads with a progress indicator
+    p = Progress(max(10, maxtotest - maxcached))
+    @Threads.threads for i in maxcached+1:maxtotest
         n = iterated_lambdas_to_one(i)
-        if n > 21 && (firsts[n] == 0 || firsts[n] > i)
-            #println(lpad(n, 4) * lpad(i, 17) * lpad(lambda(i), 14))
+        if n <= upto && (firsts[n] == 0 || firsts[n] > i)
             firsts[n] = i
-            #n >= upto && break
         end
+        next!(p)
     end
-    println("\nFinal:")
-    for n in 19:upto
-        println(lpad(n, 4) * lpad(firsts[n], 17) * lpad(lambda(firsts[n]), 14))
+    for n in stage2start:upto
+        print("\n", lpad(n, 4) * lpad(firsts[n], 17) * lpad(lambda(firsts[n]), 14))
     end
 end
 
