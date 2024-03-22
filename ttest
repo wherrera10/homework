@@ -1,69 +1,119 @@
-using Primes
-using ProgressMeter
+""" For Rosetta Code site task Extended Straddling Checkerboards """
 
-const maxcached = typemax(Int32)
-const carmicache = zeros(Int32, maxcached) # NB: 8 gigabytes memory used for this size cache
+from functools import reduce
 
-""" Carmichael reduced totient function lambda(n) """
-function lambda(n::Integer)
-    @assert n > 0
-    n <= maxcached && carmicache[n] > 0 && return Int(carmicache[n])
-    lam = 1
-    for (p, e) in factor(n)
-        if p == 2 && e > 2
-            lam = lcm(lam, 2^(e - 2))
-        else
-            lam = lcm(lam, (p - 1) * p^(e - 1))
-        end
-    end
-    if n <= maxcached
-        carmicache[n] = lam
-    end
-    return lam
-end
+WDICT = {
+    'CODE': 'κ',
+    'ACK': 'α',
+    'REQ': 'ρ',
+    'MSG': 'μ',
+    'RV': 'ν',
+    'GRID': 'γ',
+    'SEND': 'σ',
+    'SUPP': 'π',
+}
+SDICT = {v: k for (k, v) in WDICT.items()}
 
-""" return k for the k-fold iterated lambda function where k is the first time iteration reaches 1 """
-function iterated_lambdas_to_one(i)
-    k = 0
-    while i > 1
-        i = lambda(i)
-        k += 1
-    end
-    return k
-end
+CT37w = [['',  'A', 'E', 'I', 'N', 'O', 'T', 'κ', '',  '',  '',],
+         ['7', 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M',],
+         ['8', 'P', 'Q', 'R', 'S', 'U', 'V', 'W', 'X', 'Y', 'Z',],
+         ['9', ' ', '.', 'α', 'ρ', 'μ', 'ν', 'γ', 'σ', '/', 'π',],]
 
-#@show iterated_lambdas_to_one(188286357654)
 
-function find_iterated_lambdas(upto = 25, maxtotest = 188_286_358_000) #300_000_000_000)
-    println("Listing of (n, lambda(n), k for iteration to 1) for integers from 1 to 25:")
-    for i in 1:25
-        lam = lambda(i)
-        k = iterated_lambdas_to_one(i)
-        print("($i, $lam, $k)", i % 5 == 0 ? "\n" : "  ")
-    end
-    firsts = zeros(Int, upto)
-    println("\nIterations to 1     n      lambda(n)\n=====================================")
-    println("   0                1             1")
-    for i in 1:min(maxtotest, maxcached)
-        n = iterated_lambdas_to_one(i)
-        if 1 < n <= upto && firsts[n] == 0
-            println(lpad(n, 4) * lpad(i, 17) * lpad(lambda(i), 14))
-            firsts[n] = i
-        end
-    end
-    stage2start = findfirst(iszero, firsts)
-    # above the max memoized, use multiple threads with a progress indicator
-    p = Progress(max(10, maxtotest - maxcached))
-    @Threads.threads for i in maxcached+1:maxtotest
-        n = iterated_lambdas_to_one(i)
-        if n <= upto && (firsts[n] == 0 || firsts[n] > i)
-            firsts[n] = i
-        end
-        next!(p)
-    end
-    for n in stage2start:upto
-        print("\n", lpad(n, 4) * lpad(firsts[n], 17) * lpad(lambda(firsts[n]), 14))
-    end
-end
+def xcb_encode(message, nchangemode='98', code='κ', table=CT37w, wdict=WDICT):
+    """
+        Encode with extended straddling checkerboard. Default checkerboard is
+        CT37w at https://www.ciphermachinesandcryptology.com/en/table.htm
+        The numeric mode has the numbers as repeated in triplicate
+        The CODE mode expects a 3-digit numeric code
+    """
+    encoded = []
+    numericmode, codemode = False, False
+    codemodecount = 0
+    # replace terms found in dictionary with a symbol that is in the table
+    s = reduce(lambda x, p: x.replace(
+        p[0], p[1]), wdict.items(), message.upper())
+    for c in s:
+        if c.isnumeric():
+            if codemode:
+                encoded.append(c)
+                codemodecount += 1
+                if codemodecount >= 3:
+                    codemode = False
 
-find_iterated_lambdas()
+            else:
+                if not numericmode:
+                    numericmode = True
+                    encoded.append(nchangemode)
+
+                encoded.append(c*3)
+
+        else:
+            codemode = False
+            if numericmode:
+                encoded.append(nchangemode)
+                numericmode = False
+
+            if c == code:
+                codemode = True
+                codemodecount = 0
+
+            for row in table:
+                if c in row:
+                    k = row.index(c)
+                    encoded.append(str(row[0]) + str(k-1))
+                    break
+
+    return ''.join(encoded)
+
+
+def xcb_decode(s, nchangemode='98', code='κ', table=CT37w, sdict=SDICT):
+    """ Decode extended straddling checkerboard """
+    numbers = {c*3: c for c in list('0123456789')}
+    prefixes = sorted([row[0] for row in table], reverse=True)
+    pos = 0
+    numericmode = False
+    codemode = False
+    decoded = []
+    while pos < len(s):
+        if numericmode:
+            if s[pos:pos+3] in numbers:
+                decoded.append(numbers[s[pos:pos+3]])
+                pos += 2
+            elif s[pos:pos+2] == nchangemode:
+                numericmode = False
+                pos += 1
+
+        elif codemode:
+            if (s[pos:pos+3]).isnumeric():
+                decoded.append(s[pos:pos+3])
+                pos += 2
+
+            codemode = False
+
+        elif s[pos:pos+2] == nchangemode:
+            numericmode = not numericmode
+            pos += 1
+        else:
+            for p in prefixes:
+                if s[pos:].startswith(p):
+                    n = len(p)
+                    row = next(i for i, r in enumerate(table) if p == r[0])
+                    c = table[row][int(s[pos+n])+1]
+                    decoded.append(c)
+                    if c == code:
+                        codemode = True
+                    pos += n
+                    break
+
+        pos += 1
+
+    return reduce(lambda x, p: x.replace(p[0], p[1]), sdict.items(), ''.join(decoded))
+
+
+if __name__ == '__main__':
+
+    MESSAGE = 'Admin ACK your MSG. CODE291 SEND further 2000 SUPP to HQ by 1 March'
+    print(MESSAGE)
+    print('Encoded: ', xcb_encode(MESSAGE))
+    print('Decoded: ', xcb_decode(xcb_encode(MESSAGE)))
