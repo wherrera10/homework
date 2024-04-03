@@ -1,12 +1,16 @@
 using Plots
 
 const retdate = 2025
-const plan1monthly = (5100, 0)
-const plan2monthly = (4000, 2000)
-const plan3monthly = (3000, 3000)
+const plan1monthly = (6708, 0, false)
+const plan1monthly = (6406, 0, true)
+const plan3monthly = (6170, 3085, false)
+const plan4monthly = (5699, 5699, false)
+const initialreserve = 1038563
 
 function totalincome(billdeathyear, plan; maryruthdeathyr = 2048)
-    return sum((y <= billdeathyear ? plan[1] : plan[2]) * 12 for y in retdate:maryruthdeathyr)
+    totalmonthly = sum((y <= billdeathyear ? plan[1] : plan[2]) * 12 for y in retdate:maryruthdeathyr)
+    reserveremaining = initialreserve - totalmonthly
+    return totalmonthly + plan[3] && reserveremaining > 0 ? initialreserve + reserveremaining : initialreserve
 end
 
 const x = retdate:2048
