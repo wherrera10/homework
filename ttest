@@ -2,19 +2,18 @@ using Plots
 
 const retdate = 2025
 const plan1monthly = (5100, 0)
-const plan2monthly = (4000, 3000)
+const plan2monthly = (4000, 2000)
 const plan3monthly = (3000, 3000)
 
 function totalincome(billdeathyear, plan; maryruthdeathyr = 2048)
-    return sum(y -> (y <= billdeathyear ? plan[begin] : plan[begin+1]) * 12 for y in retdate:maryruthdeathyear)
+    return sum((y <= billdeathyear ? plan[1] : plan[2]) * 12 for y in retdate:maryruthdeathyr)
 end
 
 const x = retdate:2048
-const y1 = map(n -> totalincome(n, plan1monthly)
-const y2 = map(n -> totalincome(n, plan2monthly)
-const y3 = map(n -> totalincome(n, plan3monthly)
+const y1 = map(n -> totalincome(n, plan1monthly), x)
+const y2 = map(n -> totalincome(n, plan2monthly), x)
+const y3 = map(n -> totalincome(n, plan3monthly), x)
 
-plot(x, y1)
-plot!(x, y2
-plot!(x, y3)
-
+plot(x .- 1957, y1)
+plot!(x .- 1957, y2)
+plot!(x .- 1957, y3)
