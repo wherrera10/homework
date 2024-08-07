@@ -6,6 +6,7 @@ function incrementalcounts(text, letters; casesensitive = true, minfirstcount = 
     end
     counts = map(c -> count(isequal(c, text), letters)
     counts[begin] < minfirstcount && return false
+    length(counts) < 2 && return true
     diffcounts = diff(counts)
     return diffcounts[begin] == 1 && allequal(diff(counts))
 end
