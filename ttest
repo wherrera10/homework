@@ -8,5 +8,5 @@ function incrementalcounts(text, letters; casesensitive = true, minfirstcount = 
     counts[begin] < minfirstcount && return false
     length(counts) < 2 && return true
     diffcounts = diff(counts)
-    return diffcounts[begin] == 1 && allequal(diff(counts))
+    return diffcounts[begin] == 1 && allequal(diffcounts)
 end
