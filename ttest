@@ -1,27 +1,35 @@
-function incremental(text, letters; casesensitive = true, minfirstcount = 1)
-    (isempty(text) || isempty(letters)) && return false
-    if !casesensitive
-        text = lowercase(text)
-        letters = map(lowercase, letters)
-    end
-    counts = map(c -> count(==(c), text), letters) |> sort!
-    counts[begin] < minfirstcount && return false
-    length(counts) < 2 && return true
-    return all(==(1), diff(counts))
+directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+right_turn(d) = mod1(d + 1, 4)
+left_turn(d) = mod1(d - 1, 4)
+
+function sides(garden_plot)
+    side_count = 0
+    found = Set{Vector{Vector{Int}}}}()
+    t = mat[garden_plot[1][1], garden_plot[1][1]]
+    for p in garden_plot
+        for d in directions
+            q = p .+ d
+            if mat[q[1], q[2]] != t # edge
+                pair = [p, q]
+                if pair \notin found
+                    side-count += 1
+                    push!(found, p)
+                    for d2 in (right_turn(d), left_turn(d))
+                        p2 = copy(p)
+                        while true
+                            p2 = p2 .+ d2
+                            q2 = q .+ d2
+                            if mat[p2[1], p2[2]] == t && mat[q2[1], q2[2]] != t
+                                push!(found, p2)
+                            else
+                                break
+                            end
+                         end
+                     end    
+                end
+            end
+      end
+   end
+    return side_count
 end
-
-const uwords = split(read("unixdict.txt", String), r"\s+")
-const awords = split(read("words_alpha.txt", String), r"\s+")
-const tests = [
-   (uwords, ['a', 'b', 'c'], 1), (uwords, ['t', 'h', 'e'], 1), (uwords, ['c', 'i', 'o'], 2),
-   (awords, ['a', 'b', 'c'], 2), (awords, ['t', 'h', 'e'], 2), (awords, ['c', 'i', 'o'], 3),
-]
-
-for (wordlist, chars, minreq) in tests
-	fname = wordlist == uwords ? "unixdict.txt" : "words_alpha.txt"
-
-	println("Filtering $fname for letters <$(String(chars))> and minimum count $minreq:")
-	results = filter(s -> incremental(s, chars, minfirstcount = minreq), wordlist)
-	println(isempty(results) ? "<none>" : join(results, "\n"), "\n")
-end
-
+                
