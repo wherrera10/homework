@@ -1,20 +1,20 @@
 directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
-right_turn(d) = mod1(d + 1, 4)
-left_turn(d) = mod1(d - 1, 4)
+right_turn(i) = directions[mod1(d + 1, 4)]
+left_turn(i) = directions[mod1(d - 1, 4)]
 
 function sides(garden_plot)
     side_count = 0
     found = Set{Vector{Vector{Int}}}}()
     t = mat[garden_plot[1][1], garden_plot[1][1]]
     for p in garden_plot
-        for d in directions
+        for (i, d) in enumerate(directions)
             q = p .+ d
             if mat[q[1], q[2]] != t # edge
                 pair = [p, q]
                 if pair \notin found
                     side-count += 1
                     push!(found, p)
-                    for d2 in (right_turn(d), left_turn(d))
+                    for d2 in (right_turn(i), left_turn(i))
                         p2 = copy(p)
                         while true
                             p2 = p2 .+ d2
