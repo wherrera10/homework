@@ -1,3 +1,5 @@
+# wrap with blanks to avoid having to test boundaries
+
 directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
 right_turn(i) = directions[mod1(d + 1, 4)]
 left_turn(i) = directions[mod1(d - 1, 4)]
