@@ -1,37 +1,58 @@
-# wrap with blanks to avoid having to test boundaries
-
-directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
-right_turn(i) = directions[mod1(d + 1, 4)]
-left_turn(i) = directions[mod1(d - 1, 4)]
-
-function sides(garden_plot)
-    side_count = 0
-    found = Set{Vector{Vector{Int}}}}()
-    t = mat[garden_plot[1][1], garden_plot[1][1]]
-    for p in garden_plot
-        for (i, d) in enumerate(directions)
-            q = p .+ d
-            if mat[q[1], q[2]] != t # edge
-                pair = [p, q]
-                if pair \notin found
-                    side-count += 1
-                    push!(found, p)
-                    for d2 in (right_turn(i), left_turn(i))
-                        p2 = copy(p)
-                        while true
-                            p2 = p2 .+ d2
-                            q2 = q .+ d2
-                            if mat[p2[1], p2[2]] == t && mat[q2[1], q2[2]] != t
-                                push!(found, p2)
-                            else
-                                break
+for c in CartesianIndices(grid)
+    x0, y0 = c[1], c[2]
+    p = [x0, y0]
+    for t in range
+        for dx in -t+1:t-1
+            x2 = x + dx
+            for y2 in [y-t+abs(dx), y+t-abs(dx)]
+                if 2<=x2<=rows-1 && 2<=y2<=cols-1 && grid[x2, y2] != '#' # cheat end must be valid path tile
+                    # hook the start of tile to those around it
+                    for d in directions
+                        q = [x0 + d[1], y0 + d[2]]
+                        if 2<=x2<=rows-1 && 2<=y2<=cols-1 && grid[x2, y2] != '#'
+                            e1, e2 = scalar(p, rows), scalar(q, rows)
+                            if !has_edge(g, e1, e2)
+                                add_edge!(g, e1, e2)
+                                push!
                             end
-                         end
-                     end    
-                end
-            end
-      end
-   end
-    return side_count
-end
-                
+                            if !has_edge(g, e1, e2)
+                                add_edge!(g, e2, e1)
+                                push!
+                            end
+                        end
+                     end
+                   # add the path connections (two-way)
+                   prev_q = [x0, y0]
+                   for x1 in x0:x2
+                       q = [x1, y0] 
+                       e1, e2 = scalar(prev_q, cols), scalar(q, cols)
+                       if !has_edge(g, e1, e2)
+                           add_edge!(g, e1, e2)
+                           push!
+                       end
+                       if !has_edge(g, e2, e1)
+                           add_edge!(g, e2, e1)
+                           push!
+                       end
+                       prev_q = q
+                    end
+                    prev_q = [x2, y]
+                   for y1 in x0:x2
+                       q = [x2, y1] 
+                       e1, e2 = scalar(prev_q, cols), scalar(q, cols)
+                       if !has_edge(g, e1, e2)
+                           add_edge!(g, e1, e2)
+                           push!
+                       end
+                       if !has_edge(g, e2, e1)
+                           add_edge!(g, e2, e1)
+                           push!
+                       end
+                        prev_q = q
+                    end
+
+                    end
+
+
+            
+ 
