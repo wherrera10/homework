@@ -1,59 +1,23 @@
-recursive(points, , UPTO=remaining)
-for c in CartesianIndices(grid) # start with this, recurse with a surround
+recursive(point, , costs, UPTO=remaining)
     remaining == 0 && return 
-    x0, y0 = c[1], c[2]
-    p = [x0, y0]
-    for t in range
-        for dx in -t+1:t-1
-            x2 = x + dx
-            for y2 in [y-t+abs(dx), y+t-abs(dx)]
-                if 2<=x2<=rows-1 && 2<=y2<=cols-1 && grid[x2, y2] != '#' # cheat end must be valid path tile
-                    # hook the start of tile to those around it
-                    for d in directions
-                        q = [x0 + d[1], y0 + d[2]]
-                        if 2<=x2<=rows-1 && 2<=y2<=cols-1 && grid[x2, y2] != '#'
-                            e1, e2 = scalar(p, rows), scalar(q, rows)
-                            if !has_edge(g, e1, e2)
-                                add_edge!(g, e1, e2)
-                                push!
-                            end
-                            if !has_edge(g, e1, e2)
-                                add_edge!(g, e2, e1)
-                                push!
-                            end
-                        end
-                     end
-                   # add the path connections (two-way)
-                   prev_q = [x0, y0]
-                   for x1 in x0:x2
-                       q = [x1, y0] 
-                       e1, e2 = scalar(prev_q, cols), scalar(q, cols)
-                       if !has_edge(g, e1, e2)
-                           add_edge!(g, e1, e2)
-                           push!
-                       end
-                       if !has_edge(g, e2, e1)
-                           add_edge!(g, e2, e1)
-                           push!
-                       end
-                       prev_q = q
-                    end
-                    prev_q = [x2, y]
-                   for y1 in x0:x2
-                       q = [x2, y1] 
-                       e1, e2 = scalar(prev_q, cols), scalar(q, cols)
-                       if !has_edge(g, e1, e2)
-                           add_edge!(g, e1, e2)
-                           push!
-                       end
-                       if !has_edge(g, e2, e1)
-                           add_edge!(g, e2, e1)
-                           push!
-                       end
-                        prev_q = q
-                    end
+    x, y = c[p], c[p]
+    for d in directions
+        x2, y2 = x + d[1], y + d[2]
+        q = [x2, y2]
+        if 2 <= x2 <= rows-1 && 2 <= y2 <= cols-1
+            remaining == 1 && grid[x2, y2] == '#' && continue # at exit must be on empty tile
+            e1, e2 = scalar(p, rows), scalar(q, rows)
+            if !has_edge(g, e1, e2)
+                add_edge!(g, e1, e2)
+                push!
+            end
+            # test graph
+            recursive(q,  , costs, upto = remaining - 1)                
+            # restore edges
 
-                    end
+       end
+      return ()
+
 
 
             
