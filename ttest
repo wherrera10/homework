@@ -1,4 +1,17 @@
-
+d4 = diff[1:4] # use trues for a
+j, len = 5, length(diff) - 4
+while j < len
+    if !haskey(a, d4)
+        a[d4] = trues(len(prices)
+    end
+    if a[d4][i]
+        a[d4]i] = false
+        b[d4] += prices[j]
+    end  
+    popfirst!(d4)
+    push!(d4, diffs[j])
+    j += 1
+end
 
             
  
