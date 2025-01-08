@@ -1,17 +1,16 @@
-d4 = diff[1:4] # use trues for a
-j, len = 5, length(diff) - 4
-while j < len
-    if !haskey(a, d4)
-        a[d4] = trues(len(prices)
-    end
-    if a[d4][i]
-        a[d4]i] = false
-        b[d4] += prices[j]
-    end  
-    popfirst!(d4)
-    push!(d4, diffs[j])
-    j += 1
-end
+# https://discourse.gnome.org/t/generating-gdk-gtk-keyboard-events-programmatically/11020
 
-            
- 
+keyval = Gdk.unicode_to_keyval(5)
+event = Gdk.EventKey()
+event.window = self.edit_widget.get_window()
+event.type = Gdk.EventType.KEY_PRESS
+event.send_event = True
+event.time = Gdk.CURRENT_TIME
+event.keyval = keyval
+
+display = Gdk.Display.get_default()
+seat = display.get_default_seat()
+keyboard = seat.get_keyboard()
+event.set_device(keyboard);
+
+event.put()
