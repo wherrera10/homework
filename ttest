@@ -2,7 +2,7 @@ part = [0, 0]
 name= "day08.txt"
 lines = readlines(name)
 for line in lines 
-    @show line, "->", unescape_string(replace(line, r"\\u|x" => "\\v"))
+    @show line, "->", unescape_string(replace(line, r"\\u" => "\\v"))
 end
  
-part[1] = sum(length, lines) - sum(x -> length(unescape_string(replace(x, r"\\u|x" => "\\v"))), lines)
+part[1] = sum(length, lines) - sum(x -> length(unescape_string(replace(x, r"\\u" => "\\v"))), lines)
