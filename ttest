@@ -1,5 +1,2 @@
-raw_len = length(read(name))
 lines = readlines(name)
-string_len = sum(length, lines)
-apostrophes_newlines = length(lines) * 3 - 1
-part[1] = raw_len - string_len - apostrophes_newlines
+part[1] = sum(length, lines) - sum(x -> length(unescape_string(x)), lines)
