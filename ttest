@@ -23,10 +23,10 @@ function day10()
     for j in 1:50
         n = next_sequence10(n)
         if j == 40
-            part[1] = n
+            part[1] = length(n)
         end
     end
-    part[2] = n
+    part[2] = length(n)
     return part
 end
 
