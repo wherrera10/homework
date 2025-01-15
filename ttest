@@ -30,4 +30,4 @@ function day10()
     return part
 end
 
-@show day10()
+@show day10() #  [329356, 4666278]
