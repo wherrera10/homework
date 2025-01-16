@@ -32,6 +32,24 @@ end
 
 @show day10() #  [329356, 4666278]
 
-function straight11(s)
+correct_case_length(s) = length(s) == 8 && all(c -> 'a' <= c <= 'z', s)
+function has_straight_triplet(s)
     a = UInt32.(collect(s))
-    return any(i -> s[i] - s[i-1] == s[i-1] - s[i-2] == 1, 
+    return any(i -> s[i] - s[i-1] == s[i-1] - s[i-2] == 1, 3:lastindex(s))
+end
+const pairs11 = [c * c for c in 'a':'z']
+function has_two_pairs(s) = count(p -> occurinsin(p, s), pairs11) >= 2
+function next_password(s)
+    new_pw = ""
+    n = evalpoly(16, reverse(Int32.(collect(s)) .- Int32('a')))
+    for i in n+1:typemax(Int32)
+        a = Int32.(collect(string(i, base = 16, pad = 8))) .+ Int('a')
+        new_pw = String(Char.(a))
+        if correct_case_length(a) && hsa_stright_triplet(a) && has_two_pairs(new_pw)
+            break
+        end
+     end
+     return new_pw
+end
+
+    
