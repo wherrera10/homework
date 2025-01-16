@@ -31,3 +31,7 @@ function day10()
 end
 
 @show day10() #  [329356, 4666278]
+
+function straight11(s)
+    a = UInt32.(collect(s))
+    return any(i -> s[i] - s[i-1] == s[i-1] - s[i-2] == 1, 
