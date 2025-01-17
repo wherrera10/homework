@@ -1,58 +1,26 @@
-using Plots, DSP
 
-
-# a single, regular game of life, optimized for speed
-function step_regular(GoL, Mfilt)
-
-    # 2D kernel to update cells        
-    Mfilt = [true true  true;
-             true false true;
-             true true  true]
-
-    # Perform 2D FFT-based convolution
-    convGoL = DSP.conv(GoL, Mfilt)
-    lives2 = convGoL .== 2
-    lives3 = convGoL .== 3
-
-    # Keep only cells with 2 (or 3) neighbours alive
-    # Make new cells if neighbours are 3
-    twoLiveNeig = (GoL .&& lives2[2:end-1, 2:end-1])
-    GoL = twoLiveNeig .|| lives3[2:end-1, 2:end-1]
-    
-    return(GoL)
-end
-
-
-# main Game of life function loop
-function runGoL_default(GoL; runs=100,  sleepTime=0.02, safeToDisk=false, showOnConsole=true)
-
-    # Simulate the game
-    for i_gen = 1:runs
-
-        GoL = step_regular(GoL, Mfilt)
-          
-        if showOnConsole
-            plot(heatmap(GoL), show=true, reuse=true)
-            sleep(sleepTime)
+function run(steps, grid,  rows, cols)
+new_
+for in x in 1:rows
+    for y in 1:cols
+        cell = old_grid[x, y]
+        neighbor_sum = 0
+        for i in x-1:x+1
+            if 0 < x <= rows
+                for j in y-1:y+1
+                    if 0 < j <= cols
+                        i == x && j == y && continue
+                        neighbor_sum += old_grid[i, j]
+                    end
+                end
+            end
         end
+        if !cell && neighbor_sum == 3
+            new_grid[x, y] = true
+        elseif cell && neighbor_sum != 3 && neighbor_sum != 4
+            new_grid[x, y] = false
+        end 
     end
-
-    return(GoL)
 end
-
-
-# Make a simulation grid
-function initiate_grid(grid_size_width=384, grid_size_height=384)
-    rand(Bool, grid_size_width, grid_size_height)
+old_grid .= new_grid
 end
-
-
-# start a random map
-function start(GoL=nothing, runs=100, grid_size_width=384, grid_size_height=384; sleepTime=0.02)
-    grid = initiate_grid(grid_size_width, grid_size_height)
-    runGoL_default(grid, runs=runs, sleepTime=sleepTime)
-end
-
-
-# continue last run
-#res = runGoL(res)
