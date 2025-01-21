@@ -1,17 +1,21 @@
 using BenchmarkTools
 
-function day25()
-    s = "To continue, please consult the code grid in the manual.  Enter the code at row 2981, column 3075."
-    row, col = parse.(Int, split(s, r"\D+", keepempty=false))
-    code = 20151125
+function find_exponent25(row, col)
+    count = 0
     for xysum in 1:row+col
         for y in 1:xysum
             x = xysum - y + 1
-            x == row && y == col && return code
-            code = rem(code * 252533, 33554393)
+            if x == row && y == col
+                return count
+            end
+            count += 1
         end
     end
-    code
+end
+function day25()
+    s = "To continue, please consult the code grid in the manual.  Enter the code at row 2981, column 3075."
+    row, col = parse.(Int, split(s, r"\D+", keepempty=false))
+    (20151125 * powermod(252533, find_exponent25(row, col), 33554393)) % 33554393
 end
 
 @btime day25()
