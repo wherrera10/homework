@@ -4,8 +4,10 @@ using BenchmarkTools
 function day25()
     s = "To continue, please consult the code grid in the manual.  Enter the code at row 2981, column 3075."
     row, col = parse.(Int, split(s, r"\D+", keepempty=false))
+    # The first row of the first table shown in the problem description is exactly 
+    # the triangular number sequence n(n+1)/2, so we can calculate the code directly
     n = col + row - 1
-    i = (n * (n + 1)) ÷ 2 - row # upper right of diagonal of table is part of the triangular number sequence
+    i = (n * (n + 1)) ÷ 2 - row 
     (20151125 * powermod(252533, i, 33554393)) % 33554393
 end
 
