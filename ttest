@@ -3,10 +3,12 @@ function day04()
     list = ["aaaaa-bbb-z-y-x-123[abxyz]", "a-b-c-d-e-f-g-h-987[abcde]", "not-a-real-room-404[oarel]", "totally-real-room-200[decoy]"]
     for entry in list
         s, id, check = match(r"(\D+)\-(\d+)\[(\w+)\]", entry).captures
-        letters = sort!(unique!([filter(ch -> ch in 'a':'z', s)]), by = ch -> -100 * count(==(c), s) + Int(c))
+        letters = sort!(unique(filter(ch -> ch in 'a':'z', s)), by = c -> -100 * count(==(c), s) + Int(c))
+        @show entry letters, id, check
         startswith(join(letters), check) && (part[1] += 1)
     end
 
     return part
 end
 
+@show day04()
