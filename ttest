@@ -1,21 +1,19 @@
 using BenchmarkTools
 
-
 function day04()
     part = [0, 0]
     list = ["aaaaa-bbb-z-y-x-123[abxyz]", "a-b-c-d-e-f-g-h-987[abcde]", "not-a-real-room-404[oarel]", "totally-real-room-200[decoy]"]
     for entry in list
         s, id, check = match(r"(\D+)\-(\d+)\[\w+", entry).captures
-        letters = unique!([filter(ch -> ch in 'a':'z', s), by = ch -> 
-        counts_per_letter = [(count(==(ch), s), ch) for ch in letters]
-        sort!(counts_per_letter)
-    
+        letters = sort!(unique!([filter(ch -> ch in 'a':'z', s), by = ch -> -100 * count(==(c), s) + Int(c))
+        startswith(letters, check) && (part[1] += 1)
+    end
+
+
+    return part
 end
 
-@btime day25()
+@btime day04()
 
-@show day25() # 9132360
+@show day04() # 
 
-
-masses = parse.(Int, split(read("$DIR/day01.txt", String),r"\D+", keepempty=false)
-part[1] = sum(m -> m \div 3 - 2, masses)
