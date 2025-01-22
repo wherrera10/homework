@@ -14,3 +14,7 @@ end
 @btime day25()
 
 @show day25() # 9132360
+
+
+masses = parse.(Int, split(read("$DIR/day01.txt", String),r"\D+", keepempty=false)
+part[1] = sum(m -> m \div 3 - 2, masses)
