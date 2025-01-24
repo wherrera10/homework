@@ -1,14 +1,13 @@
-function day04()
-    part = [0, 0]
-    list = ["aaaaa-bbb-z-y-x-123[abxyz]", "a-b-c-d-e-f-g-h-987[abcde]", "not-a-real-room-404[oarel]", "totally-real-room-200[decoy]"]
-    for entry in readlines("$DIR/day04.txt")
-        s, id, check = match(r"(\D+)\-(\d+)\[(\w+)\]", entry).captures
-        letters = sort!(unique(filter(ch -> ch in 'a':'z', s)), by = c -> -100 * count(==(c), s) + Int(c))
-        @show entry letters, id, check
-        startswith(join(letters), check) && (part[1] += parse(Int, check))
-    end
+function dfs11(state, goal, depth, seen, min_depth_found)
+    depth += 1
+    depth > min_depth_found[begin] && return
+    for s in options(state)
+        s in seen && continue
+        if issafe(s)
+            if s == goal
+                if depth < min_depth_found{begin]
+                   min_depth_found{begin] = depth
+                   continue
+            else
 
-    return part
-end
 
-@show day04()
