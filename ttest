@@ -1,13 +1,93 @@
-function dfs11(state, goal, depth, seen, min_depth_found)
-    depth += 1
-    depth > min_depth_found[begin] && return
-    for s in options(state)
-        s in seen && continue
-        if issafe(s)
-            if s == goal
-                if depth < min_depth_found{begin]
-                   min_depth_found{begin] = depth
-                   continue
-            else
+using BenchmarkTools
 
+const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2016"
 
+const FLOORS11, CHIPS, GENS = 4, 1, 2
+# from example and data, may need to add elements for different datasets
+const ELEMENTS11 = ["curium", "plutonium", "ruthenium", "strontium", "thulium", "hydrogen", "lithium"]
+const N11 = 7
+function safe11(state)
+    for floor in 1:FLOORS11
+        x = state[floor, CHIPS] ⊻ state[floor, GENS]
+        if !isempty(x & state[floor, CHIPS]) && !isempty(x & state[floor, GENS])
+println("false for floor $floor of $state, ", state[floor, :])
+            return false
+        end
+    end
+    return true
+end
+function options(state, seen)
+    safe_states = Matrix{Int}[]
+    f1 = state[end, 1]
+    next_floors = f1 == 1 ? [2] : f1 == FLOORS11 ? [FLOORS11 - 1] : [f1 - 1, f1 + 1]
+    new_state = copy(state)
+    for f2 in next_floors
+        for i in 1:N11, type in CHIPS:GENS # move 1
+            if state[f1, type] & (1 << (i - 1)) > 0
+                new_state .= state
+                new_state[end, 1] = f2 
+                new_state[f2, type] |= (1 << (i - 1))
+                new_state[f1, type] ⊻= (1 << (i - 1))
+                if safe11(new_state) && new_state ∉ seen
+                    push!(safe_states, copy(new_state))
+                    push!(seen, copy(new_state))
+                end
+            end
+        end
+        for i in 1:N11, j in i+1:N11, t1 in CHIPS:GENS, t2 in CHIPS:GENS # move 2
+            i == j && t1 ==  t2 && continue # cannot be identical
+            i != j && t1 != t2 && continue # if chip and gen, must be paired
+            if state[f1, t1] & (1 << (i - 1)) > 0 && state[f1, t2] & (1 << (j - 1)) > 0
+                new_state .= state
+                new_state[end, 1] = f2 
+                new_state[f2, t1] |= (1 << (i - 1))
+                new_state[f1, t1] ⊻= (1 << (i - 1))
+                new_state[f2, t2] |= (1 << (j - 1))
+                new_state[f1, t2] ⊻= (1 << (j - 1))
+                if safe11(new_state) && new_state ∉ seen
+                    push!(safe_states, copy(new_state))
+                    push!(seen, copy(new_state))
+                end
+            end
+        end
+    end
+    @show state, safe_states
+    return safe_states
+end
+function dfs11(state, goal, steps, seen, min_steps)
+    steps += 1
+    steps >= min_steps[begin] && return
+    for s in options(state, seen)
+        if s == goal
+            min_steps[begin] = steps
+        else
+            dfs11(s, goal, steps, seen, min_steps)
+        end
+    end
+end
+function day11()
+    part = [0, 0]
+
+    start = zeros(Int, FLOORS11 + 1, 2) # floors by [chips, gens], up to 63 elements possible
+    start[end, 1] = 1 # floor state stored in matrix position (number of floors + 1, 1)
+    all_chips, all_gens = 0, 0
+    for (floor, text) in enumerate(readlines("$DIR/day11.txt"))
+        for m in eachmatch(r"a (\w+)([\s-])", text)
+            idx = findfirst(==(m.captures[1]), ELEMENTS11)
+            start[floor, m.captures[2] == "-" ? CHIPS : GENS] |= 1 << (idx - 1)
+        end
+    end
+    all_chips, all_gens = reduce(|, start[:, CHIPS]), reduce(|, start[:, GENS])
+    goal = vcat(zeros(Int, FLOORS11-1, 2), [all_chips all_gens], [FLOORS11 0])
+    seen = Set{Matrix{Int}}()
+    push!(seen, copy(start))
+    min_steps = [typemax(Int32)]
+    dfs11(start, goal, 0, seen, min_steps)
+    part[1] = min_steps[begin]
+
+    return part
+end
+
+#@btime day11()
+
+@show day11() # 
