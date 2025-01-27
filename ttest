@@ -1,91 +1,62 @@
 using BenchmarkTools
+using MD5
 
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2016"
 
-const FLOORS11, CHIPS, GENS = 4, 1, 2
-# from example and data, may need to add elements for different datasets
-const ELEMENTS11 = ["curium", "plutonium", "ruthenium", "strontium", "thulium", "hydrogen", "lithium"]
-const N11 = 7
-function safe11(state)
-    for floor in 1:FLOORS11
-        if state[floor, GENS] > 0 && state[floor, CHIPS] > 0 && 
-           state[floor, CHIPS] & state[floor, GENS] != state[floor, CHIPS]
-            return false
+function add_hashes14!(a3, a5, salt, idx)
+    m = zeros(UInt8, 32)
+    for i in idx:idx+999
+        m = UInt8[]
+        for (j, d) in enumerate(md5(salt * string(i)))
+            m[2j-1] = d >> 8
+            m[2j] = d & 0xf
         end
-    end
-    return true
-end
-function options(state, seen)
-    new_states = Matrix{UInt}[]
-    f1 = state[end, 1]
-    next_floors = f1 == 1 ? [2] : f1 == FLOORS11 ? [FLOORS11 - 1] : [f1 + 1, f1 - 1]
-    new_state = copy(state)
-    new_state2 = copy(state)
-   
-    for f2 in next_floors
-        for i in 1:N11, type in CHIPS:GENS # move 1
-            k = 1 << (i - 1)
-            if state[f1, type] & k == k
-                new_state .= state
-                new_state[end, 1] = f2
-                new_state[f2, type] |= k
-                new_state[f1, type] ⊻= k
-                if safe11(new_state) && new_state ∉ seen
-                    push!(new_states, deepcopy(new_state))
-                    push!(seen, deepcopy(new_state))
-                end
-                for j in i:N11, t2 in CHIPS:GENS # move 2
-                    i == j && type == t2 && continue
-                    k = 1 << (j - 1)
-                    if state[f1, t2] & k == k
-                        new_state2 .= new_state
-                        new_state2[f2, t2] |= k
-                        new_state2[f1, t2] ⊻= k
-                        if safe11(new_state2) && new_state2 ∉ seen
-                            push!(new_states, deepcopy(new_state2))
-                            push!(seen, deepcopy(new_state2))
-                        end
-                    end
-                end
+        for i in 1:lastindex(m)-2
+            if m[i] == m[i+1] == m[i+2]
+                push!(a3, (idx, m[i]))
+                break
+            end
+        end
+        for i in 1:lastindex(m)-4
+            if m[i] == m[i+1] == m[i+2] == m[i+3] == m[i+4]
+                push!(a5, (idx, m[i]))            
             end
         end
     end
-    return new_states
+    return idx + 1000
 end
-function dfs11(state, goal, steps, seen, min_steps)
-if steps < 13 @show state, steps, seen end
-    steps += 1
-    steps >= min_steps[begin] && return
-    for s in options(state, seen)
-        if s == goal
-            min_steps[begin] = steps
-        else
-            dfs11(s, goal, steps, seen, min_steps)
-        end
-    end
-end
-function day11()
+function day14()
     part = [0, 0]
 
-    start = zeros(UInt, FLOORS11 + 1, 2) # floors by [chips, gens], up to 63 elements possible
-    start[end, 1] = 1 # floor state stored in matrix position (number of floors + 1, 1)
-    all_chips, all_gens = 0, 0
-    for (floor, text) in enumerate(readlines("$DIR/day11a.txt"))
-        for m in eachmatch(r"a (\w+)([\s-])", text)
-            idx = findfirst(==(m.captures[1]), ELEMENTS11)
-            start[floor, m.captures[2] == "-" ? CHIPS : GENS] |= 1 << (idx - 1)
+    input = "yjdafjpo"
+    input = "abc"
+    hashes3 = Tuple{Int, UInt8}[]
+    hashes5 = Tuple{Int, UInt8}[]
+    idx = 0
+    found = Int[]
+    j = 1
+    while length(found) < 64
+        while length(hashes3) < j
+            idx = add_hashes14!(hashes3, hashes5, input, idx)
         end
+        n, c = hashes3[j]
+        while idx < n + 1000
+            idx = add_hashes14!(hashes3, hashes5, input, idx)
+        end
+        k = findfirst(p -> p[1] > n && p[2] == c, hashes5)
+        if !isnothing(k)
+            push!(found, n)
+            println("found at $(hashes5[k][1]) for $(string(c, base=16)) at $n")
+        else
+            println("none found for ", (n, c))
+        end
+        j += 1
     end
-    all_chips, all_gens = reduce(|, start[:, CHIPS]), reduce(|, start[:, GENS])
-    goal = vcat(zeros(UInt, FLOORS11 - 1, 2), [all_chips all_gens], [FLOORS11 0])
-    seen = Set{Matrix{Int}}()
-    push!(seen, copy(start))
-    min_steps = [5000]
-    dfs11(start, goal, 0, seen, min_steps)
-    part[1] = min_steps[begin]
+    part[1] = found[end]
+
     return part
 end
 
-#@btime day11()
+#@btime day14()
 
-@show day11() # 
+@show day14() # 
