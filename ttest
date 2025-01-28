@@ -27,8 +27,28 @@ function day21()
     command_starts = ["move", "reverse", "rotate based", "rotate left", "rotate right", "swap letter", "swap position"]
     commands = Tuple{Int, Int, Int}[]
     for line in readlines("$DIR/day21.txt")
+        c = findfirst(startswith(line), command_starts)
         words = split(line)
-        c = findfirst(==(words[1]), command_starts)
+        if c == 1 # move
+
+        elseif c == 2 # reverse
+
+        elseif c == 3 # rotate based on letter position
+
+        elseif c == 4 # rotate left 
+
+        elseif c == 5 # rotate right
+
+        elseif c == 6 # swap letter
+
+        elseif c == 7 # swap position
+
+        else
+            error("cannot parse $line")
+        end
+    end
+
+
         
 
  
