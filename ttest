@@ -1,62 +1,39 @@
 using BenchmarkTools
-using MD5
 
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2016"
 
-function add_hashes14!(a3, a5, salt, idx)
-    m = zeros(UInt8, 32)
-    for i in idx:idx+999
-        m = UInt8[]
-        for (j, d) in enumerate(md5(salt * string(i)))
-            m[2j-1] = d >> 8
-            m[2j] = d & 0xf
-        end
-        for i in 1:lastindex(m)-2
-            if m[i] == m[i+1] == m[i+2]
-                push!(a3, (idx, m[i]))
-                break
-            end
-        end
-        for i in 1:lastindex(m)-4
-            if m[i] == m[i+1] == m[i+2] == m[i+3] == m[i+4]
-                push!(a5, (idx, m[i]))            
-            end
-        end
+function fill_disk(pat, wanted)
+    while length(pat) < wanted
+        pat = vcat(pat, false, [~b for b in reverse(pat)])
     end
-    return idx + 1000
+    return pat[1:wanted]
 end
-function day14()
-    part = [0, 0]
-
-    input = "yjdafjpo"
-    input = "abc"
-    hashes3 = Tuple{Int, UInt8}[]
-    hashes5 = Tuple{Int, UInt8}[]
-    idx = 0
-    found = Int[]
-    j = 1
-    while length(found) < 64
-        while length(hashes3) < j
-            idx = add_hashes14!(hashes3, hashes5, input, idx)
-        end
-        n, c = hashes3[j]
-        while idx < n + 1000
-            idx = add_hashes14!(hashes3, hashes5, input, idx)
-        end
-        k = findfirst(p -> p[1] > n && p[2] == c, hashes5)
-        if !isnothing(k)
-            push!(found, n)
-            println("found at $(hashes5[k][1]) for $(string(c, base=16)) at $n")
-        else
-            println("none found for ", (n, c))
-        end
-        j += 1
+function check16(bits)
+    while iseven(length(bits)) 
+        bits = [bits[i] == bits[i+1] for i in 1:2:lastindex(bits)]
     end
-    part[1] = found[end]
+    return bits
+end
+function day16()
+    part = ["", ""]
 
+    part1len = 272
+    input = [b == '1' for b in "01000100010010111"]
+    disk = fill_disk(input, part1len)
+    checksum = check16(disk)
+    part[1] = join([b ? "1" : "0" for b in checksum])
+
+    part2len = 35651584
+    input = [b == '1' for b in "01000100010010111"]
+    disk = fill_disk(input, part2len)
+    @show length(disk)
+    checksum = check16(disk)
+    @show length(checksum)
+    part[2] = join([b ? "1" : "0" for b in checksum])
+ 
     return part
 end
 
-#@btime day14()
+#@btime day16()
 
-@show day14() # 
+@show day16() # 
