@@ -25,12 +25,13 @@ function day21()
     start = "abcdefgh"
     s = Int32.(collect(start))
     command_starts = ["move", "reverse", "rotate based", "rotate left", "rotate right", "swap letter", "swap position"]
-    commands = Tuple{Int, Int, Int}[]
+    f = Tuple{Int, Int, Int}[]
     for line in readlines("$DIR/day21.txt")
-        c = findfirst(startswith(line), command_starts)
+        cmd = findfirst(startswith(line), command_starts)
         words = split(line)
         if c == 1 # move
-
+            arg3, arg3 = parse(Int, words[3]), parse(Int, words[6])
+            push!(f, (cmd, arg2, arg3)
         elseif c == 2 # reverse
 
         elseif c == 3 # rotate based on letter position
