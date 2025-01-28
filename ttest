@@ -2,34 +2,35 @@ using BenchmarkTools
 
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2016"
 
-function fill_disk(pat, wanted)
-    while length(pat) < wanted
-        pat = vcat(pat, false, [~b for b in reverse(pat)])
-    end
-    return pat[1:wanted]
+swap_position21!(s, x, y) = s[x], s[y] = s[y], s[x]
+swap_letter21!(s, a, b) = for i in eachindex(s) if s[i] == a s[i] = b elseif s[i] == b s[i] = a end end
+rotate_left21!(s, n) = for _ in 1:n push!(popfirst!(s)) end
+rotate_right21!(s, n) = for _ in 1:n pushfirst!(pop!(s)) end
+function rotate_from_letter21!(s, a)
+    i = findfirst(a, s)
+    n = 1 + i + (i >= 4)
+    rotate_right21(s, n)
 end
-function check16(bits)
-    while iseven(length(bits)) 
-        bits = [bits[i] == bits[i+1] for i in 1:2:lastindex(bits)]
+reverse21!(s, x, y) = s[x:y] .= reverse(s[x:y])
+function move21!(s, i, j)
+    if i < j
+        s .= [s[1:i-1];s[i+1:j-1];s[i];s[j:end]]
+    elseif i > j
+        s .= [s[1:j-1];s[i];s[j:i-1];s[i+1:end]]
     end
-    return bits
 end
-function day16()
+
+function day21()
     part = ["", ""]
+    start = "abcdefgh"
+    s = Int32.(collect(start))
+    command_starts = ["move", "reverse", "rotate based", "rotate left", "rotate right", "swap letter", "swap position"]
+    commands = Tuple{Int, Int, Int}[]
+    for line in readlines("$DIR/day21.txt")
+        words = split(line)
+        c = findfirst(==(words[1]), command_starts)
+        
 
-    part1len = 272
-    input = [b == '1' for b in "01000100010010111"]
-    disk = fill_disk(input, part1len)
-    checksum = check16(disk)
-    part[1] = join([b ? "1" : "0" for b in checksum])
-
-    part2len = 35651584
-    input = [b == '1' for b in "01000100010010111"]
-    disk = fill_disk(input, part2len)
-    @show length(disk)
-    checksum = check16(disk)
-    @show length(checksum)
-    part[2] = join([b ? "1" : "0" for b in checksum])
  
     return part
 end
