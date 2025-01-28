@@ -19,7 +19,7 @@ function move21!(s, i, j)
         s .= [s[1:j-1];s[i];s[j:i-1];s[i+1:end]]
     end
 end
-
+const functions = [swap_position21!, swap_letter21!, rotate_left21!, rotate_right21!, rotate_from_letter21!, reverse21!, move21!]
 function day21()
     part = ["", ""]
     start = "abcdefgh"
@@ -29,29 +29,30 @@ function day21()
     for line in readlines("$DIR/day21.txt")
         cmd = findfirst(startswith(line), command_starts)
         words = split(line)
-        if c == 1 # move
-            arg3, arg3 = parse(Int, words[3]), parse(Int, words[6])
-            push!(f, (cmd, arg2, arg3)
-        elseif c == 2 # reverse
-
-        elseif c == 3 # rotate based on letter position
-
-        elseif c == 4 # rotate left 
-
-        elseif c == 5 # rotate right
-
+        if cmd == 1 || cmd == 7 # move (1) or swap (7)
+            arg2, arg3 = parse(Int, words[3]), parse(Int, words[6])
+            push!(f, (cmd, arg2, arg3))
+        elseif cmd == 2 # reverse
+            arg2, arg3 = parse(Int, words[3]), parse(Int, words[5])
+            push!(f, (cmd, arg2, arg3))
+        elseif cmd == 3 # rotate based on letter position
+            arg2 = Int32(words[7][1])
+            push!(f, (cmd, arg2, 0))
+        elseif cmd == 4 || cmd == 5 # rotate left (4) or right (5)
+            arg2 = parse(Int, words[3])
+            push!(f, (cmd, arg2, 0))
         elseif c == 6 # swap letter
-
-        elseif c == 7 # swap position
-
+            arg2, arg3 = Int32(words[3][1]), Int32(words[6][1])
+            push!(f, (cmd, arg2, arg3))
         else
             error("cannot parse $line")
         end
     end
 
-
-        
-
+    for (i, a, b) in f
+        functions[i](s, a, b)
+    end       
+    part[1] = s
  
     return part
 end
