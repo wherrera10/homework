@@ -1,1 +1,25 @@
+using BenchmarkTools
+
+const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2016"
+
+using Graphs
+
+function day22()
+    part = [0, 0]
+    nodes = zeros(Int, 33, 33, 4)
+    for line in readlines("$DIR/day22.txt")
+        a = parse.(Int, split(line, r"\D+", keepempty=false))
+        if length(a) == 6
+            nodes[a[1]+1, a[2]+1, :] .= [a[3], a[4], a[5], a[6]]
+        end
+    end
+    @show nodes
+    
+
+    return part
+end
+
+#@btime day22()
+
+@show day22() # 
 
