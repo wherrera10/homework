@@ -1,67 +1,34 @@
-using BenchmarkTools
 
-const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2016"
-
-using Graphs
-
-function day22()
-    part = [0, 0]
-
-    directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
-    nodes = zeros(Int, 33, 30, 4)
-    rows, cols = 33, 30
-    vertices = Tuple{Int, Int}[]
-    i = 0
-    for line in readlines("$DIR/day22.txt")
-        a = parse.(Int, split(line, r"\D+", keepempty=false))
-        if length(a) == 6
-            x, y = a[1] + 1, a[2] + 1
-            nodes[x, y, :] .= [a[3], a[4], a[5], a[6]]
-            push!(vertices, (x, y))
-        end
+function run(elves, goesfirst)
+    if length(elves) < 3
+        empty!(elves)
+        push!(elves, goesfirst)
+        return goesfirst
     end
-    as_v = Dict(k => v for (k, v) in enumerate(vertices))
-    as_xy = Dict(v => k for (k, v) in enumerate(vertices))
-    viable_pair_count = 0
-    for x in 1:rows
-        for y in 1:cols
-            nodes[x, y, 2] == 0 && continue
-            for x2 in 1:rows
-                for y2 in 1:cols
-                    x == x2 && y == y2 && continue
-                    if nodes[x, y, 2] <= nodes[x2, y2, 3]
-                        viable_pair_count += 1
-                    end
-                end
-            end
-        end
+    i = findfirst(==(goesfirst), elves)
+    starting_length = length(elves)
+    n = starting_length
+    eliminated = 0
+    while elves[i] > 0
+        target = mod1(i + eliminated + (n >> 1), starting_length)
+        elves[target] = 0
+        n -= 1
+        eliminated += 1
+        i = mod1(i + 1, starting_length)
     end
-
-    part[1] = viable_pair_count
-#=
-    g = SimpleGraph(length(vertices))
-    for i in eachindex(vertices)
-        x, y = as_xy[i]
-        for d in directions
-            x2, y2 = x + d[1], y + d[2]
-            if 0 < x2 <= rows && 0 < y2 <= cols
-                j = as_v[(x2, y2)]
-                if node[x, y, 2] <= node[x2, y2, 3]
-                    add_edge!(g, i, j)
-                end
-                if node[x, y, 3] <= node[x2, y2, 2]
-                    add_edge!(g, j, i)
-                end
-            end
-        end
-    end
-=#
-@show findall(n -> n > 100, nodes)
-
-
-    return part
+    return elves[something(findnext(>(0), elves, i), findfirst(>(0), elves))]
 end
 
-#@btime day22()
 
-@show day22() # 
+function test(input)
+    elves = collect(1:input)
+    next_to_go = 1
+    while length(elves) > 1
+        next_to_go = run(elves, next_to_go)
+  #  @show next_to_go, elves
+        filter!(!=(0), elves)
+    end
+    return next_to_go
+end
+
+foreach(i -> println(i, "  ", test(i)), 1:50)
