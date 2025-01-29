@@ -6,20 +6,58 @@ using Graphs
 
 function day22()
     part = [0, 0]
+
+    directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
     nodes = zeros(Int, 33, 30, 4)
+    rows, cols = 33, 30
+    vertices = Tuple{Int, Int}[]
     i = 0
     for line in readlines("$DIR/day22.txt")
         a = parse.(Int, split(line, r"\D+", keepempty=false))
         if length(a) == 6
-            nodes[a[1]+1, a[2]+1, :] .= [a[3], a[4], a[5], a[6]]
-            i += 1
+            x, y = a[1] + 1, a[2] + 1
+            nodes[x, y, :] .= [a[3], a[4], a[5], a[6]]
+            push!(vertices, (x, y))
         end
     end
-    
-    nv = 330
-    rows = 33
-    cols = 30
-    
+    as_v = Dict(k => v for (k, v) in enumerate(vertices))
+    as_xy = Dict(v => k for (k, v) in enumerate(vertices))
+    viable_pair_count = 0
+    for x in 1:rows
+        for y in 1:cols
+            nodes[x, y, 2] == 0 && continue
+            for x2 in 1:rows
+                for y2 in 1:cols
+                    x == x2 && y == y2 && continue
+                    if nodes[x, y, 2] <= nodes[x2, y2, 3]
+                        viable_pair_count += 1
+                    end
+                end
+            end
+        end
+    end
+
+    part[1] = viable_pair_count
+#=
+    g = SimpleGraph(length(vertices))
+    for i in eachindex(vertices)
+        x, y = as_xy[i]
+        for d in directions
+            x2, y2 = x + d[1], y + d[2]
+            if 0 < x2 <= rows && 0 < y2 <= cols
+                j = as_v[(x2, y2)]
+                if node[x, y, 2] <= node[x2, y2, 3]
+                    add_edge!(g, i, j)
+                end
+                if node[x, y, 3] <= node[x2, y2, 2]
+                    add_edge!(g, j, i)
+                end
+            end
+        end
+    end
+=#
+@show findall(n -> n > 100, nodes)
+
 
     return part
 end
