@@ -2,70 +2,108 @@ using BenchmarkTools
 
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2016"
 
-const LOOPS_REQUIRED25 = 12
-function day25()
+using Graphs
+
+function day22()
     part = [0, 0]
-    output = Int[]
-    alt = false
-    for start_a in 0:typemax(Int16)
-        a = start_a
-        empty!(output)
-        alt = false
-        d   = a # cpy a d
-        c   = 9 # cpy 9 c
-        @label L3
-        b = 282 # cpy 282 b
-        @label L4
-        d += 1 # inc d
-        b -= 1 # dec b
-        b != 0 && @goto L4 # jnz b -2
-        c -= 1 # dec c
-        c != 0 && @goto L3 # jnz c -5
-        @label L9
-        a = d # cpy d a
-        @label L10
-        #jnz 0 0
-        b = a # cpy a b
-        a = 0 # cpy 0 a
-        @label L13
-        c = 2 # cpy 2 c
-        @label L14
-        b != 0 && @goto L16 # jnz b 2
-        @goto L21 # jnz 1 6
-        @label L16
-        b -= 1 # dec b
-        c -= 1 # dec c
-        c != 0 && @goto L14 # jnz c -4
-        a += 1 # inc a
-        @goto L13 # jnz 1 -7
-        @label L21
-        b = 2 # cpy 2 b
-        @label L22
-        c != 0 && @goto L24 # jnz c 2
-        @goto L27 # jnz 1 4
-        @label L24
-        b -= 1 # dec b
-        c -= 1 # dec c
-        @goto L22 # jnz 1 -4
-        @label L27
-        # jnz 0 0
-        if b != alt
-            continue
-        else
-            alt = !alt
-            push!(output, b) # out b
+
+    directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+    nodes = [zeros(Int, 4) for x in 1:33, y in 1:30]
+    rows, cols = 33, 30
+    vertices = Tuple{Int, Int}[]
+    for line in readlines("$DIR/day22.txt")
+        a = parse.(Int, split(line, r"\D+", keepempty=false))
+        if length(a) == 6
+            x, y = a[1] + 1, a[2] + 1
+            nodes[x, y] .= [a[3], a[4], a[5], a[6]]
+            push!(vertices, (x, y))
         end
-        if length(output) >= LOOPS_REQUIRED25
-            part[1] = start_a
-            break
-        end
-        a != 0 && @goto L10 # jnz a -19
-        @goto L9 # jnz 1 -21        
     end
+    n_v = length(vertices)
+    xy_to_v = Dict(v => k for (k, v) in enumerate(vertices))
+    v_to_xy = Dict(k => v for (k, v) in enumerate(vertices))
+    viable_pair_count = 0
+    for x in 1:rows
+        for y in 1:cols
+            nodes[x, y][2] == 0 && continue
+            for x2 in 1:rows
+                for y2 in 1:cols
+                    x == x2 && y == y2 && continue
+                    if nodes[x, y][2] <= nodes[x2, y2][3]
+                        viable_pair_count += 1
+                    end
+                end
+            end
+        end
+    end
+
+    part[1] = viable_pair_count
+
+    _, idx = findmin(x[2] for x in nodes)
+    empty_x, empty_y = idx[1], idx[2]
+    empty_vertex = xy_to_v[(empty_x, empty_y)]
+
+    fixed_nodes = Tuple.(findall(c -> c[1] > 100, nodes))
+    fixed_vertices = map(c -> xy_to_v[(c[1], c[2])], fixed_nodes)
+
+    g = SimpleGraph(n_v)
+    for vxy in vertices
+        v1 = xy_to_v[vxy]
+        for d in directions
+        x, y = vxy[1] + d[1], vxy[2] + d[2]
+        if 0 < x <= rows && 0 < y <= cols && (x, y) ∉ fixed_nodes
+            v2 = xy_to_v[(x, y)]
+            !has_edge(g, v1, v2) && add_edge!(g, v1, v2)
+            !has_edge(g, v2, v2) && add_edge!(g, v2, v1)
+        end
+    end
+
+    f = 
+
+
+    function dfs_move_empty(start, goal, data, steps, seen, fixed, min_steps)
+        steps += 1
+        steps >= min_steps[begin] && return
+        for d in directions
+            x, y = start[1] + d[1], start[2] + d[2]
+            if 0 < x <= rows && 0 < y <= cols
+                if (x, y) == goal
+                    min_steps[begin] = steps
+                    break
+                elseif (x, y) ∉ seen && (x, y) != data && (x, y) ∉ fixed
+                    push!(seen, (x, y))
+                    dfs_move_empty((x, y), goal, data, steps, seen, fixed, min_steps)
+                end
+            end
+        end
+    end
+
+    function dfs_move_data(start, empty_start, goal, steps, seen, fixed, min_steps)
+        steps += 1
+        steps >= min_steps[begin] && return
+        for d in directions
+            x, y = start[1] + d[1], start[2] + d[2]
+            min_to_empty = [typemax(Int32)]
+            dfs_move_empty(empty_start, (x, y), start, 0, Set{Tuple{Int, Int}}(), fixed, min_to_empty)
+            clearing_steps = min_to_empty[begin]
+            steps += clearing_steps
+            empty_start = start
+            if (x, y) == goal
+                min_steps[begin] = min(steps, min_steps[begin])
+                break
+            elseif (x, y) ∉ seen && (x, y) ∉ fixed
+                dfs_move_data((x, y), empty_start, goal, steps, seen, fixed, min_steps)
+            end
+        end
+    end
+
+    min_steps = [typemax(Int32)]
+    dfs_move_data((1, cols), (empty_x, empty_y), (1, 1), 0, Set{Tuple{Int,Int}}(), fixed_nodes, min_steps)
+    part[1] = min_steps[begin]
 
     return part
 end
 
-@btime day25()
+#@btime day22()
 
-@show day25() # 
+@show day22() # 
