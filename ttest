@@ -1,2 +1,37 @@
 total_weight(s) = (n = nodes[s];  n.weight + (isempty(n.children) ? 0 : sum(total_weight, n.children))
 
+function balance(node)
+    delta = ("", 0)
+    len = length(node.children)
+    if len > 0
+        w = map(total_weight, node.children)
+        mi, ma = extrema(w)
+        if mi != ma
+            if len == 2
+                s1, n1 = balance(nodes[node.children[1]])
+                s2, n2 = balance(nodes[node.children[2]])
+                if s1 != ""
+                    delta .= s1, n1
+                elseif s2 != ""
+                    delta .= s2, n2
+                else
+                    delta .= node.children[2], nodes[node.children[1]].weight - nodes[node.children[2]].weight
+                end
+            else # len > 2
+                i = findfirst(j -> w[j] != w[j+1], 1:len-1)
+                i = i == 1 && w[2] != w[3] ? 2 : i
+                s1, n1 = balance(nodes[node.children[i]])
+                if s1 != ""
+                    delta .= s1, n1
+                else
+                    j = i == 1 ? 2 : i - 1
+                    delta .= node.children[i], nodes[node.children[j]].weight - nodes[node.children[i]].weight
+                end
+            end
+        end
+    end
+    return delta
+end
+
+
+                
