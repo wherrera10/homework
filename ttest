@@ -5,8 +5,8 @@ function balance(node)
     len = length(node.children)
     if len > 0
         w = map(total_weight, node.children)
-        mi, ma = extrema(w)
-        if mi != ma
+        min_wt, max_wt = extrema(w)
+        if min_wt != max_wt
             if len == 2
                 s1, n1 = balance(nodes[node.children[1]])
                 s2, n2 = balance(nodes[node.children[2]])
