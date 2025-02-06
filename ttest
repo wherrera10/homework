@@ -1,4 +1,4 @@
-directions = [[-1, 1], [1, -1], [1, 1], [1, 0], [1, -1], [-1, -1]]
+directions = [[-1, 0], [1, -1], [1, 1], [1, 0], [1, -1], [-1, -1]]
 d_text = ["n", "ne", "se", "s", "sw", "nw"]
 d_seq = [directions[findfirst(s)] for s in split(read("$DIR/day11.txt", String), r"\s?,\s?")]
 offset = 5000
@@ -13,12 +13,12 @@ diag_moves, vert_moves = 0, 0
 if dy == 0
     diag_moves = 0
     vert_moves = dx
-elseif dx == 0
+elseif dx == 0 || abs(dx) <= abs(dy)
     diag_moves = dy
     vert_moves = 0
-elseif dx > 0 && dy > 0 # to southeast
-    diag_moves = dy
-    vert_moves = abs(abs(dx)-abs(dy)) # correction from exact diagonal
+elseif abs(dx) > abs(dy)
+        vert_moves = abs(dx) - abs(dy)
+        diag_moves = abs(dy)
 end
 moves = diag_moves + vert_moves
     
