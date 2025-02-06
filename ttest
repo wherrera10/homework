@@ -18,7 +18,7 @@ elseif dx == 0
     vert_moves = 0
 elseif dx > 0 && dy > 0 # to southeast
     diag_moves = dy
-    vert_moves = abs(dx-dy) # correction from exact diagonal
+    vert_moves = abs(abs(dx)-abs(dy)) # correction from exact diagonal
 end
 moves = diag_moves + vert_moves
     
