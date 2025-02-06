@@ -10,13 +10,10 @@ end
 
 dx, dy = pos[1] - start[1], pos[2] - start[2]
 diag_moves, vert_moves = 0, 0
-if dy == 0
-    diag_moves = 0
-    vert_moves = dx
-elseif dx == 0 || abs(dx) <= abs(dy)
+if abs(dx) <= abs(dy)
     diag_moves = dy
     vert_moves = 0
-elseif abs(dx) > abs(dy)
+else # abs(dx) > abs(dy)
         vert_moves = abs(dx) - abs(dy)
         diag_moves = abs(dy)
 end
