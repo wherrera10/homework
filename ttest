@@ -9,5 +9,5 @@ for d in d_seq
 end
 
 dx, dy = pos[1] - start[1], pos[2] - start[2]
-moves = max(dx, dy)
+moves = max(dx, dy) + min(dx, dy)
     
