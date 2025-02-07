@@ -4,7 +4,7 @@ using Graphs
 function day12()
     part = [0, 0]
 
-    numbers = [parse.(Int, split(line, r"[\D\s]+")) .+ 1 for line in readlines("$DIR/day11.txt")]
+    numbers = [parse.(Int, split(line, r"[\D\s]+")) .+ 1 for line in readlines("./day12.txt")]
     g = SimpleGraph(length(numbers))
     for a in numbers
         for v in @view a[begin+1:end]
@@ -13,8 +13,8 @@ function day12()
         end
     end
     conn = connected_components(g)
-    part[1] = length(g[findfirst(a -> 1 in a, conn)])
-
+    part[1] = length(conn[findfirst(a -> 1 in a, conn)])
+    part[2] = length(conn)
     
 
     return part
