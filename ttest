@@ -13,7 +13,7 @@ function day12()
         end
     end
     conn = connected_components(g)
-    part[1] = length(g[findfirst(a -> 0 in a, conn)])
+    part[1] = length(g[findfirst(a -> 1 in a, conn)])
 
     
 
