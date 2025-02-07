@@ -5,7 +5,7 @@ function day12()
     part = [0, 0]
 
     numbers = [parse.(Int, split(line, r"[\D\s]+")) .+ 1 for line in readlines("$DIR/day11.txt")]
-    g = SimpleGraph(maximum(vcat(numbers))
+    g = SimpleGraph(length(numbers))
     for a in numbers
         for v in @view a[begin+1:end]
             add_edge!(g, a[begin], v)
