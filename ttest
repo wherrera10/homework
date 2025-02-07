@@ -7,11 +7,11 @@ pos = copy(offset)
 for d in d_seq
     pos .+= d
 end
+https://stackoverflow.com/questions/5084801/manhattan-distance-between-tiles-in-a-hexagonal-grid
+dx = x1 - x0
+dy = y1 - y0
 
-dx, dy = pos[1] - start[1], pos[2] - start[2]
-function hexdistance((x1, y1), (x2, y2))
-    dx, dy = x2 - x1, y2 - y1
-    dx == 0 && return abs(dy)
-    dy == 0 && return abs(dx)
-    return dx + dy - (dx + (dy > 0)) \div 2
-end
+if sign(dx) == sign(dy)
+    abs(dx) + abs(dy)
+else
+    max(abs(dx), abs(dy))
