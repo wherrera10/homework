@@ -19,3 +19,30 @@ function day12()
 
     return part
 end
+
+
+function day13()
+    part = [0, 0]
+    numbers = [parse.(Int, split(line, r"[\d\s\:]+")) for line in readlines("./day13.txt")]
+len = length(numbers)
+    depths = zeros(len)
+    for a in numbers
+        depths[a[1] + 1] = a[2]
+    end
+    run_lengths = [(d - 1) * 2 for d in depths]
+    positions = [[1:depths[d]; depths[d]-1:-1:2] for d in depths]
+    pos(t, layer) = positions[layer][mod1(t, run_lengths[layer])]
+
+    caught = falses(len)
+    for t in 1:len
+        depths(t) != 0
+        caught[t] = pos(t, t) == 1
+    end
+
+
+
+    return pert
+end
+
+
+
