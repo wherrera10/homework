@@ -9,17 +9,9 @@ for d in d_seq
 end
 
 dx, dy = pos[1] - start[1], pos[2] - start[2]
-moves = max(dx, dy) + min(dx, dy)
-    
-def hexDistance(start, dest):
-  if (start.x == dest.x):
-    return abs(dest.y - start.y)
-  elif (start.y == dest.y):
-    return abs(dest.x - start.x)
-  else:
-    dx = abs(dest.x - start.x)
-    dy = abs(dest.y - start.y)
-    if start.y < dest.y:
-      return dx + dy - int(math.ceil(dx / 2.0))
-    else:
-      return dx + dy - int(math.floor(dx / 2.0))
+function hexdistance((x1, y1), (x2, y2))
+    dx, dy = x2 - x1, y2 - y1
+    dx == 0 && return abs(dy)
+    dy == 0 && return abs(dx)
+    return dx + dy - (dx + (dy > 0)) \div 2
+end
