@@ -1,48 +1,73 @@
+using BenchmarkTools
 
-using Graphs
+const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
 
-function day12()
-    part = [0, 0]
-
-    numbers = [parse.(Int, split(line, r"[\D\s]+")) .+ 1 for line in readlines("./day12.txt")]
-    g = SimpleGraph(length(numbers))
-    for a in numbers
-        for v in @view a[begin+1:end]
-            add_edge!(g, a[begin], v)
-            add_edge!(g, v, a[begin])
+function knot_bits14(s)
+    list = collect(0:255)
+    lengths = [UInt8.(collect(s)); [17, 31, 73, 47, 23]]
+    list_len, pos, skip_size = 256, 1, 0
+    for _ in 1:64
+        for len in lengths
+            if len > 1
+                start, stop = pos, mod1(pos + len - 1, list_len)
+                if stop > start
+                    list[start:stop] .= reverse(list[start:stop])
+                elseif stop < start
+                    a = reverse([list[start:end]; list[begin:stop]])
+                    list[start:end] .=  a[begin:list_len-start+1]
+                    list[begin:stop] .= a[list_len-start+2:end]
+                else
+                    error("start $start, stop $stop")
+                end
+            end
+            pos = mod1(pos + len + skip_size, list_len)
+            skip_size += 1
         end
     end
-    conn = connected_components(g)
-    part[1] = length(conn[findfirst(a -> 1 in a, conn)])
-    part[2] = length(conn)
-    
+    hash_bits = Bool[]
+    for i in 1:16:255
+        bits8 = reduce(xor, list[i:i+15])
+        append!(hash_bits, reverse!(digits(bits8, base=2, pad=8)))
+    end
+    return hash_bits
+end
+function day14()
+    part = [0, 0]   
+    directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+    input = "xlqgujun"
+
+    grid = falses(130, 130) # wrap with 0 
+    for i in 1:128
+        s = input * "-" * string(i-1)
+        grid[i + 1, 2:end-1] .= knot_bits14(s)
+    end
+    all_found = Set{Vector{Int}}()
+    for x in 2:129
+        for y in 2:129
+            if grid[x, y]
+                part[1] += 1
+                if [x, y] ∉ all_found
+                    part[2] += 1
+                    push!(all_found, [x, y])
+                    local_found = [[x, y]]
+                    while !isempty(local_found)
+                        x1, y1 = popfirst!(local_found)
+                        for d in directions
+                            x2, y2 = x1 + d[1], y1 + d[2]
+                            if grid[x2, y2] && [x2, y2] ∉ all_found
+                                push!(local_found, [x2, y2])
+                                push!(all_found, [x2, y2])
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
 
     return part
 end
 
+#@btime day14()
 
-function day13()
-    part = [0, 0]
-    numbers = [parse.(Int, split(line, r"[\d\s\:]+")) for line in readlines("./day13.txt")]
-len = length(numbers)
-    depths = zeros(len)
-    for a in numbers
-        depths[a[1] + 1] = a[2]
-    end
-    run_lengths = [(d - 1) * 2 for d in depths]
-    positions = [[1:depths[d]; depths[d]-1:-1:2] for d in depths]
-    pos(t, layer) = positions[layer][mod1(t, run_lengths[layer])]
-
-    caught = falses(len)
-    for t in 1:len
-        depths(t) != 0
-        caught[t] = pos(t, t) == 1
-    end
-
-
-
-    return pert
-end
-
-
-
+@show day14() # 
