@@ -5,8 +5,9 @@ const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
 
 function day19()
 	part = [0, 0]
-
-    collect.(readlines("$DIR/day19txt"))
+	directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+	grid = stack((collect(line) for line in split(read("$DIR/day19.txt", String), "\n")), dims = 1)
+	rows, cols = size(grid)
 
 
 	return part
