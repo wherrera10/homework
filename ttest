@@ -4,55 +4,60 @@ const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
 
 
 function day19()
-	part = ["", 0]
-	directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+    part = ["", 0]
+    directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
 
-	grid = stack((collect(line) for line in readlines("$DIR/day19.txt")), dims = 1)
-	rows, cols = size(grid)
+    grid = stack((collect(line) for line in readlines("$DIR/day19.txt")), dims = 1)
+    rows, cols = size(grid)
     start = findfirst(==('|'), grid)
-	x, y = start[1], start[2]
-	found = Char[]
+    x, y = start[1], start[2]
+    found = Char[]
     dir = 3 # south or down is direction at start
-	done = false
+    done = false
+    count = 0
     while !done
-		dx, dy = directions[dir]
+        dx, dy = directions[dir]
         while true
-			x, y = x + dx, y + dy
-			c = grid[x, y]
-			if c == ' '
-				done = true
-				break
-			elseif 'A' <= c <= 'Z'
-                push!(found, c)
-			elseif c == '+'
-				break
-			end
-		end
-		done && break
-		opposite = mod1(dir + 2, 4)
-		for (i, d) in enumerate(directions)
-			i == opposite && continue
-			if grid[x + d[1], y + d[2]] != ' '
-				dir = i
+            x, y = x + dx, y + dy
+            count += 1
+            c = grid[x, y]
+            if c == ' '
+                done = true
                 break
-			end
-		end
-	end
+            elseif 'A' <= c <= 'Z'
+                push!(found, c)
+            elseif c == '+'
+                break
+            end
+        end
+        done && break
+        opposite = mod1(dir + 2, 4)
+        for (i, d) in enumerate(directions)
+            i == opposite && continue
+            if grid[x+d[1], y+d[2]] != ' '
+                dir = i
+                break
+            end
+        end
+    end
+
     part[1] = String(found)
 
-	for x in 1:rows, y in 1:cols
-		c = grid[x, y]
-		isspace(c) && continue
-		if c == '-' && grid[x-1, y] == '|' || c == '|' && grid[x, y-1] == '-'
-			part[2] += 2
-		else
-			part[2] += 1
+    for x in 1:rows, y in 1:cols
+        c = grid[x, y]
+        if !isspace(c)
+            if c == '-' && grid[x+1, y] == '|' == grid[x-1, y] ||
+               c == '|' && grid[x, y+1] == '-' == grid[x, y-1]
+                part[2] += 2
+            else
+                part[2] += 1
+            end
         end
-	end
+    end
 
-	return part
+    return part
 end
 
 @btime day19()
 
-@show day19() # ["DTOUFARJQ", 16641]
+@show day19() # ["DTOUFARJQ", 16638]
