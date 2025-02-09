@@ -8,12 +8,12 @@ function day19()
 	directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
 
 	grid = stack((collect(line) for line in readlines("$DIR/day19.txt")), dims = 1)
+	rows, cols = size(grid)
     start = findfirst(==('|'), grid)
 	x, y = start[1], start[2]
 	found = Char[]
     dir = 3 # south or down is direction at start
 	done = false
-	steps = 1
     while !done
 		dx, dy = directions[dir]
         while true
@@ -24,9 +24,9 @@ function day19()
 				break
 			elseif 'A' <= c <= 'Z'
                 push!(found, c)
+			elseif c == '+'
+				break
 			end
-			steps += 1
-			c == '+' && break
 		end
 		done && break
 		opposite = mod1(dir + 2, 4)
@@ -38,13 +38,21 @@ function day19()
 			end
 		end
 	end
-@show size(grid), x, y
     part[1] = String(found)
-    part[2] = steps
+
+	for x in 1:rows, y in 1:cols
+		c = grid[x, y]
+		isspace(c) && continue
+		if c == '-' && grid[x-1, y] == '|' || c == '|' && grid[x, y-1] == '-'
+			part[2] += 2
+		else
+			part[2] += 1
+        end
+	end
 
 	return part
 end
 
-#@btime day19()
+@btime day19()
 
-@show day19() # 
+@show day19() # ["DTOUFARJQ", 16641]
