@@ -1,41 +1,65 @@
 using BenchmarkTools
-
+import Base.+, Base.==
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
 
 
-function day19()
-    part = ["", 0]
-    directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+mutable struct V3
+    x::Int
+    y::Int
+    z::Int
+end
++(a::V3, b::V3) = V3(a.x + b.x, a.y + b.y, a.z + b.z)
+mutable struct Particle20
+    p::V3
+    v::V3
+    a::V3
+end
+colliding(a::Particle20, b::Particle20) = a.p.x == b.p.x && a.p.y == b.p.y && a.p.z == b.p.z
+manhattan(v3) = abs(v3.x) + abs(v3.y) + abs(v3.z)
+function day20()
+	part = [0, 0]
 
-    grid = stack((collect(line) for line in readlines("$DIR/day19.txt")), dims = 1)
-    start = findfirst(==('|'), grid[1, :]) # start on first row
-    x, y = 1, start
-    c = '|'
-    found = Char[]
-    d = 3 # south or down is direction at start
-    dx, dy = directions[d]
-    steps = 0
-    while !isspace(c) 
-        steps += 1
-        x, y = x + dx, y + dy
-        c = grid[x, y]
-        'A' <= c <= 'Z' && push!(found, c)
-        if c == '+'
-            if d == 1 || d == 3
-                d = isspace(grid[x, y-1]) ? 2 : 4
-                dx, dy = directions[d][1], directions[d][2]
-            else
-                d = isspace(grid[x-1, y]) ? 3 : 1
-                dx, dy = directions[d][1], directions[d][2]
-            end
+    numbers  = [parse.(Int, split(line, r"[\D\-]+", keepempty=false)) for line in readlines("$DIR/day20.txt")]
+    particles = [Particle20(V3(x, y, z), V3(vx, vy, vz), V3(ax, ay, az)) for (x,y,z,vx,vy,vz,ax,ay,az) in numbers]
+    ps = deepcopy(particles)
+    for t in 1:1000
+        for p in ps
+            p.v += p.a
+            p.p += p.v 
+        end
+        _, idx = findmin(manhattan(p.p) for p in ps)
+        if part[1] != idx
+            part[1] = idx
         end
     end
-    part[1] = String(found)
-    part[2] = steps
+    part[1] -= 1 # one based to 0 based index
 
-    return part
+    ps = deepcopy(particles)
+    collisions = Set{Int}()
+    for t in 1:1000000
+        for p in ps
+            p.v += p.a
+            p.p += p.v 
+        end
+        for i in firstindex(ps):lastindex(ps)-1
+            for j in i+1:lastindex(ps) 
+                if colliding(ps[i], ps[j])
+                    push!(collisions, i, j)
+                    @show collisions
+                end
+            end
+        end
+        keep = setdiff(1:length(ps), collisions)
+        empty!(collisions)
+        ps = ps[keep]
+#        println(length(ps))
+    end
+    part[2] = length(ps)
+
+
+	return part
 end
 
-@btime day19()
+#@btime day20()
 
-@show day19() # ["DTOUFARJQ", 16642]
+@show day20() #  [37923, 263]
