@@ -1,5 +1,5 @@
 using BenchmarkTools
-import Base.+, Base.==
+
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
 
 mutable struct Bridge24
