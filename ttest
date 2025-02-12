@@ -2,64 +2,54 @@ using BenchmarkTools
 import Base.+, Base.==
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
 
-
-mutable struct V3
-    x::Int
-    y::Int
-    z::Int
+mutable struct Bridge24
+    components::Vector{Vector{Int}}
+    ordering: Vector{Int}
+    function Bridge24(s)
+        start = s[1] == 1 ? [s[1], s[2]] : s[2] == 1 ? [s[2], s[2]] : error("$s cannot be start")
+        return new([s], start)
+    end
 end
-+(a::V3, b::V3) = V3(a.x + b.x, a.y + b.y, a.z + b.z)
-mutable struct Particle20
-    p::V3
-    v::V3
-    a::V3
+function options(bridge, components)
+    ret = Vector{Vector{Int}}()
+    b = bridge[ordering[end]
+    for c in components
+        c in bridge.componets && continue
+        if c[1] == b || c[2] == b
+            push!(ret, c)
+        end
+    end
+    return ret
 end
-colliding(a::Particle20, b::Particle20) = a.p.x == b.p.x && a.p.y == b.p.y && a.p.z == b.p.z
-manhattan(v3) = abs(v3.x) + abs(v3.y) + abs(v3.z)
-function day20()
+function dfs24(current, components)
+    strengths = Tuple{Int, Bridge24}[]
+    for c in options(current, components)
+        push!(strengths, dfs24(add24!(deepcopy(current), c)))
+    end
+    if isempty(strengths)
+        return sum(current.ordering), current
+    else
+        n, i = findmax(t -> t[1], strengths)
+        return n, strengths[i]
+    end
+end 
+function add24!(bridge, c)
+    v = c[1] == bridge.ordering[end] ? [c[1], c[2]] : c[2] == bridge.ordering[end] ? [c[2], c[1]] : error("Bad add: $c to $bridge")
+    append!(bridge.ordering, v)
+    push!(bridge.components, c)
+end
+function day24()
 	part = [0, 0]
-
-    numbers  = [parse.(Int, split(line, r"[\D\-]+", keepempty=false)) for line in readlines("$DIR/day20.txt")]
-    particles = [Particle20(V3(x, y, z), V3(vx, vy, vz), V3(ax, ay, az)) for (x,y,z,vx,vy,vz,ax,ay,az) in numbers]
-    ps = deepcopy(particles)
-    for t in 1:1000
-        for p in ps
-            p.v += p.a
-            p.p += p.v 
+        components  = [parse.(Int, split(line, r"[^\d\-]+", keepempty=false)) for line in readlines("$DIR/day24.txt")]
+        starts = map(Bridge24, filter(c -> c[1] == 0 || c[2] == 0, components))
+                
+        for start in starts
+            part[1], _ = add24!(start, components)
         end
-        _, idx = findmin(manhattan(p.p) for p in ps)
-        if part[1] != idx
-            part[1] = idx
-        end
-    end
-    part[1] -= 1 # one based to 0 based index
-
-    ps = deepcopy(particles)
-    collisions = Set{Int}()
-    for t in 1:1000000
-        for p in ps
-            p.v += p.a
-            p.p += p.v 
-        end
-        for i in firstindex(ps):lastindex(ps)-1
-            for j in i+1:lastindex(ps) 
-                if colliding(ps[i], ps[j])
-                    push!(collisions, i, j)
-                    @show collisions
-                end
-            end
-        end
-        keep = setdiff(1:length(ps), collisions)
-        empty!(collisions)
-        ps = ps[keep]
-#        println(length(ps))
-    end
-    part[2] = length(ps)
-
 
 	return part
 end
 
-#@btime day20()
+#@btime day24()
 
-@show day20() #  [37923, 263]
+@show day24() #  
