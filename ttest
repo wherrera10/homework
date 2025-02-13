@@ -2,49 +2,16 @@ using BenchmarkTools
 
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
 
-mutable struct Bridge24
-    components::Vector{Vector{Int}}
-    ordering: Vector{Int}
-    function Bridge24(s)
-        start = s[1] == 1 ? [s[1], s[2]] : s[2] == 1 ? [s[2], s[2]] : error("$s cannot be start")
-        return new([s], start)
-    end
-end
-function options(bridge, components)
-    ret = Vector{Vector{Int}}()
-    b = bridge[ordering[end]]
-    for c in components
-        if c \notin bridge.components && (c[1] == b || c[2] == b)
-            push!(ret, c)
-        end
-    end
-    return ret
-end
-function dfs24(current, components)
-    strengths = [(sum(current.ordering), current)]
-    for c in options(current, components)
-        push!(strengths, dfs24(add24!(deepcopy(current), c)))
-    end
-    return maximum(strengths)
-end 
-function add24!(bridge, c)
-    c1, c2 = c
-    v = c1 == bridge.ordering[end] ? [c1, c2] : c2 == bridge.ordering[end] ? [c2, c1] : error("Bad add: $c to $bridge")
-    append!(bridge.ordering, v)
-    push!(bridge.components, c)
-end
-function day24()
-	part = [0, 0]
-        components  = [parse.(Int, split(line, r"[^\d\-]+", keepempty=false)) for line in readlines("$DIR/day24.txt")]
-        starts = map(Bridge24, filter(c -> c[1] == 0 || c[2] == 0, components))
-                
-        for start in starts
-            part[1], _ = add24!(start, components)
-        end
 
-	return part
+function day25()
+
+    for line in readlines("$DIR/day25.txt")
+
+    end
+
+	return 0
 end
 
-#@btime day24()
+#@btime day25()
 
-@show day24() #  
+@show day25() # 
