@@ -78,7 +78,17 @@ function day25()
         if i == 1
             checkpoint = parse(Int, split(txt, r"\s+", keepempty=false)[end-1])
         else
-            
+            lines = split(txt, "\n")
+            if line[2][end-1] == '0'
+                w1 = line[3][end-1] == '1' ? 1 : 0
+                d1 = line[4][end-3:end-1] == "ght" ? 1 : line[4][end-3:end-1] == "eft" ? 0 : error("bad line in $txt")
+                n1 = Int(line[5][end-1]) - Int('A') + 1
+                w2 = line[7][end-1] == '1' ? 1 : 0
+                d1 = line[8][end-3:end-1] == "ght" ? 1 : line[8][end-3:end-1] == "eft" ? 0 : error("bad line in $txt")
+                n1 = Int(line[9][end-1]) - Int('A') + 1
+            end
+
+                
 
     end
 
