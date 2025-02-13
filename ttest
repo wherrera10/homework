@@ -1,22 +1,4 @@
-using BenchmarkTools
-
-const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
-
-
-function day25()
-
-    for line in readlines("$DIR/day25.txt")
-
-    end
-
-	return 0
-end
-
-#@btime day25()
-
-@show day25() # 
-
-
+"""
 Begin in state A.
 Perform a diagnostic checksum after 12173597 steps.
 
@@ -79,3 +61,30 @@ In state F:
     - Write the value 1.
     - Move one slot to the right.
     - Continue with state A.
+"""
+
+using BenchmarkTools
+
+const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
+
+using BenchmarkTools
+
+const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
+
+
+function day25()
+
+    for (i, txt) in enumerate(split(read("$DIR/day25.txt", String), "\n\n"))
+        if i == 1
+            checkpoint = parse(Int, split(txt, r"\s+", keepempty=false)[end-1])
+        else
+            
+
+    end
+
+	return 0
+end
+
+#@btime day25()
+
+@show day25() # 
