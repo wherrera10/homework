@@ -12,29 +12,24 @@ mutable struct Bridge24
 end
 function options(bridge, components)
     ret = Vector{Vector{Int}}()
-    b = bridge[ordering[end]
+    b = bridge[ordering[end]]
     for c in components
-        c in bridge.componets && continue
-        if c[1] == b || c[2] == b
+        if c \notin bridge.components && (c[1] == b || c[2] == b)
             push!(ret, c)
         end
     end
     return ret
 end
 function dfs24(current, components)
-    strengths = Tuple{Int, Bridge24}[]
+    strengths = [(sum(current.ordering), current)]
     for c in options(current, components)
         push!(strengths, dfs24(add24!(deepcopy(current), c)))
     end
-    if isempty(strengths)
-        return sum(current.ordering), current
-    else
-        n, i = findmax(t -> t[1], strengths)
-        return n, strengths[i]
-    end
+    return maximum(strengths)
 end 
 function add24!(bridge, c)
-    v = c[1] == bridge.ordering[end] ? [c[1], c[2]] : c[2] == bridge.ordering[end] ? [c[2], c[1]] : error("Bad add: $c to $bridge")
+    c1, c2 = c
+    v = c1 == bridge.ordering[end] ? [c1, c2] : c2 == bridge.ordering[end] ? [c2, c1] : error("Bad add: $c to $bridge")
     append!(bridge.ordering, v)
     push!(bridge.components, c)
 end
