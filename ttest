@@ -2,11 +2,6 @@ using BenchmarkTools
 
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
 
-using BenchmarkTools
-
-const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
-
-
 function day25()
     code = Vector{Int}[]
     for (i, txt) in enumerate(split(read("$DIR/day25.txt", String), "\n\n"))
@@ -29,7 +24,6 @@ function day25()
     tape = zeros(Bool, 2_000_000)
     position = 1_000_000
     state = 1
-
     for step in 1:checkpoint
         if tape[position]
             tape[position] = code[state][1]
@@ -42,11 +36,6 @@ function day25()
         end
     end
     return count(tape)
-end
-
-
-
-	return 0
 end
 
 #@btime day25()
