@@ -21,16 +21,28 @@ function day25()
                 w2 = line[7][end-1] == '1' ? 1 : 0
                 d1 = line[8][end-3:end-1] == "ght" ? 1 : line[8][end-3:end-1] == "eft" ? 0 : error("bad line in $txt")
                 n1 = Int(line[9][end-1]) - Int('A') + 1
-         end
-         push!(code, [w1, d1, n1, w2, d2, n2])
+            end
+        end
+        push!(code, [w1, d1, n1, w2, d2, n2])
     end
 
     tape = zeros(Bool, 2_000_000)
-    position = 1_000_001
+    position = 1_000_000
+    state = 1
 
     for step in 1:checkpoint
-
+        if tape[position]
+            tape[position] = code[state][1]
+            position += code[state][2] ? 1 : -1
+            state = code[state][3]
+        else
+            tape[position] = code[state][4]
+            position += code[state][5] ? 1 : -1
+            state = code[state][6]
+        end
     end
+    return count(tape)
+end
 
 
 
