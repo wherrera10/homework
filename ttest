@@ -1,43 +1,51 @@
 using BenchmarkTools
 
+using Primes
+
 const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
 
-function day25()
+const C23, D23 = 9_999_999_999, 10_000_000_000
+jnz23(x, y, r, ip) = (ip[begin] += (0 < abs(x) < C23 || r[x÷D23] != 0) ? (y < C23 ? y : r[y÷D23]) : 1)
+mul23(x, y, r, ip) = (r[x > C23 ? x ÷ D23 : x] *= (y > C23) ? r[y÷D23] : y; ip[begin] += 1)
+set23(x, y, r, ip) = (r[x > C23 ? x ÷ D23 : x] = (y > C23) ? r[y÷D23] : y; ip[begin] += 1)
+sub23(x, y, r, ip) = (r[x > C23 ? x ÷ D23 : x] -= (y > C23) ? r[y÷D23] : y; ip[begin] += 1)
+function day23()
+    part = [0, 0]
+    ip = [1]
+    r = [0, 0, 0, 0, 0, 0, 0, 0]
+    functions = [jnz23, mul23, set23, sub23]
+    registers = collect("abcdefgh")
+    cmds = ["jnz", "mul", "set", "sub"]
     code = Vector{Int}[]
-    for (i, txt) in enumerate(split(read("$DIR/day25.txt", String), "\n\n"))
-        if i == 1
-            checkpoint = parse(Int, split(txt, r"\s+", keepempty=false)[end-1])
-        else
-            lines = split(txt, "\n")
-            if line[2][end-1] == '0'
-                w1 = line[3][end-1] == '1' ? 1 : 0
-                d1 = line[4][end-3:end-1] == "ght" ? 1 : line[4][end-3:end-1] == "eft" ? 0 : error("bad line in $txt")
-                n1 = Int(line[5][end-1]) - Int('A') + 1
-                w2 = line[7][end-1] == '1' ? 1 : 0
-                d1 = line[8][end-3:end-1] == "ght" ? 1 : line[8][end-3:end-1] == "eft" ? 0 : error("bad line in $txt")
-                n1 = Int(line[9][end-1]) - Int('A') + 1
-            end
+    for entry in readlines("$DIR/day23.txt")
+        words = split(entry, r"\s+")
+        cmd = findfirst(==(words[1]), cmds)
+        r1 = words[2][1] ∈ registers ?
+             D23 * findfirst(i -> i == words[2][1], registers) : parse(Int, words[2])
+        r2 = words[3][1] ∈ registers ?
+             D23 * findfirst(i -> i == words[3][1], registers) : parse(Int, words[3])
+        push!(code, [cmd, r1, r2])
+    end
+    ip_end = length(code)
+    while 0 < ip[begin] <= ip_end
+        f, x, y = code[ip[begin]]
+        functions[f](x, y, r, ip)
+        if f == 2
+            part[1] += 1
         end
-        push!(code, [w1, d1, n1, w2, d2, n2])
     end
 
-    tape = zeros(Bool, 2_000_000)
-    position = 1_000_000
-    state = 1
-    for step in 1:checkpoint
-        if tape[position]
-            tape[position] = code[state][1]
-            position += code[state][2] ? 1 : -1
-            state = code[state][3]
-        else
-            tape[position] = code[state][4]
-            position += code[state][5] ? 1 : -1
-            state = code[state][6]
+    b = 100 * 81 + 100000
+    c = b + 17000
+    for d in b:17:c
+        if !isprime(d)
+            part[2] += 1
         end
     end
-    return count(tape)
+
+    return part
 end
 
-#@btime day25()
+@btime day23()
 
-@show day25() # 
+@show day23() # [6241, 909]
