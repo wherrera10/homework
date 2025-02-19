@@ -1,51 +1,93 @@
 using BenchmarkTools
 
-using Primes
+using Graphs
 
-const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2017"
+const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2018"
 
-const C23, D23 = 9_999_999_999, 10_000_000_000
-jnz23(x, y, r, ip) = (ip[begin] += (0 < abs(x) < C23 || r[x÷D23] != 0) ? (y < C23 ? y : r[y÷D23]) : 1)
-mul23(x, y, r, ip) = (r[x > C23 ? x ÷ D23 : x] *= (y > C23) ? r[y÷D23] : y; ip[begin] += 1)
-set23(x, y, r, ip) = (r[x > C23 ? x ÷ D23 : x] = (y > C23) ? r[y÷D23] : y; ip[begin] += 1)
-sub23(x, y, r, ip) = (r[x > C23 ? x ÷ D23 : x] -= (y > C23) ? r[y÷D23] : y; ip[begin] += 1)
-function day23()
-    part = [0, 0]
-    ip = [1]
-    r = [0, 0, 0, 0, 0, 0, 0, 0]
-    functions = [jnz23, mul23, set23, sub23]
-    registers = collect("abcdefgh")
-    cmds = ["jnz", "mul", "set", "sub"]
-    code = Vector{Int}[]
-    for entry in readlines("$DIR/day23.txt")
-        words = split(entry, r"\s+")
-        cmd = findfirst(==(words[1]), cmds)
-        r1 = words[2][1] ∈ registers ?
-             D23 * findfirst(i -> i == words[2][1], registers) : parse(Int, words[2])
-        r2 = words[3][1] ∈ registers ?
-             D23 * findfirst(i -> i == words[3][1], registers) : parse(Int, words[3])
-        push!(code, [cmd, r1, r2])
-    end
-    ip_end = length(code)
-    while 0 < ip[begin] <= ip_end
-        f, x, y = code[ip[begin]]
-        functions[f](x, y, r, ip)
-        if f == 2
-            part[1] += 1
+mutable struct Unit15
+    x::Int
+    y::Int
+    hp::Int
+    attack::Int
+    is_elf::Bool
+end
+lt15(a, b) = a.x == b.x ? a.y < b.y : a.x < b.x
+function day15()
+	part = [0, 0]
+    directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+
+    grid = stack([collect(line) for line in readlines("$DIR/day15.txt")], dims = 1)
+    nv = count(c -> grid[c] != '#', CartesianIndices(grid))
+    g = SimpleGraph(nv)
+    rows, cols = size(grid)
+
+    units = Unit15[]
+    tiles = Vector{Int}[]
+    for x in 1:rows
+        for y in 1:cols
+            grid[x, y] == '#' && continue
+            if grid[x, y] == 'E'
+                push!(units, Unit15(x, y, 200, 3, true))
+            elseif grid[x, y] == 'G'
+                push!(units, Unit15(x, y, 200, 3, false))
+            end
+            c = [x, y]
+            i = findfirst(==(c), tiles)
+            if isnothing(i)
+                push!(tiles, c)
+                v1 = length(tiles)
+            else
+                v1 = i
+            end
+            for d in directions
+                x2, y2 = x + d[1], y + d[2]
+                c = [x2, y2]
+                i = findfirst(==(c), tiles)
+                if isnothing(i)
+                    push!(tiles, c)
+                    v2 = length(tiles)
+                else
+                    v2 = i
+                end
+                if !has_edge(g, v1, v2)
+                    add_edge!(g, v1, v2)
+                    add_edge!(g, v2, v1)
+                end
+            end
         end
     end
+    fw = floyd_warshall_shortest_paths(g)
+    for rnd in 1:typemax(Int32)
+        game_over = false
+        sort!(units, lt = lt15)
+        for u in units
+            u.hp <= 0 && continue
+            targets = filter(ut -> ut.hp > 0 && ut.is_elf != u.is_elf, units)
+            if isempty(targets)
+                game_over = true
+                break
+            end
+            adj = [[u.x + d[1], u.y + d[2]] for d in directions]
+            ta = filter([t.x, t.y] ∈ adj, targets)
+            if !isempty(ta)
+                sort!(ta, lt = (a, b) -> a.hp == b.hp ? (a.x == b.x ? a.y < b.y : a.x < b.x) : a.hp < b.hp)
+                ta[begin].hp -= u.attack
+                continue
+            end
+            t_adj = Vector{Int}[]
+            for t in targets
+                append!(t_adj, [[t.x + d[1], t.y + d[2]] for d in directions if grid[t.x + d[1], t.y +d[2]] ∉ ['#', 'E', 'G']])
+            end
+            # find all shortest paths from u to each in t_adj
+            for t in t_adj
+                paths = collect(enumerate_paths(fw, u, t))
 
-    b = 100 * 81 + 100000
-    c = b + 17000
-    for d in b:17:c
-        if !isprime(d)
-            part[2] += 1
-        end
-    end
+            
+                
 
-    return part
+	return part
 end
 
-@btime day23()
+#@btime day15()
 
-@show day23() # [6241, 909]
+@show day15() # 
