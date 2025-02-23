@@ -1,93 +1,105 @@
-using BenchmarkTools
+using Base.Iterators: product
 
-using Graphs
+# Define an edge case for the grid
+const WALL = '#'
+const SPACE = ' '
 
-const DIR = "C:/Users/wherr/OneDrive/Documents/Julia Programs/aoc_2018"
-
-mutable struct Unit15
-    x::Int
-    y::Int
-    hp::Int
-    attack::Int
-    is_elf::Bool
-end
-lt15(a, b) = a.x == b.x ? a.y < b.y : a.x < b.x
-function day15()
-	part = [0, 0]
-    directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
-
-    grid = stack([collect(line) for line in readlines("$DIR/day15.txt")], dims = 1)
-    nv = count(c -> grid[c] != '#', CartesianIndices(grid))
-    g = SimpleGraph(nv)
-    rows, cols = size(grid)
-
-    units = Unit15[]
-    tiles = Vector{Int}[]
-    for x in 1:rows
-        for y in 1:cols
-            grid[x, y] == '#' && continue
-            if grid[x, y] == 'E'
-                push!(units, Unit15(x, y, 200, 3, true))
-            elseif grid[x, y] == 'G'
-                push!(units, Unit15(x, y, 200, 3, false))
-            end
-            c = [x, y]
-            i = findfirst(==(c), tiles)
-            if isnothing(i)
-                push!(tiles, c)
-                v1 = length(tiles)
-            else
-                v1 = i
-            end
-            for d in directions
-                x2, y2 = x + d[1], y + d[2]
-                c = [x2, y2]
-                i = findfirst(==(c), tiles)
-                if isnothing(i)
-                    push!(tiles, c)
-                    v2 = length(tiles)
-                else
-                    v2 = i
-                end
-                if !has_edge(g, v1, v2)
-                    add_edge!(g, v1, v2)
-                    add_edge!(g, v2, v1)
-                end
+# Function to get the neighbors of a given cell
+function get_neighbors(pos, grid)
+    neighbors = []
+    directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Right, Down, Left, Up
+    
+    for (dx, dy) in directions
+        new_x = pos[1] + dx
+        new_y = pos[2] + dy
+        
+        # Check boundaries and whether the cell is an empty space
+        if new_x >= 1 && new_x <= size(grid, 1) && new_y >= 1 && new_y <= size(grid, 2)
+            if grid[new_x, new_y] == SPACE
+                push!(neighbors, (new_x, new_y))
             end
         end
     end
-    fw = floyd_warshall_shortest_paths(g)
-    for rnd in 1:typemax(Int32)
-        game_over = false
-        sort!(units, lt = lt15)
-        for u in units
-            u.hp <= 0 && continue
-            targets = filter(ut -> ut.hp > 0 && ut.is_elf != u.is_elf, units)
-            if isempty(targets)
-                game_over = true
-                break
-            end
-            adj = [[u.x + d[1], u.y + d[2]] for d in directions]
-            ta = filter([t.x, t.y] ∈ adj, targets)
-            if !isempty(ta)
-                sort!(ta, lt = (a, b) -> a.hp == b.hp ? (a.x == b.x ? a.y < b.y : a.x < b.x) : a.hp < b.hp)
-                ta[begin].hp -= u.attack
-                continue
-            end
-            t_adj = Vector{Int}[]
-            for t in targets
-                append!(t_adj, [[t.x + d[1], t.y + d[2]] for d in directions if grid[t.x + d[1], t.y +d[2]] ∉ ['#', 'E', 'G']])
-            end
-            # find all shortest paths from u to each in t_adj
-            for t in t_adj
-                paths = collect(enumerate_paths(fw, u, t))
-
-            
-                
-
-	return part
+    return neighbors
 end
 
-#@btime day15()
+# Dijkstra's Algorithm function
+function dijkstra(grid, start, goal)
+    rows, cols = size(grid)
+    distances = Dict{Tuple{Int, Int}, Int}()
+    previous = Dict{Tuple{Int, Int}, Union{Tuple{Int, Int}, Nothing}}()
+    unvisited = Set{Tuple{Int, Int}}()
+    
+    # Initialize distances and unvisited set
+    for (x, y) in product(1:rows, 1:cols)
+        if grid[x, y] == SPACE
+            distances[(x, y)] = typemax(Int)  # Infinity
+            push!(unvisited, (x, y))
+        end
+    end
+    distances[start] = 0
+    
+    while !isempty(unvisited)
+        # Get the closest unvisited node
+        current = argmin([distances[key] for key in unvisited])
+        current_pos = unvisited[current]
+        
+        # If we reach the goal, reconstruct the path
+        if current_pos == goal
+            path = []
+            while current_pos !== nothing
+                push!(path, current_pos)
+                current_pos = previous[current_pos]
+            end
+            return reverse(path)
+        end
+        
+        # Remove the current node from unvisited
+        delete!(unvisited, current_pos)
+        
+        for neighbor in get_neighbors(current_pos, grid)
+            alt = distances[current_pos] + 1  # Each edge has weight of 1
+            if alt < distances[neighbor]
+                distances[neighbor] = alt
+                previous[neighbor] = current_pos
+            end
+        end
+    end
+    
+    return []  # Return an empty array if no path is found
+end
 
-@show day15() # 
+# Example grid
+grid = [
+    '#', '#', '#', '#', '#', '#', '#',
+    '#', ' ', ' ', '#', ' ', ' ', '#',
+    '#', ' ', '#', '#', ' ', '#', '#',
+    '#', ' ', ' ', ' ', ' ', ' ', '#',
+    '#', '#', '#', '#', '#', '#', '#'
+]
+
+# Convert the grid to a matrix
+grid_matrix = reshape(grid, 7, 5)
+
+# Define start and goal positions
+start = (2, 2)  # Starting at (2,2)
+goal = (4, 5)   # Goal at (4,5)
+
+# Execute Dijkstra's algorithm
+path = dijkstra(grid_matrix, start, goal)
+
+# Print the results
+println("Shortest path from $start to $goal:")
+println(path)
+
+# Optional: Visualize the path on the grid
+for pos in path
+    if pos != start && pos != goal
+        grid_matrix[pos...] = '*'
+    end
+end
+
+println("\nGrid with path:")
+for row in eachrow(grid_matrix)
+    println(join(row))
+end
