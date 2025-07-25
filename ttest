@@ -1,321 +1,436 @@
-using Gtk4
-using Cairo
-using Colors
-using Random
+use gtk4::prelude::*;
+use gtk4::{glib, Application, ApplicationWindow, DrawingArea, GestureClick};
+use cairo::{Context, FontSlant, FontWeight};
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
+use rand::Rng;
 
-# Constants
-const WINDOW_WIDTH = 800
-const WINDOW_HEIGHT = 700
-const CD_DARKER_GREY = RGB(56/255, 56/255, 56/255)
-const CD_LIGHTER_ORANGE = RGB(255/255, 165/255, 0/255)
-const CD_PALE_BLUE = RGB(152/255, 197/255, 218/255)
-const CD_MEDIUM_BLUE = RGB(117/255, 158/255, 180/255)
+// Constants for sizing and colors
+const WINDOW_WIDTH: i32 = 800;
+const WINDOW_HEIGHT: i32 = 700;
+const CD_DARKER_GREY: (f64, f64, f64) = (56.0/255.0, 56.0/255.0, 56.0/255.0);
+const CD_LIGHTER_ORANGE: (f64, f64, f64) = (255.0/255.0, 165.0/255.0, 0.0/255.0);
+const CD_PALE_BLUE: (f64, f64, f64) = (152.0/255.0, 197.0/255.0, 218.0/255.0);
+const CD_MEDIUM_BLUE: (f64, f64, f64) = (117.0/255.0, 158.0/255.0, 180.0/255.0);
 
-""" Elevator Button """
-mutable struct Button
-    x::Float64
-    y::Float64
-    text::String
-    radius::Float64
-    Button() = new(0.0, 0.0, "", 0.0)
-    Button(x::Real, y::Real, txt::String, r::Real) = new(Float64(x), Float64(y), txt, Float64(r))
-end
+// Button structure for the elevator controls
+#[derive(Clone)]
+struct Button {
+    x: f64,
+    y: f64,
+    text: String,
+    radius: f64,
+}
+// Button initialization
+impl Button {
+    fn new(x: f64, y: f64, text: &str, radius: f64) -> Self {
+        Self {
+            x,
+            y,
+            text: text.to_string(),
+            radius,
+        }
+    }
+}
 
-""" Panel struct """
-mutable struct Panel
-    x::Float64
-    y::Float64
-    width::Float64
-    height::Float64
-    Panel() = new(0.0, 0.0, 0.0, 0.0)
-    Panel(x::Real, y::Real, w::Real, h::Real) = new(Float64(x), Float64(y), Float64(w), Float64(h))
-end
+// Panel structure for the elevator controls
+#[derive(Clone)]
+struct Panel {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+}
+// Panel initialization
+impl Panel {
+    fn new(x: f64, y: f64, width: f64, height: f64) -> Self {
+        Self { x, y, width, height }
+    }
+}
 
-""" State variables """
-mutable struct ElevatorState
-    curFloor::Int
-    waitSign::Int
-    doorOpen::Bool
-    actionCount::Int
-    actions::Vector{String}
-    drawing_function::Function
-    ElevatorState() = new(0, 0, false, 0, fill("", 100), () -> nothing)
-end
+// Elevator state structure
+#[derive(Clone)]
+struct ElevatorState {
+    cur_floor: i32,
+    wait_sign: i32,
+    door_open: bool,
+    action_count: usize,
+    actions: Vec<String>,
+}
 
-# Global elevator state
-const elevator_state = ElevatorState()
+// Elevator state initialization and management
+impl ElevatorState {
+    fn new() -> Self {
+        Self {
+            cur_floor: 0,
+            wait_sign: 0,
+            door_open: false,
+            action_count: 0,
+            actions: vec![String::new(); 100],
+        }
+    }
 
-# Initialize panels and buttons (same coordinates as original)
-const panels = [
-    Panel(195, 30, 45, 12),     # indicator
-    Panel(380, 150, 50, 90),    # up/down
-    Panel(380, 465, 100, 210),  # main
-    Panel(625, 330, 75, 25),    # restart
-    Panel(625, 530, 75, 25),     # exit
-]
+    fn new_game(&mut self) {
+        let mut rng = rand::thread_rng();
+        self.cur_floor = rng.gen_range(0..=6);
+        self.wait_sign = rng.gen_range(0..=6);
+        self.door_open = rng.gen_bool(0.5);
+        self.action_count = 0;
+        self.actions.fill(String::new());
+    }
+}
 
-const buttons = [
-    Button(380, 110, "^", 30),
-    Button(380, 190, "v", 30),
-    Button(335, 305, "5", 30),
-    Button(420, 305, "6", 30),
-    Button(335, 385, "3", 30),
-    Button(420, 385, "4", 30),
-    Button(335, 465, "1", 30),
-    Button(420, 465, "2", 30),
-    Button(380, 540, "GF", 30),
-    Button(380, 630, "><", 30),
-]
+// Set Cairo color translating RGB (all floating, 0 to 1) to r, g, b
+fn set_cairo_color(ctx: &Context, color: (f64, f64, f64)) {
+    ctx.set_source_rgb(color.0, color.1, color.2);
+}
 
-""" Reset the game state by randomizing the current floor, wait sign, and door status. """
-function newGame!()
-    elevator_state.curFloor = rand(0:6)
-    elevator_state.waitSign = rand(0:6)
-    elevator_state.doorOpen = rand(Bool)
-    elevator_state.actionCount = 0
-    fill!(elevator_state.actions, "")
-end
+// Draw a rectangle at (x, y) with given width and height
+fn draw_rectangle(ctx: &Context, x: f64, y: f64, width: f64, height: f64, 
+                 fill_color: (f64, f64, f64), stroke_color: Option<(f64, f64, f64)>) {
+    ctx.rectangle(x - width, y - height, width * 2.0, height * 2.0);
+    set_cairo_color(ctx, fill_color);
+    ctx.fill_preserve().unwrap();
+    
+    if let Some(stroke) = stroke_color {
+        set_cairo_color(ctx, stroke);
+        ctx.set_line_width(1.0);
+    }
+    ctx.stroke().unwrap();
+}
 
-""" Helper function to set Cairo context color from Colors.jl RGB type. """
-function set_cairo_color(ctx, color::RGB)
-    set_source_rgb(ctx, color.r, color.g, color.b)
-end
+// Draw a diamond shape at (x, y) with given width and height
+fn draw_diamond(ctx: &Context, x: f64, y: f64, width: f64, height: f64,
+               fill_color: (f64, f64, f64), stroke_color: Option<(f64, f64, f64)>) {
+    ctx.move_to(x, y - height / 2.0);
+    ctx.line_to(x - width / 2.0, y);
+    ctx.line_to(x, y + height / 2.0);
+    ctx.line_to(x + width / 2.0, y);
+    ctx.close_path();
+    
+    set_cairo_color(ctx, fill_color);
+    ctx.fill_preserve().unwrap();
+    
+    if let Some(stroke) = stroke_color {
+        set_cairo_color(ctx, stroke);
+        ctx.set_line_width(1.0);
+    }
+    ctx.stroke().unwrap();
+}
 
-""" Helper function to draw a filled rectangle with optional stroke. """
-function draw_rectangle(ctx, x, y, width, height, fill_color, stroke_color = nothing)
-    rectangle(ctx, x - width, y - height, width * 2, height * 2)
-    set_cairo_color(ctx, fill_color)
-    fill_preserve(ctx)
-    if stroke_color !== nothing
-        set_cairo_color(ctx, stroke_color)
-        set_line_width(ctx, 1.0)
-    end
-    stroke(ctx)
-end
+// Draw a circle at (x, y) with given radius
+fn draw_circle(ctx: &Context, x: f64, y: f64, radius: f64,
+              fill_color: (f64, f64, f64), stroke_color: Option<(f64, f64, f64)>) {
+    ctx.arc(x, y, radius, 0.0, 2.0 * std::f64::consts::PI);
+    set_cairo_color(ctx, fill_color);
+    ctx.fill_preserve().unwrap();
+    
+    if let Some(stroke) = stroke_color {
+        set_cairo_color(ctx, stroke);
+        ctx.set_line_width(1.0);
+    }
+    ctx.stroke().unwrap();
+}
 
-""" Helper function to draw a filled diamond with optional stroke. """
-function draw_diamond(ctx, x, y, width, height, fill_color, stroke_color = nothing)
-    move_to(ctx, x, y - height / 2)
-    line_to(ctx, x - width / 2, y)
-    line_to(ctx, x, y + height / 2)
-    line_to(ctx, x + width / 2, y)
-    close_path(ctx)
-    set_cairo_color(ctx, fill_color)
-    fill_preserve(ctx)
-    if stroke_color !== nothing
-        set_cairo_color(ctx, stroke_color)
-        set_line_width(ctx, 1.0)
-    end
-    stroke(ctx)
-end
+// Draw text centered at (x, y)
+fn draw_text(ctx: &Context, text: &str, x: f64, y: f64, color: (f64, f64, f64), font_size: f64) {
+    set_cairo_color(ctx, color);
+    ctx.select_font_face("Arial", FontSlant::Normal, FontWeight::Bold);
+    ctx.set_font_size(font_size);
+    
+    let text_extents = ctx.text_extents(text).unwrap();
+    ctx.move_to(x - text_extents.width() / 2.0, y - text_extents.height() / 2.0);
+    ctx.show_text(text).unwrap();
+}
 
-""" Helper function to draw a filled circle with optional stroke. """
-function draw_circle(ctx, x, y, radius, fill_color, stroke_color = nothing)
-    arc(ctx, x, y, radius, 0, 2π)
-    set_cairo_color(ctx, fill_color)
-    fill_preserve(ctx)
+// Draw the elevator and its controls
+fn draw_elevator_scene(ctx: &Context, state: &ElevatorState, panels: &[Panel], buttons: &[Button]) {
+    // Set background
+    set_cairo_color(ctx, CD_DARKER_GREY);
+    ctx.paint().unwrap();
 
-    if stroke_color !== nothing
-        set_cairo_color(ctx, stroke_color)
-        set_line_width(ctx, 1.0)
-    end
-    stroke(ctx)
-end
-
-""" Helper function to draw text centered at given position. """
-function draw_text(ctx, text, x, y, color, font_size = 24)
-    set_cairo_color(ctx, color)
-    select_font_face(ctx, "Arial", 0, 1)
-    set_font_size(ctx, font_size)
-    _, _, extents_width, extents_height = text_extents(ctx, text)
-    move_to(ctx, x - extents_width / 2, y - extents_height / 2)
-    show_text(ctx, text)
-end
-
-""" Main drawing function that renders the entire elevator scene. """
-function draw_elevator_scene(ctx)
-    # Set background
-    set_cairo_color(ctx, CD_DARKER_GREY)
-    paint(ctx)
-
-    # Draw panels
-    for panel in panels
+    // Draw panels
+    for panel in panels {
         draw_rectangle(ctx, panel.x, panel.y, panel.width, panel.height,
-            CD_LIGHTER_ORANGE, RGB(0, 0, 0))
-    end
+                      CD_LIGHTER_ORANGE, Some((0.0, 0.0, 0.0)));
+    }
 
-    # Draw panel labels
-    draw_text(ctx, "Restart", panels[4].x, panels[4].y + 12, RGB(0, 0, 0), 16)
-    draw_text(ctx, "Exit", panels[5].x, panels[5].y + 12, RGB(0, 0, 0), 16)
+    // Draw panel labels
+    draw_text(ctx, "Restart", panels[3].x, panels[3].y + 12.0, (0.0, 0.0, 0.0), 16.0);
+    draw_text(ctx, "Exit", panels[4].x, panels[4].y + 12.0, (0.0, 0.0, 0.0), 16.0);
 
-    # Floor indicator
-    floor_text = elevator_state.curFloor == 0 ? "GF" : string(elevator_state.curFloor)
-    draw_text(ctx, floor_text, panels[1].x, panels[1].y + 11, RGB(0, 0, 0), 16)
+    // Floor indicator
+    let floor_text = if state.cur_floor == 0 { "GF".to_string() } else { state.cur_floor.to_string() };
+    draw_text(ctx, &floor_text, panels[0].x, panels[0].y + 11.0, (0.0, 0.0, 0.0), 16.0);
 
-    # Draw elevator shaft and floors
-    for i ∈ 6:-1:0
-        floorY = 50 + (6 - i) * 90
+    // Draw elevator shaft and floors
+    for i in (0..=6).rev() {
+        let floor_y = 50.0 + (6 - i) as f64 * 90.0;
 
-        # Draw floor background
-        draw_rectangle(ctx, 195, floorY + 40, 40, 40, RGB(1, 1, 1), RGB(0.5, 0.5, 0.5))
+        // Draw floor background
+        draw_rectangle(ctx, 195.0, floor_y + 40.0, 40.0, 40.0, 
+                      (1.0, 1.0, 1.0), Some((0.5, 0.5, 0.5)));
 
-        # Draw floor number
-        floor_num = i == 0 ? "GF" : string(i)
-        draw_text(ctx, floor_num, 130, floorY + 35, RGB(1, 1, 1), 16)
-    end
+        // Draw floor number
+        let floor_num = if i == 0 { "GF".to_string() } else { i.to_string() };
+        draw_text(ctx, &floor_num, 130.0, floor_y + 35.0, (1.0, 1.0, 1.0), 16.0);
+    }
 
-    # Elevator car position
-    elevator_y = 50 + (6 - elevator_state.curFloor) * 90 + 40
+    // Elevator car position
+    let elevator_y = 50.0 + (6 - state.cur_floor) as f64 * 90.0 + 40.0;
 
-    # Draw elevator car
-    draw_rectangle(ctx, 195, elevator_y, 35, 35, CD_MEDIUM_BLUE)
+    // Draw elevator car
+    draw_rectangle(ctx, 195.0, elevator_y, 35.0, 35.0, CD_MEDIUM_BLUE, None);
 
-    # Draw doors
-    door_color = elevator_state.doorOpen ? CD_PALE_BLUE : CD_MEDIUM_BLUE
-    draw_rectangle(ctx, 175, elevator_y, 10, 35, door_color)
-    draw_rectangle(ctx, 215, elevator_y, 10, 35, door_color)
+    // Draw doors
+    let door_color = if state.door_open { CD_PALE_BLUE } else { CD_MEDIUM_BLUE };
+    draw_rectangle(ctx, 175.0, elevator_y, 10.0, 35.0, door_color, None);
+    draw_rectangle(ctx, 215.0, elevator_y, 10.0, 35.0, door_color, None);
 
-    # Draw wait sign
-    if elevator_state.waitSign >= 0
-        wait_y = 50 + (6 - elevator_state.waitSign) * 90 + 40
-        draw_diamond(ctx, 193, wait_y, 75, 75, RGB(1, 1, 0), RGB(0, 0, 0))
-        set_line_width(ctx, 2.0)
-        draw_text(ctx, "WAIT", 194, wait_y + 14, RGB(0, 0, 0), 16)
-        stroke(ctx)
-    end
+    // Draw wait sign
+    if state.wait_sign >= 0 {
+        let wait_y = 50.0 + (6 - state.wait_sign) as f64 * 90.0 + 40.0;
+        draw_diamond(ctx, 193.0, wait_y, 75.0, 75.0, (1.0, 1.0, 0.0), Some((0.0, 0.0, 0.0)));
+        ctx.set_line_width(2.0);
+        draw_text(ctx, "WAIT", 194.0, wait_y + 14.0, (0.0, 0.0, 0.0), 16.0);
+        ctx.stroke().unwrap();
+    }
 
-    # Draw buttons
-    for button in buttons
+    // Draw buttons
+    for button in buttons {
         draw_circle(ctx, button.x, button.y, button.radius,
-            RGB(0.75, 0.75, 0.75), RGB(0, 0, 0))
-        stroke(ctx)
-        draw_text(ctx, button.text, button.x - 2, button.y + (length(button.text) > 1 ? 25 : 35), RGB(0, 0, 0), length(button.text) > 1 ? 35 : 50)
-        stroke(ctx)
-    end
-end
+                   (0.75, 0.75, 0.75), Some((0.0, 0.0, 0.0)));
+        ctx.stroke().unwrap();
+        
+        let font_size = if button.text.len() > 1 { 35.0 } else { 50.0 };
+        let y_offset = if button.text.len() > 1 { 25.0 } else { 35.0 };
+        draw_text(ctx, &button.text, button.x - 2.0, button.y + y_offset, (0.0, 0.0, 0.0), font_size);
+        ctx.stroke().unwrap();
+    }
+}
 
-""" Processes actions from the global actions queue and updates elevator state. """
-function processActions!()
-    if elevator_state.actionCount > 0
-        action = elevator_state.actions[1]
-        elevator_state.actions[1:(end-1)] = elevator_state.actions[2:end]
-        elevator_state.actions[end] = ""
-        elevator_state.actionCount -= 1
+// Process elevator actions
+fn process_actions(state: Arc<Mutex<ElevatorState>>, drawing_area: &DrawingArea) {
+    let state_clone = Arc::clone(&state);
+    let drawing_area_weak = drawing_area.downgrade();
+    
+    thread::spawn(move || {
+        loop {
+            let action = {
+                let mut state_guard = state_clone.lock().unwrap();
+                if state_guard.action_count > 0 {
+                    let action = state_guard.actions[0].clone();
+                    state_guard.actions.rotate_left(1);
+                    state_guard.actions[state_guard.action_count - 1] = String::new();
+                    state_guard.action_count -= 1;
+                    Some(action)
+                } else {
+                    None
+                }
+            };
+            
+            if let Some(action) = action {
+                let mut state_guard = state_clone.lock().unwrap();
+                
+                match action.as_str() {
+                    "GF" => {
+                        if state_guard.cur_floor > 0 {
+                            state_guard.cur_floor -= 1;
+                            state_guard.door_open = false;
+                        } else {
+                            state_guard.door_open = true;
+                        }
+                    }
+                    "1" | "2" | "3" | "4" | "5" | "6" => {
+                        if let Ok(target_floor) = action.parse::<i32>() {
+                            // Simulate movement floor by floor
+                            while state_guard.cur_floor != target_floor {
+                                if state_guard.cur_floor < target_floor {
+                                    state_guard.cur_floor += 1;
+                                } else {
+                                    state_guard.cur_floor -= 1;
+                                }
+                                state_guard.door_open = false;
+                                
+                                // Trigger redraw
+                                if let Some(drawing_area) = drawing_area_weak.upgrade() {
+                                    glib::idle_add_local_once(move || {
+                                        drawing_area.queue_draw();
+                                    });
+                                }
+                                
+                                drop(state_guard);
+                                thread::sleep(Duration::from_millis(500));
+                                state_guard = state_clone.lock().unwrap();
+                                
+                                // Check for wait sign
+                                if state_guard.cur_floor == state_guard.wait_sign {
+                                    state_guard.wait_sign = -1;
+                                    state_guard.door_open = true;
+                                    
+                                    if let Some(drawing_area) = drawing_area_weak.upgrade() {
+                                        glib::idle_add_local_once(move || {
+                                            drawing_area.queue_draw();
+                                        });
+                                    }
+                                    
+                                    drop(state_guard);
+                                    thread::sleep(Duration::from_millis(1500));
+                                    state_guard = state_clone.lock().unwrap();
+                                    
+                                    state_guard.door_open = false;
+                                    
+                                    if let Some(drawing_area) = drawing_area_weak.upgrade() {
+                                        glib::idle_add_local_once(move || {
+                                            drawing_area.queue_draw();
+                                        });
+                                    }
+                                    
+                                    drop(state_guard);
+                                    thread::sleep(Duration::from_millis(500));
+                                    state_guard = state_clone.lock().unwrap();
+                                }
+                            }
+                            state_guard.door_open = true;
+                        }
+                    }
+                    "^" => {
+                        if state_guard.cur_floor < 6 {
+                            state_guard.cur_floor += 1;
+                            state_guard.door_open = false;
+                        }
+                    }
+                    "v" => {
+                        if state_guard.cur_floor > 0 {
+                            state_guard.cur_floor -= 1;
+                            state_guard.door_open = false;
+                        }
+                    }
+                    "><" => {
+                        state_guard.door_open = !state_guard.door_open;
+                        drop(state_guard);
+                        thread::sleep(Duration::from_secs(1));
+                        state_guard = state_clone.lock().unwrap();
+                    }
+                    _ => {}
+                }
+                
+                // Trigger redraw
+                if let Some(drawing_area) = drawing_area_weak.upgrade() {
+                    glib::idle_add_local_once(move || {
+                        drawing_area.queue_draw();
+                    });
+                }
+            }
+            
+            thread::sleep(Duration::from_millis(100));
+        }
+    });
+}
 
-        if action == "GF"
-            if elevator_state.curFloor > 0
-                elevator_state.curFloor -= 1
-                elevator_state.doorOpen = false
-            else
-                elevator_state.doorOpen = true
-            end
-        elseif action in ["1", "2", "3", "4", "5", "6"]
-            target_floor = parse(Int, action)
-            # Simulate movement floor by floor
-            while elevator_state.curFloor != target_floor
-                if elevator_state.curFloor < target_floor
-                    elevator_state.curFloor += 1
-                else
-                    elevator_state.curFloor -= 1
-                end
-                elevator_state.doorOpen = false
-                elevator_state.drawing_function()
-                sleep(0.5)
-                # Check for wait sign
-                if elevator_state.curFloor == elevator_state.waitSign
-                    elevator_state.waitSign = -1
-                    elevator_state.doorOpen = true
-                    elevator_state.drawing_function()
-                    sleep(1.5)
-                    elevator_state.doorOpen = false
-                    elevator_state.drawing_function()
-                    sleep(0.5)
-                end
-            end
-            elevator_state.doorOpen = true
-        elseif action == "^"
-            if elevator_state.curFloor < 6
-                elevator_state.curFloor += 1
-                elevator_state.doorOpen = false
-            end
-        elseif action == "v"
-            if elevator_state.curFloor > 0
-                elevator_state.curFloor -= 1
-                elevator_state.doorOpen = false
-            end
-        elseif action == "><"
-            elevator_state.doorOpen = !elevator_state.doorOpen
-            sleep(1)
-        end
-    end
-end
+// Check and process button and panel clicks
+fn handle_button_click(x: f64, y: f64, state: Arc<Mutex<ElevatorState>>, 
+                      buttons: &[Button], panels: &[Panel]) -> bool {
+    for button in buttons {
+        let dist_sq = (x - button.x).powi(2) + (y - button.y).powi(2);
+        if dist_sq <= button.radius.powi(2) {
+            let mut state_guard = state.lock().unwrap();
+            if state_guard.action_count < state_guard.actions.len() {
+                state_guard.actions[state_guard.action_count] = button.text.clone();
+                state_guard.action_count += 1;
+            }
+            return true;
+        }
+    }
+    if x >= panels[3].x - panels[3].width && x <= panels[3].x + panels[3].width &&
+       y >= panels[3].y - panels[3].height && y <= panels[3].y + panels[3].height {
+        let mut state_guard = state.lock().unwrap();
+        state_guard.new_game();
+        return true;
+    } else if x >= panels[4].x - panels[4].width && x <= panels[4].x + panels[4].width &&
+              y >= panels[4].y - panels[4].height && y <= panels[4].y + panels[4].height {
+        std::process::exit(0);
+    }
+    false
+}
 
-""" Handle mouse clicks on buttons and panels. """
-function handle_button_click(x, y)
-    # Check for button clicks
-    for button in buttons
-        dist_sq = (x - button.x)^2 + (y - button.y)^2
-        if dist_sq <= button.radius^2
-            elevator_state.actions[elevator_state.actionCount+1] = button.text
-            elevator_state.actionCount += 1
-            return true
-        end
-    end
+fn main() {
+    let app = Application::builder()
+        .application_id("com.example.elevator")
+        .build();
 
-    # Check for panel clicks (Restart/Exit)
-    if panels[4].x - panels[4].width <= x <= panels[4].x + panels[4].width &&
-       panels[4].y - panels[4].height <= y <= panels[4].y + panels[4].height
-        newGame!()
-        return true
-    elseif panels[5].x - panels[5].width <= x <= panels[5].x + panels[5].width &&
-       panels[5].y - panels[5].height <= y <= panels[5].y + panels[5].height
-        exit()
-    end
-    return false
-end
+    app.connect_activate(|app| {
+        let window = ApplicationWindow::builder()
+            .application(app)
+            .title("Elevator Simulation")
+            .default_width(WINDOW_WIDTH)
+            .default_height(WINDOW_HEIGHT)
+            .build();
 
+        let drawing_area = DrawingArea::new();
+        drawing_area.set_size_request(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-""" Set up and run Gtk4 window and canvas. """
-function main()
-    # Create application
-    app = GtkWindow("Elevator Simulation", WINDOW_WIDTH, WINDOW_HEIGHT)
-    canvas = GtkCanvas(WINDOW_WIDTH, WINDOW_HEIGHT)
-    app[] = canvas
-    @guarded draw(canvas) do widget
-        ctx = getgc(canvas)
-        draw_elevator_scene(ctx)
-    end
-    elevator_state.drawing_function = () -> draw(canvas)
+        let state = Arc::new(Mutex::new(ElevatorState::new()));
+        {
+            let mut state_guard = state.lock().unwrap();
+            state_guard.new_game();
+        }
 
-    # Set up mouse click handling
-    gesture = GtkGestureClick(canvas)
+        // Initialize panels and buttons
+        let panels = vec![
+            Panel::new(195.0, 30.0, 45.0, 12.0),     // indicator
+            Panel::new(380.0, 150.0, 50.0, 90.0),    // up/down
+            Panel::new(380.0, 465.0, 100.0, 210.0),  // main
+            Panel::new(625.0, 330.0, 75.0, 25.0),    // restart
+            Panel::new(625.0, 530.0, 75.0, 25.0),    // exit
+        ];
 
-    signal_connect(gesture, "pressed") do gesture, n_press, x, y
-        handle_button_click(x, y)
-    end
+        let buttons = vec![
+            Button::new(380.0, 110.0, "^", 30.0),
+            Button::new(380.0, 190.0, "v", 30.0),
+            Button::new(335.0, 305.0, "5", 30.0),
+            Button::new(420.0, 305.0, "6", 30.0),
+            Button::new(335.0, 385.0, "3", 30.0),
+            Button::new(420.0, 385.0, "4", 30.0),
+            Button::new(335.0, 465.0, "1", 30.0),
+            Button::new(420.0, 465.0, "2", 30.0),
+            Button::new(380.0, 540.0, "GF", 30.0),
+            Button::new(380.0, 630.0, "><", 30.0),
+        ];
 
-    # Set up key press handling
-    key_controller = GtkEventControllerKey()
-    signal_connect(key_controller, "key-pressed") do controller, keyval, keycode, state
-        if keyval == Gdk.KEY_Escape
-            close(window)
-            return true
-        end
-        return false
-    end
+        let state_clone = Arc::clone(&state);
+        let panels_clone = panels.clone();
+        let buttons_clone = buttons.clone();
+        
+        drawing_area.set_draw_func(move |_, ctx, _, _| {
+            let state_guard = state_clone.lock().unwrap();
+            draw_elevator_scene(ctx, &state_guard, &panels_clone, &buttons_clone);
+        });
 
-    running = true
-    signal_connect(app, "destroy") do widget
-        running = false
-    end
-    newGame!()
-    show(app)
-    while running
-        processActions!()
-        elevator_state.drawing_function()
-        sleep(0.1)
-    end
-end
+        // Set up mouse click handling
+        let gesture = GestureClick::new();
+        let state_click = Arc::clone(&state);
+        let panels_click = panels.clone();
+        let buttons_click = buttons.clone();
+        let drawing_area_click = drawing_area.clone();
+        
+        gesture.connect_pressed(move |_, _, x, y| {
+            if handle_button_click(x, y, Arc::clone(&state_click), &buttons_click, &panels_click) {
+                drawing_area_click.queue_draw();
+            }
+        });
+        
+        drawing_area.add_controller(gesture);
 
-# Run the application
-main()
+        // Start action processing thread
+        process_actions(Arc::clone(&state), &drawing_area);
+
+        window.set_child(Some(&drawing_area));
+        window.present();
+    });
+
+    app.run();
+}
