@@ -11,7 +11,7 @@ const CD_LIGHTER_ORANGE = RGB(255/255, 165/255, 0/255)
 const CD_PALE_BLUE = RGB(152/255, 197/255, 218/255)
 const CD_MEDIUM_BLUE = RGB(117/255, 158/255, 180/255)
 
-# Button struct
+""" Elevator Button """
 mutable struct Button
     x::Float64
     y::Float64
@@ -21,7 +21,7 @@ mutable struct Button
     Button(x::Real, y::Real, txt::String, r::Real) = new(Float64(x), Float64(y), txt, Float64(r))
 end
 
-# Panel struct
+""" Panel struct """
 mutable struct Panel
     x::Float64
     y::Float64
@@ -31,7 +31,7 @@ mutable struct Panel
     Panel(x::Real, y::Real, w::Real, h::Real) = new(Float64(x), Float64(y), Float64(w), Float64(h))
 end
 
-# Global state variables
+""" State variables """
 mutable struct ElevatorState
     curFloor::Int
     waitSign::Int
@@ -39,12 +39,11 @@ mutable struct ElevatorState
     actionCount::Int
     actions::Vector{String}
     drawing_area::Union{Nothing, GtkDrawingArea}
-    
     ElevatorState() = new(0, 0, false, 0, fill("", 100), nothing)
 end
 
 # Global elevator state
-global elevator_state = ElevatorState()
+const elevator_state = ElevatorState()
 
 # Initialize panels and buttons (same coordinates as original)
 const panels = [
@@ -52,7 +51,7 @@ const panels = [
     Panel(380, 150, 50, 90),    # up/down
     Panel(380, 465, 100, 210),  # main
     Panel(625, 330, 75, 25),    # restart
-    Panel(625, 530, 75, 25)     # exit
+    Panel(625, 530, 75, 25),     # exit
 ]
 
 const buttons = [
@@ -65,46 +64,29 @@ const buttons = [
     Button(335, 465, "1", 30),
     Button(420, 465, "2", 30),
     Button(380, 540, "GF", 30),
-    Button(380, 630, "><", 30)
+    Button(380, 630, "><", 30),
 ]
 
-"""
-    newGame!()
-
-Resets the game state by randomizing the current floor, wait sign, and door status.
-"""
+""" Reset the game state by randomizing the current floor, wait sign, and door status. """
 function newGame!()
     elevator_state.curFloor = rand(0:6)
     elevator_state.waitSign = rand(0:6)
     elevator_state.doorOpen = rand(Bool)
     elevator_state.actionCount = 0
     fill!(elevator_state.actions, "")
-    
-    # Trigger redraw
-    if elevator_state.drawing_area !== nothing
-        queue_draw(elevator_state.drawing_area)
-    end
 end
 
-"""
-    set_cairo_color(ctx, color)
-
-Helper function to set Cairo context color from Colors.jl RGB type.
-"""
+""" Helper function to set Cairo context color from Colors.jl RGB type. """
 function set_cairo_color(ctx, color::RGB)
-    set_source_rgb(ctx, color.r, color.g, color.b)
+    set_source_rgb(ctx, Int.(round.(color.r)), Int.(round.(color.g)), Int.(round.(color.b)))
 end
 
-"""
-    draw_rectangle(ctx, x, y, width, height, fill_color, stroke_color=nothing)
-
-Helper function to draw a filled rectangle with optional stroke.
-"""
-function draw_rectangle(ctx, x, y, width, height, fill_color, stroke_color=nothing)
+""" Helper function to draw a filled rectangle with optional stroke. """
+function draw_rectangle(ctx, x, y, width, height, fill_color, stroke_color = nothing)
     rectangle(ctx, x - width, y - height, width * 2, height * 2)
     set_cairo_color(ctx, fill_color)
     fill_preserve(ctx)
-    
+
     if stroke_color !== nothing
         set_cairo_color(ctx, stroke_color)
         set_line_width(ctx, 1.0)
@@ -112,16 +94,12 @@ function draw_rectangle(ctx, x, y, width, height, fill_color, stroke_color=nothi
     end
 end
 
-"""
-    draw_circle(ctx, x, y, radius, fill_color, stroke_color=nothing)
-
-Helper function to draw a filled circle with optional stroke.
-"""
-function draw_circle(ctx, x, y, radius, fill_color, stroke_color=nothing)
+""" Helper function to draw a filled circle with optional stroke. """
+function draw_circle(ctx, x, y, radius, fill_color, stroke_color = nothing)
     arc(ctx, x, y, radius, 0, 2π)
     set_cairo_color(ctx, fill_color)
     fill_preserve(ctx)
-    
+
     if stroke_color !== nothing
         set_cairo_color(ctx, stroke_color)
         set_line_width(ctx, 1.0)
@@ -129,95 +107,78 @@ function draw_circle(ctx, x, y, radius, fill_color, stroke_color=nothing)
     end
 end
 
-"""
-    draw_text(ctx, text, x, y, color, font_size=16)
-
-Helper function to draw text centered at given position.
-"""
-function draw_text(ctx, text, x, y, color, font_size=16)
+""" Helper function to draw text centered at given position. """
+function draw_text(ctx, text, x, y, color, font_size = 16)
     set_cairo_color(ctx, color)
-    select_font_face(ctx, "Arial", FONT_SLANT_NORMAL, FONT_WEIGHT_NORMAL)
+    select_font_face(ctx, "Arial", 0, 0)
     set_font_size(ctx, font_size)
-    
-    text_extents_result = text_extents(ctx, text)
-    text_x = x - text_extents_result.width / 2
-    text_y = y + text_extents_result.height / 2
-    
-    move_to(ctx, text_x, text_y)
+    move_to(ctx, x, y)
     show_text(ctx, text)
 end
 
-"""
-    draw_elevator_scene(ctx)
-
-Main drawing function that renders the entire elevator scene.
-"""
+""" Main drawing function that renders the entire elevator scene. """
 function draw_elevator_scene(ctx)
     # Set background
     set_cairo_color(ctx, CD_DARKER_GREY)
     paint(ctx)
-    
+
     # Draw panels
     for panel in panels
-        draw_rectangle(ctx, panel.x, panel.y, panel.width, panel.height, 
-                      CD_LIGHTER_ORANGE, RGB(0, 0, 0))
+        draw_rectangle(ctx, panel.x, panel.y, panel.width, panel.height,
+            CD_LIGHTER_ORANGE, RGB(0, 0, 0))
     end
-    
+
     # Draw panel labels
     draw_text(ctx, "Restart", panels[4].x, panels[4].y, RGB(1, 1, 1), 16)
     draw_text(ctx, "Exit", panels[5].x, panels[5].y, RGB(1, 1, 1), 16)
-    
+
     # Floor indicator
     floor_text = elevator_state.curFloor == 0 ? "GF" : string(elevator_state.curFloor)
     draw_text(ctx, floor_text, panels[1].x, panels[1].y, RGB(1, 1, 1), 16)
-    
+
     # Draw elevator shaft and floors
-    for i = 6:-1:0
+    for i ∈ 6:-1:0
         floorY = 50 + (6 - i) * 90
-        
+
         # Draw floor background
         draw_rectangle(ctx, 195, floorY + 40, 40, 40, RGB(1, 1, 1), RGB(0.5, 0.5, 0.5))
-        
+
         # Draw floor number
         floor_num = i == 0 ? "GF" : string(i)
         draw_text(ctx, floor_num, 130, floorY + 35, RGB(1, 1, 1), 16)
     end
-    
+
     # Elevator car position
     elevator_y = 50 + (6 - elevator_state.curFloor) * 90 + 40
-    
+
     # Draw elevator car
     draw_rectangle(ctx, 195, elevator_y, 35, 35, CD_MEDIUM_BLUE)
-    
+
     # Draw doors
     door_color = elevator_state.doorOpen ? CD_PALE_BLUE : CD_MEDIUM_BLUE
     draw_rectangle(ctx, 175, elevator_y, 10, 35, door_color)
     draw_rectangle(ctx, 215, elevator_y, 10, 35, door_color)
-    
+
     # Draw wait sign
     if elevator_state.waitSign >= 0
         wait_y = 50 + (6 - elevator_state.waitSign) * 90 + 40
         draw_circle(ctx, 245, wait_y, 15, RGB(1, 1, 0), RGB(0, 0, 0))
         draw_text(ctx, "WAIT", 245, wait_y, RGB(0, 0, 0), 10)
     end
-    
+
     # Draw buttons
     for button in buttons
-        draw_circle(ctx, button.x, button.y, button.radius, 
-                   RGB(0.75, 0.75, 0.75), RGB(0, 0, 0))
+        draw_circle(ctx, button.x, button.y, button.radius,
+            RGB(0.75, 0.75, 0.75), RGB(0, 0, 0))
         draw_text(ctx, button.text, button.x, button.y, RGB(0, 0, 0), 16)
     end
 end
 
-"""
-    processActions!()
-
-Processes actions from the global actions queue and updates elevator state.
-"""
+""" Processes actions from the global actions queue and updates elevator state. """
 function processActions!()
     if elevator_state.actionCount > 0
         action = elevator_state.actions[1]
-        elevator_state.actions[1:end-1] = elevator_state.actions[2:end]
+        elevator_state.actions[1:(end-1)] = elevator_state.actions[2:end]
         elevator_state.actions[end] = ""
         elevator_state.actionCount -= 1
 
@@ -238,15 +199,6 @@ function processActions!()
                     elevator_state.curFloor -= 1
                 end
                 elevator_state.doorOpen = false
-                
-                # Trigger redraw and sleep to show movement
-                if elevator_state.drawing_area !== nothing
-                    queue_draw(elevator_state.drawing_area)
-                    # Process events to update display
-                    while pending(GLib.main_context())
-                        iteration(GLib.main_context(), false)
-                    end
-                end
                 sleep(0.5)
             end
             elevator_state.doorOpen = true
@@ -270,112 +222,83 @@ function processActions!()
             elevator_state.doorOpen = true
             # Add a door close action after a short delay
             if !("><" in elevator_state.actions[1:elevator_state.actionCount])
-                elevator_state.actions[elevator_state.actionCount + 1] = "><"
+                elevator_state.actions[elevator_state.actionCount+1] = "><"
                 elevator_state.actionCount += 1
             end
         end
-        
-        # Trigger redraw
-        if elevator_state.drawing_area !== nothing
-            queue_draw(elevator_state.drawing_area)
-        end
+
     end
 end
 
-"""
-    handle_button_click(x, y)
-
-Handles mouse clicks on buttons and panels.
-"""
+""" Handle mouse clicks on buttons and panels. """
 function handle_button_click(x, y)
     # Check for button clicks
     for button in buttons
         dist_sq = (x - button.x)^2 + (y - button.y)^2
         if dist_sq <= button.radius^2
-            elevator_state.actions[elevator_state.actionCount + 1] = button.text
+            elevator_state.actions[elevator_state.actionCount+1] = button.text
             elevator_state.actionCount += 1
             return true
         end
     end
-    
+
     # Check for panel clicks (Restart/Exit)
-    if (panels[4].x - panels[4].width <= x <= panels[4].x + panels[4].width &&
-        panels[4].y - panels[4].height <= y <= panels[4].y + panels[4].height)
+    if panels[4].x - panels[4].width <= x <= panels[4].x + panels[4].width &&
+       panels[4].y - panels[4].height <= y <= panels[4].y + panels[4].height
         newGame!()
         return true
-    elseif (panels[5].x - panels[5].width <= x <= panels[5].x + panels[5].width &&
-            panels[5].y - panels[5].height <= y <= panels[5].y + panels[5].height)
-        # Exit - close the application
+    elseif panels[5].x - panels[5].width <= x <= panels[5].x + panels[5].width &&
+       panels[5].y - panels[5].height <= y <= panels[5].y + panels[5].height
         exit()
     end
-    
     return false
 end
 
-"""
-    main()
-
-Sets up the Gtk4 application and main window.
-"""
+""" Set up and run Gtk4 window and canvas. """
 function main()
     # Create application
-    app = GtkApplication("com.example.elevator", 0)
-    
-    signal_connect(app, "activate") do
-    # Create main window
-        window = GtkApplicationWindow(app)
-        set_title(window, "Elevator Simulation")
-        set_default_size(window, WINDOW_WIDTH, WINDOW_HEIGHT)
-        set_resizable(window, false)
-    
-        # Create drawing area
-        drawing_area = GtkDrawingArea()
-        set_size_request(drawing_area, WINDOW_WIDTH, WINDOW_HEIGHT)
-        elevator_state.drawing_area = drawing_area
-        
-        # Set up drawing function
-        set_draw_func(drawing_area) do widget, ctx, width, height, user_data
-            draw_elevator_scene(ctx)
-        end
-    
+    app = GtkWindow("Elevator Simulation", WINDOW_WIDTH, WINDOW_HEIGHT)
+    canvas = GtkCanvas(WINDOW_WIDTH, WINDOW_HEIGHT)
+    @guarded draw(canvas) do widget
+        ctx = getgc(canvas)
+        draw_elevator_scene(ctx)
+    end
+
+    app[] = canvas
+
     # Set up mouse click handling
-        gesture = GtkGestureClick()
-        add_controller(drawing_area, gesture)
-        
-        signal_connect(gesture, "pressed") do gesture, n_press, x, y
+    gesture = GtkGestureClick(canvas)
+
+    signal_connect(gesture, "pressed") do gesture, n_press, x, y
         handle_button_click(x, y)
     end
-    
+
     # Set up key press handling
-        key_controller = GtkEventControllerKey()
-        add_controller(window, key_controller)
-        
-        signal_connect(key_controller, "key-pressed") do controller, keyval, keycode, state
-            if keyval == Gdk.KEY_Escape
-                close(window)
-                return true
+    key_controller = GtkEventControllerKey()
+    signal_connect(key_controller, "key-pressed") do controller, keyval, keycode, state
+        if keyval == Gdk.KEY_Escape
+            close(window)
+            return true
         end
-            return false
+        return false
     end
-    
-        # Add drawing area to window
-        set_child(window, drawing_area)
-    
-    # Initialize game
+
+    running = true
+    signal_connect(app, "destroy") do widget
+        running = false
+    end
+    elevator_state.drawing_area = canvas
     newGame!()
-    
-    # Show window
-        show(window)
-    
-    # Start action processing timer
-    timeout_add(100) do  # 100ms interval
+    show(app)
+    while running
         processActions!()
-            return true  # Continue timer
+        if elevator_state.drawing_area !== nothing
+            draw(canvas)
         end
+        sleep(0.1)
     end
-    
-    # Run application
-    run(app)
+    elevator_state.drawing_area = nothing  # Clear drawing area reference
+    return nothing
 end
 
 # Run the application
