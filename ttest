@@ -78,7 +78,7 @@ end
 
 """ Helper function to set Cairo context color from Colors.jl RGB type. """
 function set_cairo_color(ctx, color::RGB)
-    set_source_rgb(ctx, Int.(round.(color.r)), Int.(round.(color.g)), Int.(round.(color.b)))
+    set_source_rgb(ctx, color.r, color.g, color.b)
 end
 
 """ Helper function to draw a filled rectangle with optional stroke. """
@@ -108,9 +108,9 @@ function draw_circle(ctx, x, y, radius, fill_color, stroke_color = nothing)
 end
 
 """ Helper function to draw text centered at given position. """
-function draw_text(ctx, text, x, y, color, font_size = 16)
+function draw_text(ctx, text, x, y, color, font_size = 24)
     set_cairo_color(ctx, color)
-    select_font_face(ctx, "Arial", 0, 0)
+    select_font_face(ctx, "Arial", 0, 1)
     set_font_size(ctx, font_size)
     move_to(ctx, x, y)
     show_text(ctx, text)
@@ -129,8 +129,8 @@ function draw_elevator_scene(ctx)
     end
 
     # Draw panel labels
-    draw_text(ctx, "Restart", panels[4].x, panels[4].y, RGB(1, 1, 1), 16)
-    draw_text(ctx, "Exit", panels[5].x, panels[5].y, RGB(1, 1, 1), 16)
+    draw_text(ctx, "Restart", panels[4].x, panels[4].y, RGB(0, 0, 0), 16)
+    draw_text(ctx, "Exit", panels[5].x, panels[5].y, RGB(0, 0, 0), 16)
 
     # Floor indicator
     floor_text = elevator_state.curFloor == 0 ? "GF" : string(elevator_state.curFloor)
