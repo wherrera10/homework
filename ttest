@@ -38,8 +38,8 @@ mutable struct ElevatorState
     doorOpen::Bool
     actionCount::Int
     actions::Vector{String}
-    drawing_area::Union{Nothing, GtkDrawingArea}
-    ElevatorState() = new(0, 0, false, 0, fill("", 100), nothing)
+    drawing_function::Function
+    ElevatorState() = new(0, 0, false, 0, fill("", 100), () -> nothing)
 end
 
 # Global elevator state
@@ -86,12 +86,27 @@ function draw_rectangle(ctx, x, y, width, height, fill_color, stroke_color = not
     rectangle(ctx, x - width, y - height, width * 2, height * 2)
     set_cairo_color(ctx, fill_color)
     fill_preserve(ctx)
-
     if stroke_color !== nothing
         set_cairo_color(ctx, stroke_color)
         set_line_width(ctx, 1.0)
-        stroke(ctx)
     end
+    stroke(ctx)
+end
+
+""" Helper function to draw a filled diamond with optional stroke. """
+function draw_diamond(ctx, x, y, width, height, fill_color, stroke_color = nothing)
+    move_to(ctx, x, y - height / 2)
+    line_to(ctx, x - width / 2, y)
+    line_to(ctx, x, y + height / 2)
+    line_to(ctx, x + width / 2, y)
+    close_path(ctx)
+    set_cairo_color(ctx, fill_color)
+    fill_preserve(ctx)
+    if stroke_color !== nothing
+        set_cairo_color(ctx, stroke_color)
+        set_line_width(ctx, 1.0)
+    end
+    stroke(ctx)
 end
 
 """ Helper function to draw a filled circle with optional stroke. """
@@ -103,8 +118,8 @@ function draw_circle(ctx, x, y, radius, fill_color, stroke_color = nothing)
     if stroke_color !== nothing
         set_cairo_color(ctx, stroke_color)
         set_line_width(ctx, 1.0)
-        stroke(ctx)
     end
+    stroke(ctx)
 end
 
 """ Helper function to draw text centered at given position. """
@@ -112,7 +127,8 @@ function draw_text(ctx, text, x, y, color, font_size = 24)
     set_cairo_color(ctx, color)
     select_font_face(ctx, "Arial", 0, 1)
     set_font_size(ctx, font_size)
-    move_to(ctx, x, y)
+    _, _, extents_width, extents_height = text_extents(ctx, text)
+    move_to(ctx, x - extents_width / 2, y - extents_height / 2)
     show_text(ctx, text)
 end
 
@@ -129,12 +145,12 @@ function draw_elevator_scene(ctx)
     end
 
     # Draw panel labels
-    draw_text(ctx, "Restart", panels[4].x, panels[4].y, RGB(0, 0, 0), 16)
-    draw_text(ctx, "Exit", panels[5].x, panels[5].y, RGB(0, 0, 0), 16)
+    draw_text(ctx, "Restart", panels[4].x, panels[4].y + 12, RGB(0, 0, 0), 16)
+    draw_text(ctx, "Exit", panels[5].x, panels[5].y + 12, RGB(0, 0, 0), 16)
 
     # Floor indicator
     floor_text = elevator_state.curFloor == 0 ? "GF" : string(elevator_state.curFloor)
-    draw_text(ctx, floor_text, panels[1].x, panels[1].y, RGB(1, 1, 1), 16)
+    draw_text(ctx, floor_text, panels[1].x, panels[1].y + 11, RGB(0, 0, 0), 16)
 
     # Draw elevator shaft and floors
     for i ∈ 6:-1:0
@@ -162,15 +178,19 @@ function draw_elevator_scene(ctx)
     # Draw wait sign
     if elevator_state.waitSign >= 0
         wait_y = 50 + (6 - elevator_state.waitSign) * 90 + 40
-        draw_circle(ctx, 245, wait_y, 15, RGB(1, 1, 0), RGB(0, 0, 0))
-        draw_text(ctx, "WAIT", 245, wait_y, RGB(0, 0, 0), 10)
+        draw_diamond(ctx, 193, wait_y, 75, 75, RGB(1, 1, 0), RGB(0, 0, 0))
+        set_line_width(ctx, 2.0)
+        draw_text(ctx, "WAIT", 194, wait_y + 14, RGB(0, 0, 0), 16)
+        stroke(ctx)
     end
 
     # Draw buttons
     for button in buttons
         draw_circle(ctx, button.x, button.y, button.radius,
             RGB(0.75, 0.75, 0.75), RGB(0, 0, 0))
-        draw_text(ctx, button.text, button.x, button.y, RGB(0, 0, 0), 16)
+        stroke(ctx)
+        draw_text(ctx, button.text, button.x - 2, button.y + (length(button.text) > 1 ? 25 : 35), RGB(0, 0, 0), length(button.text) > 1 ? 35 : 50)
+        stroke(ctx)
     end
 end
 
@@ -199,7 +219,18 @@ function processActions!()
                     elevator_state.curFloor -= 1
                 end
                 elevator_state.doorOpen = false
+                elevator_state.drawing_function()
                 sleep(0.5)
+                # Check for wait sign
+                if elevator_state.curFloor == elevator_state.waitSign
+                    elevator_state.waitSign = -1
+                    elevator_state.doorOpen = true
+                    elevator_state.drawing_function()
+                    sleep(1.5)
+                    elevator_state.doorOpen = false
+                    elevator_state.drawing_function()
+                    sleep(0.5)
+                end
             end
             elevator_state.doorOpen = true
         elseif action == "^"
@@ -214,19 +245,8 @@ function processActions!()
             end
         elseif action == "><"
             elevator_state.doorOpen = !elevator_state.doorOpen
+            sleep(1)
         end
-
-        # Check for wait sign
-        if elevator_state.curFloor == elevator_state.waitSign
-            elevator_state.waitSign = -1
-            elevator_state.doorOpen = true
-            # Add a door close action after a short delay
-            if !("><" in elevator_state.actions[1:elevator_state.actionCount])
-                elevator_state.actions[elevator_state.actionCount+1] = "><"
-                elevator_state.actionCount += 1
-            end
-        end
-
     end
 end
 
@@ -254,17 +274,18 @@ function handle_button_click(x, y)
     return false
 end
 
+
 """ Set up and run Gtk4 window and canvas. """
 function main()
     # Create application
     app = GtkWindow("Elevator Simulation", WINDOW_WIDTH, WINDOW_HEIGHT)
     canvas = GtkCanvas(WINDOW_WIDTH, WINDOW_HEIGHT)
+    app[] = canvas
     @guarded draw(canvas) do widget
         ctx = getgc(canvas)
         draw_elevator_scene(ctx)
     end
-
-    app[] = canvas
+    elevator_state.drawing_function = () -> draw(canvas)
 
     # Set up mouse click handling
     gesture = GtkGestureClick(canvas)
@@ -287,18 +308,13 @@ function main()
     signal_connect(app, "destroy") do widget
         running = false
     end
-    elevator_state.drawing_area = canvas
     newGame!()
     show(app)
     while running
         processActions!()
-        if elevator_state.drawing_area !== nothing
-            draw(canvas)
-        end
+        elevator_state.drawing_function()
         sleep(0.1)
     end
-    elevator_state.drawing_area = nothing  # Clear drawing area reference
-    return nothing
 end
 
 # Run the application
