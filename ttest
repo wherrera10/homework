@@ -1,436 +1,285 @@
-use gtk4::prelude::*;
-use gtk4::{glib, Application, ApplicationWindow, DrawingArea, GestureClick};
-use cairo::{Context, FontSlant, FontWeight};
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
-use rand::Rng;
+using Gtk4
+using Gtk4.GLib
 
-// Constants for sizing and colors
-const WINDOW_WIDTH: i32 = 800;
-const WINDOW_HEIGHT: i32 = 700;
-const CD_DARKER_GREY: (f64, f64, f64) = (56.0/255.0, 56.0/255.0, 56.0/255.0);
-const CD_LIGHTER_ORANGE: (f64, f64, f64) = (255.0/255.0, 165.0/255.0, 0.0/255.0);
-const CD_PALE_BLUE: (f64, f64, f64) = (152.0/255.0, 197.0/255.0, 218.0/255.0);
-const CD_MEDIUM_BLUE: (f64, f64, f64) = (117.0/255.0, 158.0/255.0, 180.0/255.0);
+# Key code mappings for common keys
+const KEY_CODES = Dict{String, UInt32}(
+    "a" => 0x0061, "b" => 0x0062, "c" => 0x0063, "d" => 0x0064, "e" => 0x0065,
+    "f" => 0x0066, "g" => 0x0067, "h" => 0x0068, "i" => 0x0069, "j" => 0x006a,
+    "k" => 0x006b, "l" => 0x006c, "m" => 0x006d, "n" => 0x006e, "o" => 0x006f,
+    "p" => 0x0070, "q" => 0x0071, "r" => 0x0072, "s" => 0x0073, "t" => 0x0074,
+    "u" => 0x0075, "v" => 0x0076, "w" => 0x0077, "x" => 0x0078, "y" => 0x0079,
+    "z" => 0x007a,
+    "A" => 0x0041, "B" => 0x0042, "C" => 0x0043, "D" => 0x0044, "E" => 0x0045,
+    "F" => 0x0046, "G" => 0x0047, "H" => 0x0048, "I" => 0x0049, "J" => 0x004a,
+    "K" => 0x004b, "L" => 0x004c, "M" => 0x004d, "N" => 0x004e, "O" => 0x004f,
+    "P" => 0x0050, "Q" => 0x0051, "R" => 0x0052, "S" => 0x0053, "T" => 0x0054,
+    "U" => 0x0055, "V" => 0x0056, "W" => 0x0057, "X" => 0x0058, "Y" => 0x0059,
+    "Z" => 0x005a,
+    "0" => 0x0030, "1" => 0x0031, "2" => 0x0032, "3" => 0x0033, "4" => 0x0034,
+    "5" => 0x0035, "6" => 0x0036, "7" => 0x0037, "8" => 0x0038, "9" => 0x0039,
+    " " => 0x0020, "!" => 0x0021, "@" => 0x0040, "#" => 0x0023, "\$" => 0x0024,
+    "%" => 0x0025, "^" => 0x005e, "&" => 0x0026, "*" => 0x002a, "(" => 0x0028,
+    ")" => 0x0029, "-" => 0x002d, "_" => 0x005f, "=" => 0x003d, "+" => 0x002b,
+    "[" => 0x005b, "]" => 0x005d, "{" => 0x007b, "}" => 0x007d, "\\" => 0x005c,
+    "|" => 0x007c, ";" => 0x003b, ":" => 0x003a, "'" => 0x0027, "\"" => 0x0022,
+    "," => 0x002c, "." => 0x002e, "<" => 0x003c, ">" => 0x003e, "/" => 0x002f,
+    "?" => 0x003f, "`" => 0x0060, "~" => 0x007e,
+    # Special keys
+    "Return" => 0xff0d, "Enter" => 0xff0d, "Tab" => 0xff09, "Escape" => 0xff1b,
+    "BackSpace" => 0xff08, "Delete" => 0xffff, "Insert" => 0xff63,
+    "Home" => 0xff50, "End" => 0xff57, "Page_Up" => 0xff55, "Page_Down" => 0xff56,
+    "Up" => 0xff52, "Down" => 0xff54, "Left" => 0xff51, "Right" => 0xff53,
+    "F1" => 0xffbe, "F2" => 0xffbf, "F3" => 0xffc0, "F4" => 0xffc1,
+    "F5" => 0xffc2, "F6" => 0xffc3, "F7" => 0xffc4, "F8" => 0xffc5,
+    "F9" => 0xffc6, "F10" => 0xffc7, "F11" => 0xffc8, "F12" => 0xffc9,
+)
 
-// Button structure for the elevator controls
-#[derive(Clone)]
-struct Button {
-    x: f64,
-    y: f64,
-    text: String,
-    radius: f64,
-}
-// Button initialization
-impl Button {
-    fn new(x: f64, y: f64, text: &str, radius: f64) -> Self {
-        Self {
-            x,
-            y,
-            text: text.to_string(),
-            radius,
-        }
-    }
-}
+# Modifier key constants
+const MODIFIER_SHIFT = 0x1
+const MODIFIER_CTRL = 0x4
+const MODIFIER_ALT = 0x8
+const MODIFIER_SUPER = 0x40
 
-// Panel structure for the elevator controls
-#[derive(Clone)]
-struct Panel {
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
-}
-// Panel initialization
-impl Panel {
-    fn new(x: f64, y: f64, width: f64, height: f64) -> Self {
-        Self { x, y, width, height }
-    }
-}
+""" App to create and initialize the GTK app object and set up the main window """
+mutable struct AppState
+    target_window::GtkWindow
+    target_widget::GtkEntry
+    target_textview::GtkTextView
+    function AppState()
+        window = GtkWindow("Keystroke Target Window", 400, 300)
+        widget = GtkEntry()
+        set_gtk_property!(widget, :placeholder_text, "Type here or use simulation...")
+        buffer = GtkTextBuffer()
+        set_gtk_property!(buffer, :text, "This is a target text area.\nSimulated keystrokes will appear here.\n\n")
+        textview = GtkTextView(buffer)
+        scrolled = GtkScrolledWindow()
+        scrolled[] = textview
+        vbox = GtkBox(:v, 10)
+        push!(vbox, GtkLabel("Single line entry:"))
+        push!(vbox, widget)
+        push!(vbox, GtkLabel("Multi-line text area:"))
+        push!(vbox, scrolled)
+        set_gtk_property!(vbox, :margin_start, 10)
+        set_gtk_property!(vbox, :margin_end, 10)
+        set_gtk_property!(vbox, :margin_top, 10)
+        set_gtk_property!(vbox, :margin_bottom, 10)
+        window[] = vbox
+        show(window)
+        return new(window, widget, textview)
+    end
+end
 
-// Elevator state structure
-#[derive(Clone)]
-struct ElevatorState {
-    cur_floor: i32,
-    wait_sign: i32,
-    door_open: bool,
-    action_count: usize,
-    actions: Vec<String>,
-}
+# the app
+const APP = AppState()
 
-// Elevator state initialization and management
-impl ElevatorState {
-    fn new() -> Self {
-        Self {
-            cur_floor: 0,
-            wait_sign: 0,
-            door_open: false,
-            action_count: 0,
-            actions: vec![String::new(); 100],
-        }
-    }
+""" Send a single key event to a widget """
+function send_key_event(widget, keyval::UInt32, modifiers = UInt32(0), showerrors = false)
+    try
+        # Create key press event
+        display = Gtk4.display(widget)
+        device_manager = Gtk4.G_.display_get_default_seat(display)
+        keyboard = Gtk4.G_.seat_get_keyboard(device_manager)
+        surface = Gtk4.G_.widget_get_surface(widget)
+        event_press = Gtk4.G_.key_event_new(
+            Gtk4.GdkEventType_KEY_PRESS,
+            surface,
+            keyboard,
+            UInt32(time_ns() ÷ 1000000),  # timestamp in milliseconds
+            keyval,
+            modifiers,
+            false,  # is_modifier
+            nothing,  # will be translated
+        )
+        event_release = Gtk4.G_.key_event_new(
+            Gtk4.GdkEventType_KEY_RELEASE,
+            surface,
+            keyboard,
+            UInt32(time_ns() ÷ 1000000 + 50),  # timestamp + 50ms
+            keyval,
+            modifiers,
+            false,  # is_modifier
+            nothing,  # will be translated
+        )
 
-    fn new_game(&mut self) {
-        let mut rng = rand::thread_rng();
-        self.cur_floor = rng.gen_range(0..=6);
-        self.wait_sign = rng.gen_range(0..=6);
-        self.door_open = rng.gen_bool(0.5);
-        self.action_count = 0;
-        self.actions.fill(String::new());
-    }
-}
+        # Send simulated keyboard events
+        Gtk4.G_.widget_event(widget, event_press)
+        sleep(0.03 * rand())  # Small variable delay between press and release
+        Gtk4.G_.widget_event(widget, event_release)
+        return true
+    catch e
+        showerrors && println("Error sending key event: ", e)
+        return false
+    end
+end
 
-// Set Cairo color translating RGB (all floating, 0 to 1) to r, g, b
-fn set_cairo_color(ctx: &Context, color: (f64, f64, f64)) {
-    ctx.set_source_rgb(color.0, color.1, color.2);
-}
+""" Alternative method using synthetic key events """
+function send_synthetic_key(widget, key::String, modifiers = UInt32(0))
+    if !haskey(KEY_CODES, key)
+        println("Unknown key: $key")
+        return false
+    end
+    keyval = KEY_CODES[key]
+    Gtk4.grab_focus(widget)
+    if length(key) == 1 && isletter(key[1])
+        if isa(widget, GtkEntry)
+            current_text = get_gtk_property(widget, :text, String)
+            pos = get_gtk_property(widget, :cursor_position)
+            new_text = current_text[1:pos] * key * current_text[(pos+1):end]
+            set_gtk_property!(widget, :text, new_text)
+            #set_gtk_property!(widget, :cursor_position, pos + 1)
+            return true
+        elseif isa(widget, GtkTextView)
+            buffer = GtkTextBuffer(widget)
+            insert_at_cursor(buffer, key)
+            return true
+        end
+    end
+    return send_key_event(widget, keyval, modifiers)
+end
 
-// Draw a rectangle at (x, y) with given width and height
-fn draw_rectangle(ctx: &Context, x: f64, y: f64, width: f64, height: f64, 
-                 fill_color: (f64, f64, f64), stroke_color: Option<(f64, f64, f64)>) {
-    ctx.rectangle(x - width, y - height, width * 2.0, height * 2.0);
-    set_cairo_color(ctx, fill_color);
-    ctx.fill_preserve().unwrap();
-    
-    if let Some(stroke) = stroke_color {
-        set_cairo_color(ctx, stroke);
-        ctx.set_line_width(1.0);
-    }
-    ctx.stroke().unwrap();
-}
+""" Send a string of text to a widget """
+function send_text_to_widget(widget, text::AbstractString; delay = 0.05)
+    println("Sending text: \"$text\"")
+    for char in text
+        if char == '\n'
+            send_synthetic_key(widget, "Return")
+        else
+            send_synthetic_key(widget, string(char))
+        end
+        sleep(delay * rand())
+    end
+end
 
-// Draw a diamond shape at (x, y) with given width and height
-fn draw_diamond(ctx: &Context, x: f64, y: f64, width: f64, height: f64,
-               fill_color: (f64, f64, f64), stroke_color: Option<(f64, f64, f64)>) {
-    ctx.move_to(x, y - height / 2.0);
-    ctx.line_to(x - width / 2.0, y);
-    ctx.line_to(x, y + height / 2.0);
-    ctx.line_to(x + width / 2.0, y);
-    ctx.close_path();
-    
-    set_cairo_color(ctx, fill_color);
-    ctx.fill_preserve().unwrap();
-    
-    if let Some(stroke) = stroke_color {
-        set_cairo_color(ctx, stroke);
-        ctx.set_line_width(1.0);
-    }
-    ctx.stroke().unwrap();
-}
+""" Send including special key combinations """
+function send_key_combination(widget, keys::Vector{String})
+    modifiers = 0x0000
+    main_key = ""
+    for key in keys
+        if key == "Ctrl" || key == "Control"
+            modifiers |= MODIFIER_CTRL
+        elseif key == "Shift"
+            modifiers |= MODIFIER_SHIFT
+        elseif key == "Alt"
+            modifiers |= MODIFIER_ALT
+        elseif key == "Super" || key == "Cmd"
+            modifiers |= MODIFIER_SUPER
+        else
+            main_key = key
+        end
+    end
+    if main_key != ""
+        println("Sending key combination: $(join(keys, "+"))")
+        send_synthetic_key(widget, main_key, modifiers)
+    end
+end
 
-// Draw a circle at (x, y) with given radius
-fn draw_circle(ctx: &Context, x: f64, y: f64, radius: f64,
-              fill_color: (f64, f64, f64), stroke_color: Option<(f64, f64, f64)>) {
-    ctx.arc(x, y, radius, 0.0, 2.0 * std::f64::consts::PI);
-    set_cairo_color(ctx, fill_color);
-    ctx.fill_preserve().unwrap();
-    
-    if let Some(stroke) = stroke_color {
-        set_cairo_color(ctx, stroke);
-        ctx.set_line_width(1.0);
-    }
-    ctx.stroke().unwrap();
-}
+""" High-level interface to simulate keyboard data entries """
+function simulate_typing(text::AbstractString; target = :auto, delay::Float64 = 0.05)
+    widget = APP.target_widget
+    Gtk4.grab_focus(widget)
+    sleep(0.1)  # Allow time for focus
+    send_text_to_widget(widget, text, delay = delay)
+end
 
-// Draw text centered at (x, y)
-fn draw_text(ctx: &Context, text: &str, x: f64, y: f64, color: (f64, f64, f64), font_size: f64) {
-    set_cairo_color(ctx, color);
-    ctx.select_font_face("Arial", FontSlant::Normal, FontWeight::Bold);
-    ctx.set_font_size(font_size);
-    
-    let text_extents = ctx.text_extents(text).unwrap();
-    ctx.move_to(x - text_extents.width() / 2.0, y - text_extents.height() / 2.0);
-    ctx.show_text(text).unwrap();
-}
+""" Simulate text entry """
+function simulate_key_press(key::AbstractString; target = :auto)
+    widget = APP.target_widget
+    Gtk4.grab_focus(widget)
+    sleep(0.1)
+    send_synthetic_key(widget, key)
+end
 
-// Draw the elevator and its controls
-fn draw_elevator_scene(ctx: &Context, state: &ElevatorState, panels: &[Panel], buttons: &[Button]) {
-    // Set background
-    set_cairo_color(ctx, CD_DARKER_GREY);
-    ctx.paint().unwrap();
+""" Simulate keyboard key combos """
+function simulate_key_combo(keys::Vector{String}; target = :auto)
+    widget = APP.target_widget
+    Gtk4.grab_focus(widget)
+    sleep(0.1)
+    send_key_combination(widget, keys)
+end
 
-    // Draw panels
-    for panel in panels {
-        draw_rectangle(ctx, panel.x, panel.y, panel.width, panel.height,
-                      CD_LIGHTER_ORANGE, Some((0.0, 0.0, 0.0)));
-    }
+""" Demo functions """
+function demo_basic_typing()
+    println("\n=== Basic Typing Demo ===")
+    sleep(2)  # Give time to see the window
+    simulate_typing("Hello from Gtk4.jl!")
+    sleep(1)
+    simulate_key_press("Return")
+    simulate_typing("This is a demonstration of simulated keyboard input.")
+    sleep(1)
+    simulate_key_press("Return")
+    simulate_typing("Special characters: !@#\$%^&*()")
+end
 
-    // Draw panel labels
-    draw_text(ctx, "Restart", panels[3].x, panels[3].y + 12.0, (0.0, 0.0, 0.0), 16.0);
-    draw_text(ctx, "Exit", panels[4].x, panels[4].y + 12.0, (0.0, 0.0, 0.0), 16.0);
+""" demo of special keys """
+function demo_special_keys()
+    println("\n=== Special Keys Demo ===")
+    isnothing(APP.target_widget) && sleep(2)
+    simulate_typing("Testing special keys:")
+    simulate_key_press("Return")
+    simulate_typing("Use arrows: ")
+    simulate_key_press("Left")
+    simulate_key_press("Left")
+    simulate_typing("HERE")
+    simulate_key_press("End")
+    simulate_key_press("Return")
+    simulate_typing("Select all with Ctrl+A: ")
+    sleep(1)
+    simulate_key_combo(["Ctrl", "a"])
+    sleep(1)
+    simulate_typing("Replaced!")
+end
 
-    // Floor indicator
-    let floor_text = if state.cur_floor == 0 { "GF".to_string() } else { state.cur_floor.to_string() };
-    draw_text(ctx, &floor_text, panels[0].x, panels[0].y + 11.0, (0.0, 0.0, 0.0), 16.0);
+""" Demo of text editing """
+function demo_text_editing()
+    println("\n=== Text Editing Demo ===")
+    isnothing(APP.target_widget) && sleep(2)
+    simulate_typing("This line will be edited.")
+    simulate_key_press("Return")
+    simulate_key_press("Up")
+    simulate_key_press("Home")
+    simulate_key_combo(["Ctrl", "Right"])  # Move word right
+    simulate_key_combo(["Ctrl", "Shift", "Right"])  # Select next word
+    simulate_typing("TEXT")
+    simulate_key_press("BackSpace")
+    simulate_key_press("End")
+    simulate_key_press("Return")
+    simulate_typing("Editing complete!")
+end
 
-    // Draw elevator shaft and floors
-    for i in (0..=6).rev() {
-        let floor_y = 50.0 + (6 - i) as f64 * 90.0;
+""" run demos """
+function app()
+    println("Julia Keystroke Simulation with Gtk4.jl")
+    println("=======================================")
+    println("Available functions:")
+    println("• create_target_window() - Create a test window")
+    println("• simulate_typing(\"text\") - Type text")
+    println("• simulate_key_press(\"key\") - Press a special key")
+    println("• simulate_key_combo([\"Ctrl\", \"a\"]) - Key combinations")
+    println("• demo_basic_typing() - Run typing demo")
+    println("• demo_special_keys() - Run special keys demo")
+    println("• demo_text_editing() - Run text editing demo")
+    println("\nAvailable special keys:")
+    special_keys = ["Return", "Tab", "Escape", "BackSpace", "Delete",
+        "Up", "Down", "Left", "Right", "Home", "End",
+        "F1", "F2", "F3", "F4", "F5", "F6"]
+    println(join(special_keys, ", "))
 
-        // Draw floor background
-        draw_rectangle(ctx, 195.0, floor_y + 40.0, 40.0, 40.0, 
-                      (1.0, 1.0, 1.0), Some((0.5, 0.5, 0.5)));
+    demo_basic_typing()
+    demo_special_keys()
+    demo_text_editing()
+end
 
-        // Draw floor number
-        let floor_num = if i == 0 { "GF".to_string() } else { i.to_string() };
-        draw_text(ctx, &floor_num, 130.0, floor_y + 35.0, (1.0, 1.0, 1.0), 16.0);
-    }
-
-    // Elevator car position
-    let elevator_y = 50.0 + (6 - state.cur_floor) as f64 * 90.0 + 40.0;
-
-    // Draw elevator car
-    draw_rectangle(ctx, 195.0, elevator_y, 35.0, 35.0, CD_MEDIUM_BLUE, None);
-
-    // Draw doors
-    let door_color = if state.door_open { CD_PALE_BLUE } else { CD_MEDIUM_BLUE };
-    draw_rectangle(ctx, 175.0, elevator_y, 10.0, 35.0, door_color, None);
-    draw_rectangle(ctx, 215.0, elevator_y, 10.0, 35.0, door_color, None);
-
-    // Draw wait sign
-    if state.wait_sign >= 0 {
-        let wait_y = 50.0 + (6 - state.wait_sign) as f64 * 90.0 + 40.0;
-        draw_diamond(ctx, 193.0, wait_y, 75.0, 75.0, (1.0, 1.0, 0.0), Some((0.0, 0.0, 0.0)));
-        ctx.set_line_width(2.0);
-        draw_text(ctx, "WAIT", 194.0, wait_y + 14.0, (0.0, 0.0, 0.0), 16.0);
-        ctx.stroke().unwrap();
-    }
-
-    // Draw buttons
-    for button in buttons {
-        draw_circle(ctx, button.x, button.y, button.radius,
-                   (0.75, 0.75, 0.75), Some((0.0, 0.0, 0.0)));
-        ctx.stroke().unwrap();
-        
-        let font_size = if button.text.len() > 1 { 35.0 } else { 50.0 };
-        let y_offset = if button.text.len() > 1 { 25.0 } else { 35.0 };
-        draw_text(ctx, &button.text, button.x - 2.0, button.y + y_offset, (0.0, 0.0, 0.0), font_size);
-        ctx.stroke().unwrap();
-    }
-}
-
-// Process elevator actions
-fn process_actions(state: Arc<Mutex<ElevatorState>>, drawing_area: &DrawingArea) {
-    let state_clone = Arc::clone(&state);
-    let drawing_area_weak = drawing_area.downgrade();
-    
-    thread::spawn(move || {
-        loop {
-            let action = {
-                let mut state_guard = state_clone.lock().unwrap();
-                if state_guard.action_count > 0 {
-                    let action = state_guard.actions[0].clone();
-                    state_guard.actions.rotate_left(1);
-                    state_guard.actions[state_guard.action_count - 1] = String::new();
-                    state_guard.action_count -= 1;
-                    Some(action)
-                } else {
-                    None
-                }
-            };
-            
-            if let Some(action) = action {
-                let mut state_guard = state_clone.lock().unwrap();
-                
-                match action.as_str() {
-                    "GF" => {
-                        if state_guard.cur_floor > 0 {
-                            state_guard.cur_floor -= 1;
-                            state_guard.door_open = false;
-                        } else {
-                            state_guard.door_open = true;
-                        }
-                    }
-                    "1" | "2" | "3" | "4" | "5" | "6" => {
-                        if let Ok(target_floor) = action.parse::<i32>() {
-                            // Simulate movement floor by floor
-                            while state_guard.cur_floor != target_floor {
-                                if state_guard.cur_floor < target_floor {
-                                    state_guard.cur_floor += 1;
-                                } else {
-                                    state_guard.cur_floor -= 1;
-                                }
-                                state_guard.door_open = false;
-                                
-                                // Trigger redraw
-                                if let Some(drawing_area) = drawing_area_weak.upgrade() {
-                                    glib::idle_add_local_once(move || {
-                                        drawing_area.queue_draw();
-                                    });
-                                }
-                                
-                                drop(state_guard);
-                                thread::sleep(Duration::from_millis(500));
-                                state_guard = state_clone.lock().unwrap();
-                                
-                                // Check for wait sign
-                                if state_guard.cur_floor == state_guard.wait_sign {
-                                    state_guard.wait_sign = -1;
-                                    state_guard.door_open = true;
-                                    
-                                    if let Some(drawing_area) = drawing_area_weak.upgrade() {
-                                        glib::idle_add_local_once(move || {
-                                            drawing_area.queue_draw();
-                                        });
-                                    }
-                                    
-                                    drop(state_guard);
-                                    thread::sleep(Duration::from_millis(1500));
-                                    state_guard = state_clone.lock().unwrap();
-                                    
-                                    state_guard.door_open = false;
-                                    
-                                    if let Some(drawing_area) = drawing_area_weak.upgrade() {
-                                        glib::idle_add_local_once(move || {
-                                            drawing_area.queue_draw();
-                                        });
-                                    }
-                                    
-                                    drop(state_guard);
-                                    thread::sleep(Duration::from_millis(500));
-                                    state_guard = state_clone.lock().unwrap();
-                                }
-                            }
-                            state_guard.door_open = true;
-                        }
-                    }
-                    "^" => {
-                        if state_guard.cur_floor < 6 {
-                            state_guard.cur_floor += 1;
-                            state_guard.door_open = false;
-                        }
-                    }
-                    "v" => {
-                        if state_guard.cur_floor > 0 {
-                            state_guard.cur_floor -= 1;
-                            state_guard.door_open = false;
-                        }
-                    }
-                    "><" => {
-                        state_guard.door_open = !state_guard.door_open;
-                        drop(state_guard);
-                        thread::sleep(Duration::from_secs(1));
-                        state_guard = state_clone.lock().unwrap();
-                    }
-                    _ => {}
-                }
-                
-                // Trigger redraw
-                if let Some(drawing_area) = drawing_area_weak.upgrade() {
-                    glib::idle_add_local_once(move || {
-                        drawing_area.queue_draw();
-                    });
-                }
-            }
-            
-            thread::sleep(Duration::from_millis(100));
-        }
-    });
-}
-
-// Check and process button and panel clicks
-fn handle_button_click(x: f64, y: f64, state: Arc<Mutex<ElevatorState>>, 
-                      buttons: &[Button], panels: &[Panel]) -> bool {
-    for button in buttons {
-        let dist_sq = (x - button.x).powi(2) + (y - button.y).powi(2);
-        if dist_sq <= button.radius.powi(2) {
-            let mut state_guard = state.lock().unwrap();
-            if state_guard.action_count < state_guard.actions.len() {
-                state_guard.actions[state_guard.action_count] = button.text.clone();
-                state_guard.action_count += 1;
-            }
-            return true;
-        }
-    }
-    if x >= panels[3].x - panels[3].width && x <= panels[3].x + panels[3].width &&
-       y >= panels[3].y - panels[3].height && y <= panels[3].y + panels[3].height {
-        let mut state_guard = state.lock().unwrap();
-        state_guard.new_game();
-        return true;
-    } else if x >= panels[4].x - panels[4].width && x <= panels[4].x + panels[4].width &&
-              y >= panels[4].y - panels[4].height && y <= panels[4].y + panels[4].height {
-        std::process::exit(0);
-    }
-    false
-}
-
-fn main() {
-    let app = Application::builder()
-        .application_id("com.example.elevator")
-        .build();
-
-    app.connect_activate(|app| {
-        let window = ApplicationWindow::builder()
-            .application(app)
-            .title("Elevator Simulation")
-            .default_width(WINDOW_WIDTH)
-            .default_height(WINDOW_HEIGHT)
-            .build();
-
-        let drawing_area = DrawingArea::new();
-        drawing_area.set_size_request(WINDOW_WIDTH, WINDOW_HEIGHT);
-
-        let state = Arc::new(Mutex::new(ElevatorState::new()));
-        {
-            let mut state_guard = state.lock().unwrap();
-            state_guard.new_game();
-        }
-
-        // Initialize panels and buttons
-        let panels = vec![
-            Panel::new(195.0, 30.0, 45.0, 12.0),     // indicator
-            Panel::new(380.0, 150.0, 50.0, 90.0),    // up/down
-            Panel::new(380.0, 465.0, 100.0, 210.0),  // main
-            Panel::new(625.0, 330.0, 75.0, 25.0),    // restart
-            Panel::new(625.0, 530.0, 75.0, 25.0),    // exit
-        ];
-
-        let buttons = vec![
-            Button::new(380.0, 110.0, "^", 30.0),
-            Button::new(380.0, 190.0, "v", 30.0),
-            Button::new(335.0, 305.0, "5", 30.0),
-            Button::new(420.0, 305.0, "6", 30.0),
-            Button::new(335.0, 385.0, "3", 30.0),
-            Button::new(420.0, 385.0, "4", 30.0),
-            Button::new(335.0, 465.0, "1", 30.0),
-            Button::new(420.0, 465.0, "2", 30.0),
-            Button::new(380.0, 540.0, "GF", 30.0),
-            Button::new(380.0, 630.0, "><", 30.0),
-        ];
-
-        let state_clone = Arc::clone(&state);
-        let panels_clone = panels.clone();
-        let buttons_clone = buttons.clone();
-        
-        drawing_area.set_draw_func(move |_, ctx, _, _| {
-            let state_guard = state_clone.lock().unwrap();
-            draw_elevator_scene(ctx, &state_guard, &panels_clone, &buttons_clone);
-        });
-
-        // Set up mouse click handling
-        let gesture = GestureClick::new();
-        let state_click = Arc::clone(&state);
-        let panels_click = panels.clone();
-        let buttons_click = buttons.clone();
-        let drawing_area_click = drawing_area.clone();
-        
-        gesture.connect_pressed(move |_, _, x, y| {
-            if handle_button_click(x, y, Arc::clone(&state_click), &buttons_click, &panels_click) {
-                drawing_area_click.queue_draw();
-            }
-        });
-        
-        drawing_area.add_controller(gesture);
-
-        // Start action processing thread
-        process_actions(Arc::clone(&state), &drawing_area);
-
-        window.set_child(Some(&drawing_area));
-        window.present();
-    });
-
-    app.run();
-}
+# run demos
+app()
+println("Press Ctrl+C to exit or close the target window.")
+try
+    while get_gtk_property(APP.target_window, :visible, Bool)
+        sleep(0.1)
+    end
+    print("Target window closed, exiting...")
+catch InterruptException
+    print("Caught an interrupt signal, exiting...")
+finally
+    println("Shutting down...")
+    !isnothing(APP.target_window) && close(APP.target_window)
+end
