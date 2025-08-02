@@ -1,285 +1,34 @@
-using Gtk4
-using Gtk4.GLib
+using Libc
 
-# Key code mappings for common keys
-const KEY_CODES = Dict{String, UInt32}(
-    "a" => 0x0061, "b" => 0x0062, "c" => 0x0063, "d" => 0x0064, "e" => 0x0065,
-    "f" => 0x0066, "g" => 0x0067, "h" => 0x0068, "i" => 0x0069, "j" => 0x006a,
-    "k" => 0x006b, "l" => 0x006c, "m" => 0x006d, "n" => 0x006e, "o" => 0x006f,
-    "p" => 0x0070, "q" => 0x0071, "r" => 0x0072, "s" => 0x0073, "t" => 0x0074,
-    "u" => 0x0075, "v" => 0x0076, "w" => 0x0077, "x" => 0x0078, "y" => 0x0079,
-    "z" => 0x007a,
-    "A" => 0x0041, "B" => 0x0042, "C" => 0x0043, "D" => 0x0044, "E" => 0x0045,
-    "F" => 0x0046, "G" => 0x0047, "H" => 0x0048, "I" => 0x0049, "J" => 0x004a,
-    "K" => 0x004b, "L" => 0x004c, "M" => 0x004d, "N" => 0x004e, "O" => 0x004f,
-    "P" => 0x0050, "Q" => 0x0051, "R" => 0x0052, "S" => 0x0053, "T" => 0x0054,
-    "U" => 0x0055, "V" => 0x0056, "W" => 0x0057, "X" => 0x0058, "Y" => 0x0059,
-    "Z" => 0x005a,
-    "0" => 0x0030, "1" => 0x0031, "2" => 0x0032, "3" => 0x0033, "4" => 0x0034,
-    "5" => 0x0035, "6" => 0x0036, "7" => 0x0037, "8" => 0x0038, "9" => 0x0039,
-    " " => 0x0020, "!" => 0x0021, "@" => 0x0040, "#" => 0x0023, "\$" => 0x0024,
-    "%" => 0x0025, "^" => 0x005e, "&" => 0x0026, "*" => 0x002a, "(" => 0x0028,
-    ")" => 0x0029, "-" => 0x002d, "_" => 0x005f, "=" => 0x003d, "+" => 0x002b,
-    "[" => 0x005b, "]" => 0x005d, "{" => 0x007b, "}" => 0x007d, "\\" => 0x005c,
-    "|" => 0x007c, ";" => 0x003b, ":" => 0x003a, "'" => 0x0027, "\"" => 0x0022,
-    "," => 0x002c, "." => 0x002e, "<" => 0x003c, ">" => 0x003e, "/" => 0x002f,
-    "?" => 0x003f, "`" => 0x0060, "~" => 0x007e,
-    # Special keys
-    "Return" => 0xff0d, "Enter" => 0xff0d, "Tab" => 0xff09, "Escape" => 0xff1b,
-    "BackSpace" => 0xff08, "Delete" => 0xffff, "Insert" => 0xff63,
-    "Home" => 0xff50, "End" => 0xff57, "Page_Up" => 0xff55, "Page_Down" => 0xff56,
-    "Up" => 0xff52, "Down" => 0xff54, "Left" => 0xff51, "Right" => 0xff53,
-    "F1" => 0xffbe, "F2" => 0xffbf, "F3" => 0xffc0, "F4" => 0xffc1,
-    "F5" => 0xffc2, "F6" => 0xffc3, "F7" => 0xffc4, "F8" => 0xffc5,
-    "F9" => 0xffc6, "F10" => 0xffc7, "F11" => 0xffc8, "F12" => 0xffc9,
-)
-
-# Modifier key constants
-const MODIFIER_SHIFT = 0x1
-const MODIFIER_CTRL = 0x4
-const MODIFIER_ALT = 0x8
-const MODIFIER_SUPER = 0x40
-
-""" App to create and initialize the GTK app object and set up the main window """
-mutable struct AppState
-    target_window::GtkWindow
-    target_widget::GtkEntry
-    target_textview::GtkTextView
-    function AppState()
-        window = GtkWindow("Keystroke Target Window", 400, 300)
-        widget = GtkEntry()
-        set_gtk_property!(widget, :placeholder_text, "Type here or use simulation...")
-        buffer = GtkTextBuffer()
-        set_gtk_property!(buffer, :text, "This is a target text area.\nSimulated keystrokes will appear here.\n\n")
-        textview = GtkTextView(buffer)
-        scrolled = GtkScrolledWindow()
-        scrolled[] = textview
-        vbox = GtkBox(:v, 10)
-        push!(vbox, GtkLabel("Single line entry:"))
-        push!(vbox, widget)
-        push!(vbox, GtkLabel("Multi-line text area:"))
-        push!(vbox, scrolled)
-        set_gtk_property!(vbox, :margin_start, 10)
-        set_gtk_property!(vbox, :margin_end, 10)
-        set_gtk_property!(vbox, :margin_top, 10)
-        set_gtk_property!(vbox, :margin_bottom, 10)
-        window[] = vbox
-        show(window)
-        return new(window, widget, textview)
-    end
+# Fork process
+pid = ccall(:fork, Cint, ())
+if pid != 0
+    println("Child process detached with pid $pid")
+    exit(0)
 end
 
-# the app
-const APP = AppState()
+# Save original stdio file descriptors
+old_stdin = stdin
+old_stdout = stdout
+old_stderr = stderr
 
-""" Send a single key event to a widget """
-function send_key_event(widget, keyval::UInt32, modifiers = UInt32(0), showerrors = false)
-    try
-        # Create key press event
-        display = Gtk4.display(widget)
-        device_manager = Gtk4.G_.display_get_default_seat(display)
-        keyboard = Gtk4.G_.seat_get_keyboard(device_manager)
-        surface = Gtk4.G_.widget_get_surface(widget)
-        event_press = Gtk4.G_.key_event_new(
-            Gtk4.GdkEventType_KEY_PRESS,
-            surface,
-            keyboard,
-            UInt32(time_ns() ÷ 1000000),  # timestamp in milliseconds
-            keyval,
-            modifiers,
-            false,  # is_modifier
-            nothing,  # will be translated
-        )
-        event_release = Gtk4.G_.key_event_new(
-            Gtk4.GdkEventType_KEY_RELEASE,
-            surface,
-            keyboard,
-            UInt32(time_ns() ÷ 1000000 + 50),  # timestamp + 50ms
-            keyval,
-            modifiers,
-            false,  # is_modifier
-            nothing,  # will be translated
-        )
+# Redirect stdio
+redirect_stdio(stdin=open("/dev/null", "r"),
+               stdout=open("/tmp/dmn.log", "w"),
+               stderr=stdout)
 
-        # Send simulated keyboard events
-        Gtk4.G_.widget_event(widget, event_press)
-        sleep(0.03 * rand())  # Small variable delay between press and release
-        Gtk4.G_.widget_event(widget, event_release)
-        return true
-    catch e
-        showerrors && println("Error sending key event: ", e)
-        return false
-    end
-end
+# Close original file descriptors
+close(old_stdin)
+close(old_stdout)
+close(old_stderr)
 
-""" Alternative method using synthetic key events """
-function send_synthetic_key(widget, key::String, modifiers = UInt32(0))
-    if !haskey(KEY_CODES, key)
-        println("Unknown key: $key")
-        return false
-    end
-    keyval = KEY_CODES[key]
-    Gtk4.grab_focus(widget)
-    if length(key) == 1 && isletter(key[1])
-        if isa(widget, GtkEntry)
-            current_text = get_gtk_property(widget, :text, String)
-            pos = get_gtk_property(widget, :cursor_position)
-            new_text = current_text[1:pos] * key * current_text[(pos+1):end]
-            set_gtk_property!(widget, :text, new_text)
-            #set_gtk_property!(widget, :cursor_position, pos + 1)
-            return true
-        elseif isa(widget, GtkTextView)
-            buffer = GtkTextBuffer(widget)
-            insert_at_cursor(buffer, key)
-            return true
-        end
-    end
-    return send_key_event(widget, keyval, modifiers)
-end
+# Create new session
+ccall(:setsid, Cint, ())
 
-""" Send a string of text to a widget """
-function send_text_to_widget(widget, text::AbstractString; delay = 0.05)
-    println("Sending text: \"$text\"")
-    for char in text
-        if char == '\n'
-            send_synthetic_key(widget, "Return")
-        else
-            send_synthetic_key(widget, string(char))
-        end
-        sleep(delay * rand())
-    end
-end
-
-""" Send including special key combinations """
-function send_key_combination(widget, keys::Vector{String})
-    modifiers = 0x0000
-    main_key = ""
-    for key in keys
-        if key == "Ctrl" || key == "Control"
-            modifiers |= MODIFIER_CTRL
-        elseif key == "Shift"
-            modifiers |= MODIFIER_SHIFT
-        elseif key == "Alt"
-            modifiers |= MODIFIER_ALT
-        elseif key == "Super" || key == "Cmd"
-            modifiers |= MODIFIER_SUPER
-        else
-            main_key = key
-        end
-    end
-    if main_key != ""
-        println("Sending key combination: $(join(keys, "+"))")
-        send_synthetic_key(widget, main_key, modifiers)
-    end
-end
-
-""" High-level interface to simulate keyboard data entries """
-function simulate_typing(text::AbstractString; target = :auto, delay::Float64 = 0.05)
-    widget = APP.target_widget
-    Gtk4.grab_focus(widget)
-    sleep(0.1)  # Allow time for focus
-    send_text_to_widget(widget, text, delay = delay)
-end
-
-""" Simulate text entry """
-function simulate_key_press(key::AbstractString; target = :auto)
-    widget = APP.target_widget
-    Gtk4.grab_focus(widget)
-    sleep(0.1)
-    send_synthetic_key(widget, key)
-end
-
-""" Simulate keyboard key combos """
-function simulate_key_combo(keys::Vector{String}; target = :auto)
-    widget = APP.target_widget
-    Gtk4.grab_focus(widget)
-    sleep(0.1)
-    send_key_combination(widget, keys)
-end
-
-""" Demo functions """
-function demo_basic_typing()
-    println("\n=== Basic Typing Demo ===")
-    sleep(2)  # Give time to see the window
-    simulate_typing("Hello from Gtk4.jl!")
+# Timer loop
+using Dates
+t = time()
+while time() < t + 10
+    println("timer running, $(time() - t) seconds")
     sleep(1)
-    simulate_key_press("Return")
-    simulate_typing("This is a demonstration of simulated keyboard input.")
-    sleep(1)
-    simulate_key_press("Return")
-    simulate_typing("Special characters: !@#\$%^&*()")
-end
-
-""" demo of special keys """
-function demo_special_keys()
-    println("\n=== Special Keys Demo ===")
-    isnothing(APP.target_widget) && sleep(2)
-    simulate_typing("Testing special keys:")
-    simulate_key_press("Return")
-    simulate_typing("Use arrows: ")
-    simulate_key_press("Left")
-    simulate_key_press("Left")
-    simulate_typing("HERE")
-    simulate_key_press("End")
-    simulate_key_press("Return")
-    simulate_typing("Select all with Ctrl+A: ")
-    sleep(1)
-    simulate_key_combo(["Ctrl", "a"])
-    sleep(1)
-    simulate_typing("Replaced!")
-end
-
-""" Demo of text editing """
-function demo_text_editing()
-    println("\n=== Text Editing Demo ===")
-    isnothing(APP.target_widget) && sleep(2)
-    simulate_typing("This line will be edited.")
-    simulate_key_press("Return")
-    simulate_key_press("Up")
-    simulate_key_press("Home")
-    simulate_key_combo(["Ctrl", "Right"])  # Move word right
-    simulate_key_combo(["Ctrl", "Shift", "Right"])  # Select next word
-    simulate_typing("TEXT")
-    simulate_key_press("BackSpace")
-    simulate_key_press("End")
-    simulate_key_press("Return")
-    simulate_typing("Editing complete!")
-end
-
-""" run demos """
-function app()
-    println("Julia Keystroke Simulation with Gtk4.jl")
-    println("=======================================")
-    println("Available functions:")
-    println("• create_target_window() - Create a test window")
-    println("• simulate_typing(\"text\") - Type text")
-    println("• simulate_key_press(\"key\") - Press a special key")
-    println("• simulate_key_combo([\"Ctrl\", \"a\"]) - Key combinations")
-    println("• demo_basic_typing() - Run typing demo")
-    println("• demo_special_keys() - Run special keys demo")
-    println("• demo_text_editing() - Run text editing demo")
-    println("\nAvailable special keys:")
-    special_keys = ["Return", "Tab", "Escape", "BackSpace", "Delete",
-        "Up", "Down", "Left", "Right", "Home", "End",
-        "F1", "F2", "F3", "F4", "F5", "F6"]
-    println(join(special_keys, ", "))
-
-    demo_basic_typing()
-    demo_special_keys()
-    demo_text_editing()
-end
-
-# run demos
-app()
-println("Press Ctrl+C to exit or close the target window.")
-try
-    while get_gtk_property(APP.target_window, :visible, Bool)
-        sleep(0.1)
-    end
-    print("Target window closed, exiting...")
-catch InterruptException
-    print("Caught an interrupt signal, exiting...")
-finally
-    println("Shutting down...")
-    !isnothing(APP.target_window) && close(APP.target_window)
 end
