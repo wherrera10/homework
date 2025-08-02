@@ -1,28 +1,27 @@
-using Libc
+using Distributed
 
-# Fork process
-pid = ccall(:fork, Cint, ())
-if pid != 0
-    println("Child process detached with pid $pid")
-    exit(0)
+@everywhere function daemonize(outfile = "test3_demonize.log")
+    try
+        # Redirect standard I/O
+        redirect_stdio(; stdin = devnull,
+            stdout = open(outfile, "w"),
+            stderr = devnull)
+
+        first_t = time()
+        # write logs
+        while time() < first_t + 10
+            println("timer running, $(time() - first_t) seconds")
+            sleep(1)
+        end
+    catch e
+        println("Error occurred: $e")
+    finally
+        close(stdout)
+    end
 end
 
-# Redirect standard I/O
-old_stdin = stdin
-old_stdout = stdout
-old_stderr = stderr
-redirect_stdio(stdin=open("/dev/null", "r"),
-               stdout=open("/tmp/dmn.log", "w"),
-               stderr=stdout)
-close(old_stdin)
-close(old_stdout)
-close(old_stderr)
+addprocs(3)
 
-# Create new session
-ccall(:setsid, Cint, ())
+@spawnat 3 daemonize()
 
-t = time()
-while time() < t + 10
-    println("timer running, $(time() - t) seconds")
-    sleep(1)
-end
+sleep(12)
