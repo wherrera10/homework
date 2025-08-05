@@ -1,27 +1,55 @@
-using Distributed
+use rug::{Integer, Complete};
 
-@everywhere function daemonize(outfile = "test3_demonize.log")
-    try
-        # Redirect standard I/O
-        redirect_stdio(; stdin = devnull,
-            stdout = open(outfile, "w"),
-            stderr = devnull)
+/// Print a very large sized Integer in an abbreviated format
+fn limited_print(n: &Integer) -> String {
+    let s = n.to_string();
+    let len = s.len();
+    
+    if len <= 40 {
+        s
+    } else {
+        format!("{}...{} ({} digits)", 
+                &s[0..20], 
+                &s[len-19..], 
+                len)
+    }
+}
 
-        first_t = time()
-        # write logs
-        while time() < first_t + 10
-            println("timer running, $(time() - first_t) seconds")
-            sleep(1)
-        end
-    catch e
-        println("Error occurred: $e")
-    finally
-        close(stdout)
-    end
-end
+/// Big (rug::Integer) factorial function
+fn factorial(n: u32) -> Integer {
+    let mut result = Integer::from(1);
+    for i in 1..=n {
+        result *= i;
+    }
+    result
+}
 
-addprocs(3)
+/// Use rug's probabilistic primality test with 25 rounds (Miller-Rabin)
+/// This gives a probability of error less than 2^-50
+fn is_probable_prime(n: &Integer) -> bool {
+    n.is_probably_prime(25) != rug::integer::IsPrime::No
+}
 
-@spawnat 3 daemonize()
+/// Show factorial primes for numbers from 1 to n
+fn show_factorial_primes(n: u32) {
+    for i in 1..=n {
+        let f = factorial(i);
+        
+        // Check f - 1
+        let f_minus_1 = (&f - 1).complete();
+        if is_probable_prime(&f_minus_1) {
+            println!("{:3}! - 1 -> {}", i, limited_print(&f_minus_1));
+        }
+        
+        // Check f + 1
+        let f_plus_1 = (&f + 1).complete();
+        if is_probable_prime(&f_plus_1) {
+            println!("{:3}! + 1 -> {}", i, limited_print(&f_plus_1));
+        }
+    }
+}
 
-sleep(12)
+fn main() {
+    show_factorial_primes(1000);
+}
+
